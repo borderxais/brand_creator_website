@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
-type UserRole = 'CREATOR' | 'BRAND'
 
 export async function POST(request: Request) {
   try {

@@ -1,6 +1,6 @@
 import React from 'react';
-import { Clock, DollarSign, Users, Edit, Share2, Archive, Globe } from 'lucide-react';
-import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
+import { Clock, DollarSign, Users, Edit, Share2, Archive } from 'lucide-react';
+import { FaInstagram, FaTiktok } from 'react-icons/fa';
 
 interface CampaignDetailsProps {
   params: {

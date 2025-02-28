@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { Clock, DollarSign, Users, Filter, Search } from 'lucide-react';
 import CreateCampaignModal from '@/components/campaigns/CreateCampaignModal';
 import Link from 'next/link';
-import { Category } from '@/types/category';
-import { CategorySelector } from '@/components/ui/CategorySelector';
 
 const campaigns = [
   {
