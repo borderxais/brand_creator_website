@@ -18,6 +18,12 @@ export default function Navigation() {
   useEffect(() => {
     setMounted(true);
     calculateView(); // Calculate view after mounting
+    console.log('Navigation mounted, session state:', { 
+      session: session,
+      pathname: pathname,
+      mounted: mounted,
+      isDesktopView: isDesktopView 
+    });
   }, []);
 
   const calculateView = () => {
@@ -57,8 +63,8 @@ export default function Navigation() {
     return null;
   }
 
-  // Don't show main navigation for logged in users
-  if (session?.user?.role === 'BRAND' || session?.user?.role === 'CREATOR') {
+  // Only hide navigation for authenticated users with specific roles
+  if (session?.user && (session.user.role === 'BRAND' || session.user.role === 'CREATOR')) {
     return null;
   }
 
