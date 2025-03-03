@@ -2,13 +2,14 @@ import React from 'react';
 import { Clock, DollarSign, Users, Edit, Share2, Archive } from 'lucide-react';
 import { FaInstagram, FaTiktok } from 'react-icons/fa';
 
-interface CampaignDetailsProps {
+type PageProps = {
   params: {
     id: string;
   };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
-export default function CampaignDetails({ params }: CampaignDetailsProps) {
+export default function CampaignDetails({ params }: PageProps) {
   // This would be fetched from your API based on the ID
   const campaign = {
     id: params.id,
