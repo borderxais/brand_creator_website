@@ -1,18 +1,55 @@
 import React from 'react';
 import { Clock, DollarSign, Users, Edit, Share2, Archive } from 'lucide-react';
 import { FaInstagram, FaTiktok } from 'react-icons/fa';
+import { Metadata } from 'next';
 
-type PageProps = {
+interface PageProps {
   params: {
     id: string;
   };
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default function CampaignDetails({ params }: PageProps) {
+interface Campaign {
+  id: string;
+  title: string;
+  brand: string;
+  image: string;
+  description: string;
+  platforms: string[];
+  commission: string;
+  deadline: string;
+  budget: string;
+  requirements: string[];
+  status: string;
+  applicants: number;
+  deliverables: string[];
+  timeline: {
+    applicationDeadline: string;
+    campaignStart: string;
+    campaignEnd: string;
+    contentDueDate: string;
+  };
+  budget: {
+    commission: string;
+    minimumGuarantee: string;
+    totalBudget: string;
+  };
+  applicantsList: {
+    id: number;
+    name: string;
+    handle: string;
+    followers: string;
+    engagement: string;
+    status: string;
+    avatar: string;
+  }[];
+}
+
+async function getCampaign(id: string): Promise<Campaign> {
   // This would be fetched from your API based on the ID
-  const campaign = {
-    id: params.id,
+  return {
+    id,
     title: 'Summer Fashion Collection Launch',
     brand: 'StyleCo',
     image: '/images/campaign1.jpg',
@@ -20,14 +57,15 @@ export default function CampaignDetails({ params }: PageProps) {
     platforms: ['Instagram', 'TikTok'],
     commission: '15% per sale',
     deadline: '2024-04-15',
-    applicants: 24,
-    status: 'Active',
+    budget: '$5,000',
     requirements: [
-      'Minimum 10K followers',
-      'Fashion or lifestyle content focus',
-      'High engagement rate (>3%)',
-      'Previous collaboration experience'
+      'Minimum 10k followers',
+      'Fashion/Lifestyle niche',
+      'Previous experience with fashion brands',
+      'High engagement rate'
     ],
+    status: 'Active',
+    applicants: 12,
     deliverables: [
       '3 Instagram feed posts',
       '5 Instagram stories',
@@ -67,6 +105,18 @@ export default function CampaignDetails({ params }: PageProps) {
       // Add more applicants as needed
     ]
   };
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const campaign = await getCampaign(params.id);
+  return {
+    title: `${campaign.title} - Campaign Details`,
+    description: campaign.description
+  };
+}
+
+export default async function CampaignDetails({ params }: PageProps) {
+  const campaign = await getCampaign(params.id);
 
   return (
     <div className="min-h-screen p-8">
