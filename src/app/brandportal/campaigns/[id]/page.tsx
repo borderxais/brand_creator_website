@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { use } from 'react';
 import { Clock, DollarSign, Users, Edit, Share2, Archive } from 'lucide-react';
 import { FaInstagram, FaTiktok } from 'react-icons/fa';
 import { Metadata } from 'next';
 
-interface PageProps {
-  params: {
-    id: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
-}
+// interface PageProps {
+//   params: {
+//     id: string;
+//   };
+//   searchParams: { [key: string]: string | string[] | undefined };
+// }
+
+
 
 interface Campaign {
   id: string;
@@ -30,7 +32,7 @@ interface Campaign {
     campaignEnd: string;
     contentDueDate: string;
   };
-  budget: {
+  requirement: {
     commission: string;
     minimumGuarantee: string;
     totalBudget: string;
@@ -78,7 +80,7 @@ async function getCampaign(id: string): Promise<Campaign> {
       campaignEnd: '2024-06-30',
       contentDueDate: '2024-06-15'
     },
-    budget: {
+    requirement: {
       commission: '15% per sale',
       minimumGuarantee: '$500',
       totalBudget: '$10,000'
@@ -107,16 +109,34 @@ async function getCampaign(id: string): Promise<Campaign> {
   };
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const campaign = await getCampaign(params.id);
+// export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+//   const campaign = await getCampaign(params.id);
+//   return {
+//     title: `${campaign.title} - Campaign Details`,
+//     description: campaign.description
+//   };
+// }
+
+export async function generateMetadata({params}: {params: Promise<{ id: string }>}) {
+  const { id } = await params;
+  const campaign = await getCampaign(id);
+
   return {
     title: `${campaign.title} - Campaign Details`,
-    description: campaign.description
+    description: campaign.description,
   };
 }
 
-export default async function CampaignDetails({ params }: PageProps) {
-  const campaign = await getCampaign(params.id);
+
+
+// export default async function CampaignDetails({ params }: PageProps) {
+//   const campaign = await getCampaign(params.id);
+
+export default async function CampaignDetails({params}: {params: Promise<{ id: string }>}) {
+  const { id } = await params;
+  const campaign = await getCampaign(id);
+
+  
 
   return (
     <div className="min-h-screen p-8">
@@ -152,8 +172,8 @@ export default async function CampaignDetails({ params }: PageProps) {
                 <DollarSign className="h-10 w-10 text-gray-400 mr-3" />
                 <div>
                   <p className="text-sm font-medium text-gray-500">Commission</p>
-                  <p className="text-lg font-semibold text-green-600">{campaign.budget.commission}</p>
-                  <p className="text-sm text-gray-500">Min. {campaign.budget.minimumGuarantee}</p>
+                  <p className="text-lg font-semibold text-green-600">{campaign.requirement.commission}</p>
+                  <p className="text-sm text-gray-500">Min. {campaign.requirement.minimumGuarantee}</p>
                 </div>
               </div>
               <div className="flex items-center">
