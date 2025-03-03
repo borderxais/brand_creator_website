@@ -1,10 +1,8 @@
-import { Card } from '@/components/ui/Card';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { PlatformSection } from '@/components/ui/PlatformSection';
 import { SearchParamsHandler } from '@/components/ui/SearchHandler';
 import { prisma } from '@/lib/prisma';
 import { Creator } from '@/types/creator';
-import Link from 'next/link';
 import { Suspense } from 'react';
 
 async function getCreatorsByPlatform(platform: string): Promise<Creator[]> {
