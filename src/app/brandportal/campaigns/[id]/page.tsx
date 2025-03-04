@@ -109,13 +109,7 @@ async function getCampaign(id: string): Promise<Campaign> {
   };
 }
 
-// export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-//   const campaign = await getCampaign(params.id);
-//   return {
-//     title: `${campaign.title} - Campaign Details`,
-//     description: campaign.description
-//   };
-// }
+
 
 export async function generateMetadata({params}: {params: Promise<{ id: string }>}) {
   const { id } = await params;
@@ -128,9 +122,6 @@ export async function generateMetadata({params}: {params: Promise<{ id: string }
 }
 
 
-
-// export default async function CampaignDetails({ params }: PageProps) {
-//   const campaign = await getCampaign(params.id);
 
 export default async function CampaignDetails({params}: {params: Promise<{ id: string }>}) {
   const { id } = await params;
