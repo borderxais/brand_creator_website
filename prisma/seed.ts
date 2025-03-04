@@ -162,6 +162,102 @@ const mockCreators = {
   ]
 };
 
+const mockBrands = [
+  {
+    companyName: 'FashionNova',
+    industry: 'Fashion',
+    description: 'Leading fast fashion brand',
+    website: 'https://fashionnova.com',
+    location: 'Los Angeles, CA',
+    user: {
+      name: 'FashionNova',
+      email: 'brand@fashionnova.com',
+      password: 'password123',
+      image: '/images/brands/fashionnova.png'
+    }
+  },
+  {
+    companyName: 'TechGear',
+    industry: 'Technology',
+    description: 'Innovative tech accessories',
+    website: 'https://techgear.com',
+    location: 'San Francisco, CA',
+    user: {
+      name: 'TechGear',
+      email: 'brand@techgear.com',
+      password: 'password123',
+      image: '/images/brands/techgear.png'
+    }
+  },
+  {
+    companyName: 'HealthyLife',
+    industry: 'Health & Wellness',
+    description: 'Premium health supplements',
+    website: 'https://healthylife.com',
+    location: 'New York, NY',
+    user: {
+      name: 'HealthyLife',
+      email: 'brand@healthylife.com',
+      password: 'password123',
+      image: '/images/brands/healthylife.png'
+    }
+  }
+];
+
+const mockCampaigns = [
+  {
+    title: 'Summer Fashion Collection Launch',
+    description: 'Looking for fashion influencers to showcase our new summer collection. Must have a strong presence in fashion and lifestyle content.',
+    budget: 2000,
+    requirements: JSON.stringify({
+      platforms: ['INSTAGRAM', 'TIKTOK'],
+      category: 'FASHION',
+      list: [
+        'Minimum 50k followers',
+        'High engagement rate',
+        'Fashion/lifestyle focus',
+        '3 posts + 2 stories'
+      ]
+    }),
+    deadline: new Date('2025-06-01'),
+    status: 'ACTIVE'
+  },
+  {
+    title: 'Tech Review Campaign',
+    description: 'Seeking tech reviewers to create in-depth reviews of our latest smartphone accessories. Looking for detailed, honest reviews.',
+    budget: 1500,
+    requirements: JSON.stringify({
+      platforms: ['YOUTUBE'],
+      category: 'TECH',
+      list: [
+        'Minimum 100k subscribers',
+        'Tech-focused content',
+        '10+ minute review video',
+        'Hands-on demonstration'
+      ]
+    }),
+    deadline: new Date('2025-05-15'),
+    status: 'ACTIVE'
+  },
+  {
+    title: 'Fitness Challenge Partnership',
+    description: 'Partner with us for a 30-day fitness challenge. Looking for fitness enthusiasts to showcase our supplements and create workout content.',
+    budget: 3000,
+    requirements: JSON.stringify({
+      platforms: ['INSTAGRAM', 'YOUTUBE'],
+      category: 'FITNESS',
+      list: [
+        'Fitness/wellness focus',
+        'Before/after content',
+        'Daily stories',
+        'Weekly progress updates'
+      ]
+    }),
+    deadline: new Date('2025-07-01'),
+    status: 'ACTIVE'
+  }
+];
+
 async function main() {
   // Delete all existing data
   await prisma.application.deleteMany();
@@ -172,6 +268,45 @@ async function main() {
   await prisma.creatorProfile.deleteMany();
   await prisma.brandProfile.deleteMany();
   await prisma.user.deleteMany();
+
+  // Create brands and their campaigns
+  for (const brand of mockBrands) {
+    const hashedPassword = await bcrypt.hash(brand.user.password, 10);
+    
+    const user = await prisma.user.create({
+      data: {
+        name: brand.user.name,
+        email: brand.user.email,
+        password: hashedPassword,
+        image: brand.user.image,
+        role: 'BRAND',
+        brand: {
+          create: {
+            companyName: brand.companyName,
+            industry: brand.industry,
+            description: brand.description,
+            website: brand.website,
+            location: brand.location
+          }
+        }
+      },
+      include: {
+        brand: true
+      }
+    });
+
+    // Create campaigns for each brand
+    const brandCampaigns = mockCampaigns.map(campaign => ({
+      ...campaign,
+      brandId: user.brand!.id
+    }));
+
+    await prisma.campaign.createMany({
+      data: brandCampaigns
+    });
+
+    console.log(`Created brand and campaigns: ${user.name}`);
+  }
 
   // Helper function to create creators for a platform
   async function createCreatorsForPlatform(platform: string, creators: any[]) {
@@ -191,7 +326,7 @@ async function main() {
               location: creator.location,
               followers: creator.followers,
               categories: creator.categories,
-              engagementRate: Number((Math.random() * 5 + 2).toFixed(2)), // Convert string back to number
+              engagementRate: Number((Math.random() * 5 + 2).toFixed(2)),
               [platform]: true
             }
           }
@@ -206,7 +341,7 @@ async function main() {
     await createCreatorsForPlatform(platform, creators);
   }
 
-  console.log('Seeding completed successfully!');
+  console.log('Database has been seeded!');
 }
 
 main()
