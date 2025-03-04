@@ -5,19 +5,18 @@ import { prisma } from '@/lib/prisma';
 import { Creator } from '@/types/creator';
 import { Suspense } from 'react';
 
+// Add dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getCreatorsByPlatform(platform: string): Promise<Creator[]> {
   try {
     // Get creators from database
     const creators = await prisma.creatorProfile.findMany({
       where: {
-        [platform]: true
+        [platform.toLowerCase()]: true
       },
-      select: {
-        id: true,
-        bio: true,
-        location: true,
-        followers: true,
-        engagementRate: true,
+      include: {
         user: {
           select: {
             name: true,
