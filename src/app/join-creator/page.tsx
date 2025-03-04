@@ -18,6 +18,7 @@ interface FormData {
 export default function JoinAsCreator() {
   const router = useRouter();
   const [step, setStep] = useState(1);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -71,10 +72,37 @@ export default function JoinAsCreator() {
       setStep(step + 1);
     } else {
       try {
-        // Add API call here
-        router.push('/creatorportal');
+        // Validate passwords match
+        if (formData.password !== formData.confirmPassword) {
+          setError('Passwords do not match');
+          return;
+        }
+
+        // Register the user
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            name: formData.name,
+            role: 'CREATOR'
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Registration failed');
+        }
+
+        // Redirect to login with success message
+        router.push('/login?registered=true');
       } catch (error) {
         console.error('Error:', error);
+        setError(error instanceof Error ? error.message : 'Registration failed');
       }
     }
   };
@@ -112,6 +140,11 @@ export default function JoinAsCreator() {
         </div>
 
         <div className="bg-white shadow rounded-lg p-6 md:p-8">
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+              {error}
+            </div>
+          )}
           <form onSubmit={handleSubmit}>
             {step === 1 && (
               <div className="space-y-6">
@@ -208,7 +241,6 @@ export default function JoinAsCreator() {
                     onChange={handleInputChange}
                     rows={4}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-black"
-                    placeholder="Tell brands about yourself and your content..."
                     required
                   />
                 </div>
@@ -218,46 +250,35 @@ export default function JoinAsCreator() {
             {step === 3 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-black">Your Platforms</h2>
-                <div>
-                  <label className="block text-sm font-medium text-black mb-3">
-                    Select your active social media platforms
-                  </label>
-                  <div className="grid grid-cols-2 gap-4">
-                    {platforms.map((platform) => (
-                      <button
-                        key={platform}
-                        type="button"
-                        onClick={() => handlePlatformToggle(platform)}
-                        className={`p-4 rounded-lg border ${
-                          formData.platforms.includes(platform)
-                            ? 'border-purple-500 bg-purple-50 text-purple-700'
-                            : 'border-gray-200 hover:border-purple-500 text-black'
-                        }`}
-                      >
-                        {platform}
-                      </button>
-                    ))}
-                  </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {platforms.map((platform) => (
+                    <button
+                      key={platform}
+                      type="button"
+                      onClick={() => handlePlatformToggle(platform)}
+                      className={`p-4 border rounded-lg flex items-center justify-between ${
+                        formData.platforms.includes(platform)
+                          ? 'border-purple-500 bg-purple-50'
+                          : 'border-gray-300'
+                      }`}
+                    >
+                      <span className="text-black">{platform}</span>
+                      {formData.platforms.includes(platform) && (
+                        <CheckCircle className="w-5 h-5 text-purple-500" />
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
 
-            <div className="mt-8 flex justify-between">
-              {step > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setStep(step - 1)}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-black bg-white hover:bg-gray-50"
-                >
-                  Back
-                </button>
-              )}
+            <div className="mt-8 flex justify-end">
               <button
                 type="submit"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 ml-auto"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
               >
-                {step === 3 ? 'Complete Sign Up' : 'Next'}
-                <ArrowRight className="ml-2 h-5 w-5" />
+                {step === 3 ? 'Create Account' : 'Next'}
+                <ArrowRight className="ml-2 w-4 h-4" />
               </button>
             </div>
           </form>
