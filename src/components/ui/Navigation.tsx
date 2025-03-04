@@ -11,42 +11,28 @@ export default function Navigation() {
   const { data: session } = useSession();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [isDesktopView, setIsDesktopView] = useState(false); // Start with mobile view by default
+  const [isDesktopView, setIsDesktopView] = useState(true); // Start with desktop view by default
 
-  // Set mounted state
+  // Calculate view on mount and window resize
   useEffect(() => {
-    setMounted(true);
-    calculateView(); // Calculate view after mounting
-    console.log('Navigation mounted, session state:', { 
-      session: session,
-      pathname: pathname,
-      mounted: mounted,
-      isDesktopView: isDesktopView 
-    });
-  }, []);
+    const calculateView = () => {
+      if (typeof window === 'undefined') return;
+      
+      const logoWidth = 150;
+      const findCreatorsWidth = 120;
+      const campaignsWidth = 100;
+      const howItWorksWidth = 120;
+      const loginWidth = 80;
+      const creatorButtonWidth = 140;
+      const brandButtonWidth = 140;
+      const spacing = 120;
+      const minWidth = logoWidth + findCreatorsWidth + campaignsWidth + howItWorksWidth + 
+                      loginWidth + creatorButtonWidth + brandButtonWidth + spacing;
+      
+      setIsDesktopView(window.innerWidth >= minWidth);
+    };
 
-  const calculateView = () => {
-    if (typeof window === 'undefined') return;
-    
-    const logoWidth = 150;
-    const findCreatorsWidth = 120;
-    const campaignsWidth = 100;
-    const howItWorksWidth = 120;
-    const loginWidth = 80;
-    const creatorButtonWidth = 140;
-    const brandButtonWidth = 140;
-    const spacing = 120;
-    const minWidth = logoWidth + findCreatorsWidth + campaignsWidth + howItWorksWidth + 
-                    loginWidth + creatorButtonWidth + brandButtonWidth + spacing;
-    
-    setIsDesktopView(window.innerWidth >= minWidth);
-  };
-
-  // Handle window resize
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
+    calculateView();
     window.addEventListener('resize', calculateView);
     return () => window.removeEventListener('resize', calculateView);
   }, []);
@@ -75,28 +61,6 @@ export default function Navigation() {
   ];
 
   const isActive = (path: string) => pathname === path;
-
-  // Show a simple skeleton during SSR
-  if (!mounted) {
-    return (
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="flex items-center gap-3">
-                <img
-                  src="/logo.jpg"
-                  alt="BorderX Logo"
-                  className="w-6 h-6"
-                />
-                <span className="text-2xl font-bold text-gray-600 whitespace-nowrap">BorderX</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-    );
-  }
 
   return (
     <nav className="bg-white border-b border-gray-200">
@@ -207,31 +171,29 @@ export default function Navigation() {
             </Link>
           ))}
           {!session && (
-            <div className="pt-4 pb-3 border-t border-gray-200">
-              <div className="space-y-2">
-                <Link
-                  href="/login"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-purple-600 hover:bg-purple-50"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/join-creator"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-white bg-purple-600 hover:bg-purple-700"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Join as Creator
-                </Link>
-                <Link
-                  href="/join-brand"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-white bg-purple-600 hover:bg-purple-700"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Join as Brand
-                </Link>
-              </div>
-            </div>
+            <>
+              <Link
+                href="/login"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Log in
+              </Link>
+              <Link
+                href="/join-creator"
+                className="block px-3 py-2 rounded-md text-base font-medium text-purple-600 bg-purple-50 hover:bg-purple-100"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Join as Creator
+              </Link>
+              <Link
+                href="/join-brand"
+                className="block px-3 py-2 rounded-md text-base font-medium text-purple-600 bg-purple-50 hover:bg-purple-100"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Join as Brand
+              </Link>
+            </>
           )}
         </div>
       )}

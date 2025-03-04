@@ -15,6 +15,15 @@ export default withAuth(
       return NextResponse.redirect(new URL("/login", req.url))
     }
 
+    // If user is logged in as brand or creator, redirect them to their respective portals
+    if (path === "/" && token?.role === "BRAND") {
+      return NextResponse.redirect(new URL("/brandportal/dashboard", req.url))
+    }
+
+    if (path === "/" && token?.role === "CREATOR") {
+      return NextResponse.redirect(new URL("/creatorportal/dashboard", req.url))
+    }
+
     return NextResponse.next()
   },
   {
@@ -35,5 +44,5 @@ export default withAuth(
 )
 
 export const config = {
-  matcher: ["/brandportal", "/brandportal/:path*", "/creatorportal", "/creatorportal/:path*"]
+  matcher: ["/", "/brandportal", "/brandportal/:path*", "/creatorportal", "/creatorportal/:path*"]
 }

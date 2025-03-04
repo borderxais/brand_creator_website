@@ -3,7 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { LayoutDashboard, Image, DollarSign, Share2, MessageSquare, Settings, LogOut, Menu, ChevronDown, Users } from 'lucide-react';
 import Loading from '@/components/ui/Loading';
 import '@/styles/portals.css';
@@ -35,9 +35,6 @@ export default function CreatorPortalLayout({
   const pathname = usePathname();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [needsToggle, setNeedsToggle] = useState(false);
-  const navRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -47,28 +44,6 @@ export default function CreatorPortalLayout({
     }
   }, [status, session, router]);
 
-  useEffect(() => {
-    const checkNavOverflow = () => {
-      const nav = navRef.current;
-      const container = containerRef.current;
-      if (!nav || !container) return;
-
-      const containerWidth = container.offsetWidth - 300; // Reserve space for logo and profile
-      const items = Array.from(nav.children) as HTMLElement[];
-      let totalWidth = 0;
-
-      items.forEach(item => {
-        totalWidth += item.offsetWidth;
-      });
-
-      setNeedsToggle(totalWidth > containerWidth);
-    };
-
-    checkNavOverflow();
-    window.addEventListener('resize', checkNavOverflow);
-    return () => window.removeEventListener('resize', checkNavOverflow);
-  }, []);
-
   if (status === 'loading') {
     return <Loading />;
   }
@@ -76,7 +51,7 @@ export default function CreatorPortalLayout({
   return (
     <div className="creator-portal min-h-screen">
       <nav className="nav-container bg-white shadow-sm pt-4 w-full">
-        <div className="nav-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" ref={containerRef}>
+        <div className="nav-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center">
             {/* Logo */}
             <div className="portal-logo">
@@ -88,47 +63,27 @@ export default function CreatorPortalLayout({
               <span className="text-xl font-bold text-gray-600 whitespace-nowrap">BorderX<br />CreatorHub</span>
             </div>
 
-            {/* Navigation */}
-            {!needsToggle ? (
-              <div className="nav-links ml-8" ref={navRef}>
-                {navigationItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`nav-link flex items-center ${pathname === item.href ? 'active' : ''}`}
-                  >
-                    <item.icon className="h-5 w-5 mr-2 text-gray-600" />
-                    <span className="nav-text">{item.name}</span>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="relative ml-4">
-                <button
-                  onClick={() => setShowMobileMenu(!showMobileMenu)}
-                  className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100"
+            {/* Desktop Navigation */}
+            <div className="nav-links ml-8">
+              {navigationItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`nav-link flex items-center ${pathname === item.href ? 'active' : ''}`}
                 >
-                  <Menu className="h-6 w-6" />
-                </button>
+                  <item.icon className="h-5 w-5 mr-2 text-gray-600" />
+                  <span className="nav-text">{item.name}</span>
+                </Link>
+              ))}
+            </div>
 
-                {/* Toggle Menu Dropdown */}
-                {showMobileMenu && (
-                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-1 z-50 border border-gray-100">
-                    {navigationItems.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setShowMobileMenu(false)}
-                      >
-                        <item.icon className="h-4 w-4 mr-2 text-gray-500" />
-                        {item.name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="ml-4 p-2 text-gray-600 hover:text-gray-900 block lg:hidden"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
 
             {/* User Profile */}
             <div className="ml-auto">
@@ -178,6 +133,23 @@ export default function CreatorPortalLayout({
                 )}
               </div>
             </div>
+
+            {/* Mobile Navigation Menu */}
+            {showMobileMenu && (
+              <div className={`mobile-menu py-2 lg:hidden ${showMobileMenu ? 'show' : ''}`}>
+                {navigationItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`nav-link flex items-center ${pathname === item.href ? 'active' : ''}`}
+                    onClick={() => setShowMobileMenu(false)}
+                  >
+                    <item.icon className="h-5 w-5 mr-2 text-gray-600" />
+                    <span className="nav-text">{item.name}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </nav>

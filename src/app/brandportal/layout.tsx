@@ -76,7 +76,7 @@ export default function BrandPortalLayout({
             {/* Mobile Menu Button */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="ml-4 p-2 text-gray-600 hover:text-gray-900 lg:hidden"
+              className="ml-4 p-2 text-gray-600 hover:text-gray-900 block lg:hidden"
             >
               <Menu className="h-6 w-6" />
             </button>
@@ -132,7 +132,7 @@ export default function BrandPortalLayout({
 
             {/* Mobile Navigation Menu */}
             {showMobileMenu && (
-              <div className="mobile-menu py-2 lg:hidden">
+              <div className={`mobile-menu py-2 lg:hidden ${showMobileMenu ? 'show' : ''}`}>
                 {mainNavigation.map((item) => (
                   <Link
                     key={item.href}

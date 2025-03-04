@@ -1,144 +1,60 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock, DollarSign, Users, Filter, Search } from 'lucide-react';
 import CreateCampaignModal from '@/components/campaigns/CreateCampaignModal';
 import Link from 'next/link';
+import Image from 'next/image';
 
-const campaigns = [
-  {
-    id: 1,
-    title: 'Summer Fashion Collection Launch',
-    brand: 'StyleCo',
-    image: '/images/campaign1.jpg',
-    description: 'Promote our new summer collection focusing on sustainable fashion and beachwear.',
-    platforms: ['Instagram', 'TikTok'],
-    commission: '15% per sale',
-    deadline: '2024-04-15',
-    applicants: 24,
-    status: 'Active',
-    requirements: [
-      'Minimum 10K followers',
-      'Fashion or lifestyle content focus',
-      'High engagement rate (>3%)',
-      'Previous collaboration experience'
-    ]
-  },
-  {
-    id: 2,
-    title: 'Gaming Peripherals Review',
-    brand: 'TechGear',
-    commission: '20% per sale + $500 base',
-    deadline: '2024-04-20',
-    applicants: 18,
-    requirements: [
-      'Minimum 50K followers',
-      'Gaming content focus',
-      'High engagement rate (>2%)',
-      'Previous review experience'
-    ],
-    status: 'Active',
-    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800',
-    category: 'Technology',
-    platforms: ['YouTube', 'Twitch'],
-    description: 'Seeking tech reviewers to showcase our new line of gaming peripherals. Must have experience in tech reviews and gaming content.',
-    deliverables: ['1 detailed review video', '2 livestream features'],
-    currentParticipants: [
-      {
-        name: 'Michael Chen',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-        followers: '89K'
+interface Campaign {
+  id: string;
+  title: string;
+  description: string;
+  budget: number;
+  requirements: string | null;
+  deadline: string;
+  status: string;
+  applications: Array<{
+    id: string;
+    status: string;
+    creator: {
+      user: {
+        name: string;
+        image: string | null;
       }
-    ]
-  },
-  {
-    id: 3,
-    title: 'Healthy Lifestyle Campaign',
-    brand: 'VitaFit',
-    commission: '25% per sale',
-    deadline: '2024-05-01',
-    applicants: 32,
-    requirements: [
-      'Minimum 20K followers',
-      'Fitness or wellness content focus',
-      'High engagement rate (>2%)',
-      'Previous collaboration experience'
-    ],
-    status: 'Active',
-    image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800',
-    category: 'Fitness',
-    platforms: ['Instagram', 'YouTube'],
-    description: 'Looking for fitness enthusiasts to promote our new line of supplements and workout equipment.',
-    deliverables: ['4 Instagram posts', '2 YouTube videos', '3 Instagram stories'],
-    currentParticipants: [
-      {
-        name: 'David Kim',
-        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
-        followers: '180K'
-      }
-    ]
-  },
-  {
-    id: 4,
-    title: 'Travel Photography Series',
-    brand: 'Wanderlust',
-    commission: '18% per sale + $1000 base',
-    deadline: '2024-05-15',
-    applicants: 45,
-    requirements: [
-      'Minimum 30K followers',
-      'Travel photography content focus',
-      'High engagement rate (>2%)',
-      'Previous collaboration experience'
-    ],
-    status: 'Scheduled',
-    image: 'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=800',
-    category: 'Travel',
-    platforms: ['Instagram', 'YouTube'],
-    description: 'Seeking travel content creators to showcase destinations using our photography gear.',
-    deliverables: ['6 Instagram posts', '1 YouTube video', '4 Instagram stories'],
-    currentParticipants: [
-      {
-        name: 'Sophia Patel',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
-        followers: '320K'
-      }
-    ]
-  },
-  {
-    id: 5,
-    title: 'Skincare Routine Challenge',
-    brand: 'GlowUp',
-    commission: '22% per sale',
-    deadline: '2024-05-10',
-    applicants: 29,
-    requirements: [
-      'Minimum 15K followers',
-      'Skincare content focus',
-      'High engagement rate (>2%)',
-      'Previous collaboration experience'
-    ],
-    status: 'Draft',
-    image: 'https://images.unsplash.com/photo-1576426863848-c21f53c60b19?w=800',
-    category: 'Beauty',
-    platforms: ['Instagram', 'TikTok', 'YouTube'],
-    description: 'Looking for skincare enthusiasts to participate in our 30-day skincare challenge.',
-    deliverables: ['30 daily updates', '1 final review video', '4 tutorial posts'],
-    currentParticipants: []
-  }
-];
-
-const platforms = [
-  { id: 'instagram', name: 'Instagram' },
-  { id: 'tiktok', name: 'TikTok' },
-  { id: 'youtube', name: 'YouTube' },
-  { id: 'weibo', name: 'Weibo' },
-  { id: 'xiaohongshu', name: 'Xiaohongshu' },
-  { id: 'douyin', name: 'Douyin' }
-];
+    }
+  }>;
+}
 
 export default function Campaigns() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
+
+  const fetchCampaigns = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/brand/campaigns');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch campaigns');
+      }
+
+      const data = await response.json();
+      setCampaigns(data);
+    } catch (error) {
+      console.error('Error fetching campaigns:', error);
+      setError('Failed to load campaigns. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleCreateCampaign = async (formData: any) => {
     try {
@@ -155,11 +71,16 @@ export default function Campaigns() {
       }
 
       setIsCreateModalOpen(false);
-      // TODO: Refresh campaigns list
+      fetchCampaigns(); // Refresh the campaigns list
     } catch (error) {
       console.error('Error creating campaign:', error);
     }
   };
+
+  const filteredCampaigns = campaigns.filter(campaign =>
+    campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    campaign.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -195,106 +116,91 @@ export default function Campaigns() {
           </div>
           <input
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="block w-full rounded-xl border border-white/20 bg-white/50 backdrop-blur-xl py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="Search campaigns..."
           />
         </div>
-        <select className="rounded-xl border border-white/20 bg-white/50 backdrop-blur-xl py-2 pl-3 pr-10 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 w-48">
-          <option>All Status</option>
-          <option>Active</option>
-          <option>Completed</option>
-          <option>Draft</option>
-        </select>
-        <button className="flex items-center rounded-xl border border-white/20 bg-white/50 backdrop-blur-xl px-4 py-2 text-sm text-gray-700 hover:bg-white/80 transition-all duration-300">
-          <Filter className="h-5 w-5 mr-2 text-gray-400" />
-          More Filters
-        </button>
       </div>
 
       {/* Campaigns Grid */}
-      <div className="grid grid-cols-1 gap-6 mt-6">
-        {campaigns.map((campaign) => (
-          <div
-            key={campaign.id}
-            className="relative overflow-hidden rounded-2xl backdrop-blur-xl bg-white/50 border border-white/20 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
-          >
-            <label className={`absolute top-4 right-4 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-              campaign.status === 'Active' ? 'bg-green-100 text-green-800' :
-              campaign.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {campaign.status}
-            </label>
-            <div className="p-6">
-              <div className="flex items-start space-x-4">
-                <img
-                  src={campaign.image}
-                  alt={campaign.title}
-                  className="h-20 w-20 rounded-xl object-cover"
-                />
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {campaign.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1 max-w-xl">{campaign.description}</p>
-                  <div className="flex items-center mt-2 space-x-2">
-                    {campaign.platforms.map((platform) => (
-                      <span key={platform} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                        {platform}
-                      </span>
-                    ))}
+      {isLoading ? (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+      ) : error ? (
+        <div className="text-center py-12">
+          <p className="text-red-600">{error}</p>
+        </div>
+      ) : filteredCampaigns.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No campaigns found</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCampaigns.map((campaign) => (
+            <Link
+              key={campaign.id}
+              href={`/brandportal/campaigns/${campaign.id}`}
+              className="block transition-transform hover:scale-[1.02]"
+            >
+              <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="p-6">
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-lg font-semibold text-gray-900">{campaign.title}</h3>
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      campaign.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                      campaign.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {campaign.status.charAt(0) + campaign.status.slice(1).toLowerCase()}
+                    </span>
                   </div>
+                  
+                  <p className="mt-2 text-sm text-gray-600 line-clamp-2">{campaign.description}</p>
+                  
+                  <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
+                    <div className="flex items-center">
+                      <DollarSign className="h-4 w-4 mr-1" />
+                      <span>${campaign.budget.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="h-4 w-4 mr-1" />
+                      <span>{new Date(campaign.deadline).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Users className="h-4 w-4 mr-1" />
+                      <span>{campaign.applications.length}</span>
+                    </div>
+                  </div>
+
+                  {campaign.applications.length > 0 && (
+                    <div className="mt-4 flex -space-x-2">
+                      {campaign.applications.slice(0, 3).map((application) => (
+                        <div key={application.id} className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-white">
+                          <Image
+                            src={application.creator.user.image || "/images/placeholder-40.svg"}
+                            alt={application.creator.user.name}
+                            fill
+                            className="object-cover"
+                            sizes="32px"
+                          />
+                        </div>
+                      ))}
+                      {campaign.applications.length > 3 && (
+                        <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs text-gray-600">
+                          +{campaign.applications.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-
-              <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="flex items-center">
-                  <DollarSign className="h-5 w-5 text-gray-400" />
-                  <div className="ml-2">
-                    <dt className="text-sm font-medium text-gray-500">Commission</dt>
-                    <dd className="text-sm font-semibold text-green-600">{campaign.commission}</dd>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <Clock className="h-5 w-5 text-gray-400" />
-                  <div className="ml-2">
-                    <dt className="text-sm font-medium text-gray-500">Deadline</dt>
-                    <dd className="text-sm text-gray-900">{new Date(campaign.deadline).toLocaleDateString()}</dd>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <Users className="h-5 w-5 text-gray-400" />
-                  <div className="ml-2">
-                    <dt className="text-sm font-medium text-gray-500">Applicants</dt>
-                    <dd className="text-sm text-gray-900">{campaign.applicants} influencers</dd>
-                  </div>
-                </div>
-              </dl>
-
-              <div className="mt-4">
-                <h4 className="text-sm font-medium text-gray-500">Requirements</h4>
-                <ul className="mt-2 text-sm text-gray-900 space-y-1 list-disc list-inside">
-                  {campaign.requirements.map((req, index) => (
-                    <li key={index}>{req}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="mt-6 flex justify-end space-x-3">
-                <Link 
-                  href={`/brandportal/campaigns/${campaign.id}`}
-                  className="rounded-xl border border-white/20 bg-white/50 backdrop-blur-xl px-4 py-2 text-sm text-gray-700 hover:bg-white/80 transition-all duration-300"
-                >
-                  View Campaign
-                </Link>
-                <button className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm text-white hover:from-blue-700 hover:to-purple-700 transition-all duration-300">
-                  View Applicants
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

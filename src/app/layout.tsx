@@ -23,7 +23,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <SessionProvider>
           <div className="min-h-screen flex flex-col">
-            <Navigation />
+            <SessionProvider>
+              <Navigation />
+            </SessionProvider>
             <div className="flex-grow">
               {children}
             </div>
