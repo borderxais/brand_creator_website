@@ -6,6 +6,8 @@ import { useEffect, useState, Suspense } from "react";
 import { Platform } from "@/types/platform";
 import { Category } from "@/types/category";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 
 interface Creator {
   id: string;
@@ -134,37 +136,47 @@ function CreatorList() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {creators.map((creator) => (
-              <Card key={creator.id} className="p-6 hover:shadow-lg transition-shadow bg-white">
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={creator.user.image || "/default-avatar.png"}
-                    alt={creator.user.name}
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900">{creator.user.name}</h3>
-                    <p className="text-gray-500">{creator.location}</p>
+              <Link 
+                key={creator.id} 
+                href={`/creator/${creator.id}`}
+                className="block transition-transform hover:scale-[1.02]"
+              >
+                <Card className="p-6 hover:shadow-lg transition-shadow bg-white">
+                  <div className="flex items-center space-x-4">
+                    <div className="relative w-16 h-16 rounded-full overflow-hidden">
+                      <Image
+                        src={creator.user.image || "/images/placeholder-40.svg"}
+                        alt={creator.user.name}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">{creator.user.name}</h3>
+                      <p className="text-gray-500">{creator.location}</p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="mt-4">
-                  <p className="text-gray-600 line-clamp-2">{creator.bio}</p>
-                </div>
+                  <div className="mt-4">
+                    <p className="text-gray-600 line-clamp-2">{creator.bio}</p>
+                  </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {creator.instagram && <span className="px-2 py-1 bg-pink-100 text-pink-800 rounded-full text-sm font-medium">Instagram</span>}
-                  {creator.tiktok && <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">TikTok</span>}
-                  {creator.youtube && <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">YouTube</span>}
-                  {creator.weibo && <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">Weibo</span>}
-                  {creator.xiaohongshu && <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">Xiaohongshu</span>}
-                  {creator.douyin && <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Douyin</span>}
-                </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {creator.instagram && <span className="px-2 py-1 bg-pink-100 text-pink-800 rounded-full text-sm font-medium">Instagram</span>}
+                    {creator.tiktok && <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">TikTok</span>}
+                    {creator.youtube && <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">YouTube</span>}
+                    {creator.weibo && <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">Weibo</span>}
+                    {creator.xiaohongshu && <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">Xiaohongshu</span>}
+                    {creator.douyin && <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Douyin</span>}
+                  </div>
 
-                <div className="mt-4 flex justify-between text-sm text-gray-500">
-                  <span>{creator.followers.toLocaleString()} followers</span>
-                  <span>{creator.engagementRate.toFixed(1)}% engagement</span>
-                </div>
-              </Card>
+                  <div className="mt-4 flex justify-between text-sm text-gray-500">
+                    <span>{creator.followers.toLocaleString()} followers</span>
+                    <span>{creator.engagementRate.toFixed(1)}% engagement</span>
+                  </div>
+                </Card>
+              </Link>
             ))}
           </div>
         )}
