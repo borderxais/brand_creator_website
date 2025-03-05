@@ -20,6 +20,13 @@ type CreatorWithRelations = Prisma.CreatorProfileGetPayload<{
   };
 }>;
 
+interface PageProps {
+  params: Promise<{
+    id: string;
+  }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
 async function getCreatorProfile(id: string) {
   try {
     const creator = await prisma.creatorProfile.findUnique({
@@ -59,8 +66,9 @@ function parseCategories(categoriesStr: string | null): string[] {
   }
 }
 
-export async function generateMetadata({params}: {params: { id: string }}) {
-  const creator = await getCreatorProfile(params.id);
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const creator = await getCreatorProfile(id);
   
   if (!creator) {
     return {
@@ -74,9 +82,8 @@ export async function generateMetadata({params}: {params: { id: string }}) {
   };
 }
 
-export default async function CreatorProfile({params}: { params: { id: string }}) {
-  const { id } = params;
-
+export default async function CreatorProfile({ params }: PageProps) {
+  const { id } = await params;
   const creator = await getCreatorProfile(id);
 
   if (!creator) {
@@ -200,7 +207,7 @@ export default async function CreatorProfile({params}: { params: { id: string }}
           </div>
         </div>
 
-        {/* Portfolio Section */}
+        {/* Portfolio Gallery */}
         {creator.portfolioItems.length > 0 && (
           <div className="mt-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Portfolio</h2>
@@ -212,15 +219,26 @@ export default async function CreatorProfile({params}: { params: { id: string }}
         {creator.posts.length > 0 && (
           <div className="mt-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Posts</h2>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {creator.posts.map((post) => (
                 <div key={post.id} className="bg-white shadow rounded-lg overflow-hidden">
-                  <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900">{post.title}</h3>
-                    <p className="mt-2 text-gray-600 line-clamp-3">{post.content}</p>
-                    <div className="mt-4 text-sm text-gray-500">
-                      {new Date(post.createdAt).toLocaleDateString()}
+                  {post.imageUrl ? (
+                    <div className="relative h-48">
+                      <Image
+                        src={post.imageUrl}
+                        alt={post.title}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
+                  ) : (
+                    <div className="h-48 bg-gray-100 flex items-center justify-center">
+                      <span className="text-gray-400">No image</span>
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg">{post.title}</h3>
+                    <p className="text-gray-600 mt-2">{post.content}</p>
                   </div>
                 </div>
               ))}

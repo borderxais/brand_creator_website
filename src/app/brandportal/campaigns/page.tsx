@@ -7,6 +7,12 @@ import { Clock, DollarSign, Users, Tag, Filter, Search } from 'lucide-react';
 import CreateCampaignModal from '@/components/campaigns/CreateCampaignModal';
 import Image from 'next/image';
 
+interface Platform {
+  id: string;
+  name: string;
+  displayName: string;
+}
+
 interface Campaign {
   id: string;
   title: string;
@@ -155,7 +161,7 @@ export default function Campaigns() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [platforms, setPlatforms] = useState([]);
+  const [platforms, setPlatforms] = useState<Platform[]>([]);
 
   useEffect(() => {
     if (status === 'loading') return;

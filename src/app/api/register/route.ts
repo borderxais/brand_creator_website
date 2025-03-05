@@ -72,22 +72,33 @@ export async function POST(request: Request) {
 
       // Create corresponding profile based on role
       if (role === 'CREATOR') {
-        await prisma.creatorProfile.create({
+        // Create basic creator profile
+        const creatorProfile = await prisma.creatorProfile.create({
           data: {
             userId: user.id,
             bio: '',
             location: '',
             followers: 0,
             engagementRate: 0,
-            categories: '[]',
-            instagram: false,
-            tiktok: false,
-            youtube: false,
-            douyin: false,
-            xiaohongshu: false,
-            weibo: false
+            categories: '[]'
           }
         });
+
+        // Get all available platforms
+        const platforms = await prisma.platform.findMany();
+        
+        // Create CreatorPlatform entries for each platform
+        await Promise.all(platforms.map(platform => 
+          prisma.creatorPlatform.create({
+            data: {
+              creatorId: creatorProfile.id,
+              platformId: platform.id,
+              followers: 0,
+              engagementRate: 0,
+              isVerified: false
+            }
+          })
+        ));
       } else if (role === 'BRAND') {
         await prisma.brandProfile.create({
           data: {

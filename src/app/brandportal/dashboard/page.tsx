@@ -1,12 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { MessageSquare } from 'lucide-react';
 import { DollarSign, Users, ShoppingBag, TrendingUp, Plus, Target, Smile } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Link from 'next/link';
 import CreateCampaignModal from '@/components/campaigns/CreateCampaignModal';
+
+interface Platform {
+  id: string;
+  name: string;
+  displayName: string;
+}
 
 const revenueData = [
   { name: 'Jan', revenue: 4000 },
@@ -136,6 +142,24 @@ const topCategories = [
 export default function BrandDashboard() {
   const { data: session } = useSession();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [platforms, setPlatforms] = useState<Platform[]>([]);
+
+  useEffect(() => {
+    fetchPlatforms();
+  }, []);
+
+  const fetchPlatforms = async () => {
+    try {
+      const response = await fetch('/api/platforms');
+      if (!response.ok) {
+        throw new Error('Failed to fetch platforms');
+      }
+      const data = await response.json();
+      setPlatforms(data);
+    } catch (error) {
+      console.error('Error fetching platforms:', error);
+    }
+  };
 
   const handleCreateCampaign = async (formData: any) => {
     try {
@@ -184,6 +208,7 @@ export default function BrandDashboard() {
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           onSubmit={handleCreateCampaign}
+          platforms={platforms}
         />
 
         {/* Stats Grid */}

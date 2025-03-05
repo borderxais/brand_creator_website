@@ -162,6 +162,7 @@ model Post {
   title           String
   content         String
   published       Boolean   @default(false)
+  imageUrl        String?
   
   creator         CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   createdAt       DateTime    @default(now())
