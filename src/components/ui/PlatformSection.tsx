@@ -103,9 +103,18 @@ export default function PlatformSection({ platform, creators, description }: Pla
                     <div className="flex justify-between text-sm mb-2">
                       <span className="text-gray-600">Categories:</span>
                       <span className="text-gray-900">{
-                        JSON.parse(creator.categories)
-                          .slice(0, 2)
-                          .join(', ')
+                        (() => {
+                          try {
+                            const parsed = JSON.parse(creator.categories);
+                            if (Array.isArray(parsed)) {
+                              return parsed.slice(0, 2).join(', ');
+                            } else {
+                              return parsed;
+                            }
+                          } catch (e) {
+                            return creator.categories || 'N/A';
+                          }
+                        })()
                       }</span>
                     </div>
                     <div className="flex justify-between text-sm">

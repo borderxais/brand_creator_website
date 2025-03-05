@@ -1,5 +1,7 @@
-import Image from 'next/image';
+"use client";
+
 import Link from 'next/link';
+import ErrorHandlingImage from './ErrorHandlingImage';
 
 interface PortfolioItem {
   id: string;
@@ -20,11 +22,16 @@ export function PortfolioGallery({ items }: PortfolioGalleryProps) {
         <div key={item.id} className="bg-white shadow rounded-lg overflow-hidden">
           {item.imageUrl && (
             <div className="relative h-48">
-              <Image
+              <ErrorHandlingImage
                 src={item.imageUrl}
                 alt={item.title}
                 fill
                 className="object-cover"
+                fallback={
+                  <div className="h-48 bg-gray-100 flex items-center justify-center">
+                    <span className="text-gray-400">Image unavailable</span>
+                  </div>
+                }
               />
             </div>
           )}

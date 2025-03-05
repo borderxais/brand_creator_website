@@ -82,7 +82,18 @@ export default function Campaigns() {
           title: campaign.title,
           description: campaign.description,
           platform: campaign.platformIds.map((id: string) => ({ id, name: id })),
-          category: JSON.parse(campaign.categories)[0],
+          category: (() => {
+            try {
+              const categories = JSON.parse(campaign.categories);
+              return Array.isArray(categories) && categories.length > 0 
+                ? categories[0] 
+                : typeof categories === 'string' 
+                  ? categories 
+                  : 'General';
+            } catch (e) {
+              return 'General';
+            }
+          })(),
           compensation: `$${campaign.budget}`,
           startDate: new Date(campaign.startDate),
           endDate: new Date(campaign.endDate),

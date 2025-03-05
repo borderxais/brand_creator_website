@@ -56,7 +56,16 @@ export function CampaignList({ currentCampaigns, availableCampaigns }: CampaignL
       
       const matchesCategory =
         categoryFilter === 'all' ||
-        JSON.parse(campaign.categories).includes(categoryFilter);
+        (() => {
+          try {
+            const categories = JSON.parse(campaign.categories);
+            return Array.isArray(categories) 
+              ? categories.includes(categoryFilter)
+              : categories === categoryFilter;
+          } catch (e) {
+            return false;
+          }
+        })();
 
       return matchesSearch && matchesPlatform && matchesCategory;
     });

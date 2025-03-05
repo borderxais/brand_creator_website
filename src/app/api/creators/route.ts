@@ -48,7 +48,34 @@ export async function GET(request: Request) {
 
     console.log('Total creators found:', creators.length);
 
-    return NextResponse.json(creators);
+    // Transform the data to match what the find-creators page expects
+    const transformedCreators = creators.map(creator => {
+      // Extract platform flags
+      const platformFlags = {
+        instagram: false,
+        tiktok: false,
+        youtube: false,
+        weibo: false,
+        xiaohongshu: false,
+        douyin: false
+      };
+      
+      // Set platform flags based on the creator's platforms
+      creator.platforms.forEach(platform => {
+        const platformName = platform.platform.name.toLowerCase();
+        if (platformName in platformFlags) {
+          // Use type assertion to tell TypeScript this is a valid key
+          platformFlags[platformName as keyof typeof platformFlags] = true;
+        }
+      });
+      
+      return {
+        ...creator,
+        ...platformFlags
+      };
+    });
+
+    return NextResponse.json(transformedCreators);
   } catch (error) {
     console.error('API Error:', error);
     return NextResponse.json({ error: 'Failed to fetch creators' }, { status: 500 });

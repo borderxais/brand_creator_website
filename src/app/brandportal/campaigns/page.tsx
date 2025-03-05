@@ -48,8 +48,22 @@ interface Campaign {
 
 function CampaignCard({ campaign }: { campaign: Campaign }) {
   const requirements = campaign.requirements ? JSON.parse(campaign.requirements).list : [];
-  const categories = JSON.parse(campaign.categories);
-  const deliverables = JSON.parse(campaign.deliverables);
+
+  let categories = [];
+  try {
+    const parsedCategories = JSON.parse(campaign.categories);
+    categories = Array.isArray(parsedCategories) ? parsedCategories : [parsedCategories];
+  } catch (e) {
+    categories = [campaign.categories];
+  }
+
+  let deliverables = [];
+  try {
+    const parsedDeliverables = JSON.parse(campaign.deliverables);
+    deliverables = Array.isArray(parsedDeliverables) ? parsedDeliverables : [parsedDeliverables];
+  } catch (e) {
+    deliverables = [campaign.deliverables];
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-4">
