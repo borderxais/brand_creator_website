@@ -1,7 +1,9 @@
 'use client';
 
+import { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { ScrollButtons } from '@/components/ui/ScrollButtons';
 import { Prisma } from '@prisma/client';
 
 type CreatorWithPlatforms = {
@@ -29,21 +31,61 @@ interface PlatformSectionProps {
 }
 
 export default function PlatformSection({ platform, creators, description }: PlatformSectionProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = direction === 'left' ? -400 : 400;
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <section className="py-8">
+    <section className="py-8 relative">
       <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-4 text-gray-900">{platform} Creators</h2>
-          <p className="text-gray-600">{description}</p>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h2 className="text-3xl font-bold mb-4 text-gray-900">{platform} Creators</h2>
+            <p className="text-gray-600">{description}</p>
+          </div>
+          <Link 
+            href={`/find-creators?platform=${platform.toLowerCase()}`}
+            className="text-blue-600 hover:text-blue-800 font-medium"
+          >
+            View All
+          </Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {creators.map((creator) => {
+
+        {/* Left scroll button */}
+        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
+          <ScrollButtons 
+            direction="left"
+            onScrollLeft={() => handleScroll('left')}
+            className="p-2 rounded-full bg-white shadow-lg hover:bg-gray-50 transition-colors"
+          />
+        </div>
+
+        {/* Right scroll button */}
+        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10">
+          <ScrollButtons 
+            direction="right"
+            onScrollRight={() => handleScroll('right')}
+            className="p-2 rounded-full bg-white shadow-lg hover:bg-gray-50 transition-colors"
+          />
+        </div>
+        
+        <div 
+          ref={scrollContainerRef}
+          className="flex overflow-x-auto gap-6 pb-4 hide-scrollbar px-12"
+          style={{ scrollBehavior: 'smooth' }}
+        >
+          {creators.slice(0, 6).map((creator) => {
             const platformData = creator.platforms.find(p => p.platform.name === platform.toLowerCase());
             if (!platformData) return null;
             
             return (
               <Link href={`/creator/${creator.id}`} key={creator.id}>
-                <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow min-w-[300px]">
                   <div className="flex items-center mb-4">
                     <Image
                       src={creator.user.image || '/images/placeholder-40.svg'}

@@ -9,12 +9,18 @@ export async function GET(request: Request) {
 
     console.log('API Request - Filtering creators by:', { platform, category });
 
-    // Get all creators with their profiles and user info
+    // Get all creators with their profiles, platforms, and user info
     const creators = await prisma.creatorProfile.findMany({
       where: {
         // Filter by platform if specified
         ...(platform !== 'all' && {
-          [platform]: true
+          platforms: {
+            some: {
+              platform: {
+                name: platform
+              }
+            }
+          }
         }),
         // Filter by category if specified
         ...(category !== 'all' && {
@@ -31,6 +37,11 @@ export async function GET(request: Request) {
             email: true,
             image: true,
           }
+        },
+        platforms: {
+          include: {
+            platform: true
+          }
         }
       }
     });
@@ -40,9 +51,6 @@ export async function GET(request: Request) {
     return NextResponse.json(creators);
   } catch (error) {
     console.error('API Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch creators' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch creators' }, { status: 500 });
   }
 }
