@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRef } from 'react';
 import { Creator } from '@/types/creator';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Instagram, Youtube, Globe } from 'lucide-react';
 
 interface PlatformSectionProps {
   platform: string;
@@ -28,6 +28,17 @@ export function PlatformSection({ platform, creators, description }: PlatformSec
     });
   };
 
+  const getPlatformIcon = (platformName: string) => {
+    switch (platformName.toLowerCase()) {
+      case 'instagram':
+        return <Instagram className="w-6 h-6 text-gray-600" />;
+      case 'youtube':
+        return <Youtube className="w-6 h-6 text-gray-600" />;
+      default:
+        return <Globe className="w-6 h-6 text-gray-600" />;
+    }
+  };
+
   return (
     <section>
       <div className="flex items-center justify-between mb-6">
@@ -38,7 +49,6 @@ export function PlatformSection({ platform, creators, description }: PlatformSec
       </div>
 
       <div className="relative group">
-        {/* Left scroll button */}
         <button
           onClick={() => scroll('left')}
           className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
@@ -47,7 +57,6 @@ export function PlatformSection({ platform, creators, description }: PlatformSec
           <ChevronLeft className="w-6 h-6 text-gray-600" />
         </button>
 
-        {/* Right scroll button */}
         <button
           onClick={() => scroll('right')}
           className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
@@ -56,7 +65,6 @@ export function PlatformSection({ platform, creators, description }: PlatformSec
           <ChevronRight className="w-6 h-6 text-gray-600" />
         </button>
 
-        {/* Scrollable container */}
         <div
           ref={scrollContainerRef}
           className="flex overflow-x-auto gap-6 pb-4 scrollbar-hide scroll-smooth"
@@ -96,9 +104,12 @@ export function PlatformSection({ platform, creators, description }: PlatformSec
                 )}
               </div>
               <div className="p-4">
-                <h3 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
-                  {creator.user?.name}
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                    {creator.user?.name}
+                  </h3>
+                  {getPlatformIcon(platform)}
+                </div>
                 <p className="mt-1 text-sm text-gray-600">
                   {creator.followers.toLocaleString()} followers
                 </p>
