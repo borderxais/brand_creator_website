@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Clock, DollarSign, Users, Tag, Filter, Search } from 'lucide-react';
 import CreateCampaignModal from '@/components/campaigns/CreateCampaignModal';
 import Image from 'next/image';
@@ -19,9 +21,20 @@ interface Campaign {
   platformIds: string[];
   brand: {
     companyName: string;
+    user: {
+      name: string;
+      image: string;
+    };
   };
   applications: Array<{
     id: string;
+    status: string;
+    creator: {
+      user: {
+        name: string;
+        image: string;
+      };
+    };
   }>;
   createdAt: Date;
   updatedAt: Date;
@@ -38,8 +51,8 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
         <div className="flex items-center gap-4">
           <div className="relative w-12 h-12">
             <Image
-              src="/images/placeholder.svg"
-              alt={campaign.brand.companyName}
+              src={campaign.brand.user.image || "/images/placeholder.svg"}
+              alt={campaign.brand.user.name}
               fill
               className="rounded-full object-cover"
             />
@@ -92,6 +105,36 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
         </div>
       </div>
 
+      {campaign.applications.length > 0 && (
+        <div className="border-t pt-4 mb-4">
+          <h4 className="font-medium mb-2">Applications:</h4>
+          <div className="space-y-2">
+            {campaign.applications.map((application) => (
+              <div key={application.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                <div className="flex items-center gap-2">
+                  <div className="relative w-8 h-8">
+                    <Image
+                      src={application.creator.user.image || "/images/placeholder.svg"}
+                      alt={application.creator.user.name}
+                      fill
+                      className="rounded-full object-cover"
+                    />
+                  </div>
+                  <span className="font-medium">{application.creator.user.name}</span>
+                </div>
+                <span className={`px-2 py-1 rounded text-xs ${
+                  application.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                  application.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {application.status.charAt(0).toUpperCase() + application.status.slice(1).toLowerCase()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="border-t pt-4">
         <h4 className="font-medium mb-2">Requirements:</h4>
         <ul className="list-disc list-inside text-gray-600">
@@ -105,6 +148,8 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
 }
 
 export default function Campaigns() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -113,9 +158,21 @@ export default function Campaigns() {
   const [platforms, setPlatforms] = useState([]);
 
   useEffect(() => {
+    if (status === 'loading') return;
+    
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+
+    if (session.user.role !== 'BRAND') {
+      router.push('/login');
+      return;
+    }
+
     fetchPlatforms();
     fetchCampaigns();
-  }, []);
+  }, [session, status, router]);
 
   const fetchPlatforms = async () => {
     try {
@@ -133,17 +190,20 @@ export default function Campaigns() {
   const fetchCampaigns = async () => {
     try {
       setIsLoading(true);
+      setError(null);
+      
       const response = await fetch('/api/brand/campaigns');
       
       if (!response.ok) {
-        throw new Error('Failed to fetch campaigns');
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to fetch campaigns');
       }
 
       const data = await response.json();
       setCampaigns(data);
     } catch (error) {
       console.error('Error fetching campaigns:', error);
-      setError('Failed to load campaigns. Please try again later.');
+      setError(error instanceof Error ? error.message : 'Failed to load campaigns');
     } finally {
       setIsLoading(false);
     }
@@ -176,12 +236,35 @@ export default function Campaigns() {
     campaign.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (status === 'loading' || isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session || session.user.role !== 'BRAND') {
+    router.push('/login');
+    return null;
   }
 
   if (error) {
-    return <div className="text-red-500">{error}</div>;
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 text-sm text-red-600 hover:text-red-800"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -200,35 +283,33 @@ export default function Campaigns() {
         </button>
       </div>
 
+      <div className="bg-white rounded-lg p-4 mb-6">
+        <div className="flex items-center gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search campaigns..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {filteredCampaigns.map((campaign) => (
+          <CampaignCard key={campaign.id} campaign={campaign} />
+        ))}
+      </div>
+
       <CreateCampaignModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateCampaign}
         platforms={platforms}
       />
-
-      <div className="mb-6 flex gap-4">
-        <div className="flex-1 relative">
-          <input
-            type="text"
-            placeholder="Search campaigns..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg"
-          />
-          <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-        </div>
-        <button className="px-4 py-2 border rounded-lg flex items-center gap-2">
-          <Filter className="w-5 h-5" />
-          Filter
-        </button>
-      </div>
-
-      <div className="space-y-4">
-        {filteredCampaigns.map(campaign => (
-          <CampaignCard key={campaign.id} campaign={campaign} />
-        ))}
-      </div>
     </div>
   );
 }

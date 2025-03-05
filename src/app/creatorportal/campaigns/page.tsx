@@ -1,8 +1,9 @@
-import { getServerSession } from 'next-auth/next';
-import { authConfig } from '@/app/api/auth/[...nextauth]/auth.config';
-import { prisma } from '@/lib/prisma';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { CampaignList } from '@/components/campaigns/CampaignList';
-import { redirect } from 'next/navigation';
 import { Platform } from '@/types/platform';
 import { Category } from '@/types/category';
 
@@ -31,107 +32,113 @@ interface Campaign {
   budget: number;
 }
 
-async function getCampaigns(userId: string) {
-  // Get the creator's profile
-  const creator = await prisma.creatorProfile.findUnique({
-    where: { userId },
-    select: { id: true }
-  });
+export default function Campaigns() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [currentCampaigns, setCurrentCampaigns] = useState<Campaign[]>([]);
+  const [availableCampaigns, setAvailableCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!creator) {
-    return { currentCampaigns: [], availableCampaigns: [] };
+  useEffect(() => {
+    if (status === 'loading') return;
+    
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+
+    const fetchCampaigns = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Check if we're on the right page
+        if (session.user.role !== 'CREATOR') {
+          router.push('/login');
+          return;
+        }
+
+        const response = await fetch('/api/creator/campaigns', {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to fetch campaigns');
+        }
+
+        const data = await response.json();
+        
+        // Transform campaigns to match the interface
+        const transformCampaign = (campaign: any): Campaign => ({
+          id: campaign.id,
+          brand: {
+            name: campaign.brand.user.name,
+            logo: '/images/placeholder.svg'
+          },
+          title: campaign.title,
+          description: campaign.description,
+          platform: campaign.platformIds.map((id: string) => ({ id, name: id })),
+          category: JSON.parse(campaign.categories)[0],
+          compensation: `$${campaign.budget}`,
+          startDate: new Date(campaign.startDate),
+          endDate: new Date(campaign.endDate),
+          deadline: new Date(campaign.endDate).toISOString().split('T')[0],
+          status: campaign.status,
+          requirements: JSON.parse(campaign.requirements).list,
+          createdAt: new Date(campaign.createdAt),
+          platformIds: campaign.platformIds,
+          categories: campaign.categories,
+          deliverables: campaign.deliverables,
+          budget: campaign.budget
+        });
+
+        setCurrentCampaigns(data.currentCampaigns.map(transformCampaign));
+        setAvailableCampaigns(data.availableCampaigns.map(transformCampaign));
+      } catch (error) {
+        console.error('Error fetching campaigns:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load campaigns');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCampaigns();
+  }, [session, status, router]);
+
+  if (status === 'loading' || loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
   }
 
-  // Get campaigns the creator has applied to
-  const currentCampaigns = await prisma.campaign.findMany({
-    where: {
-      applications: {
-        some: {
-          creatorId: creator.id
-        }
-      },
-      status: {
-        in: ['ACTIVE', 'IN_PROGRESS']
-      }
-    },
-    include: {
-      brand: {
-        include: {
-          user: {
-            select: {
-              name: true,
-              image: true
-            }
-          }
-        }
-      }
-    }
-  });
-
-  // Get available campaigns
-  const availableCampaigns = await prisma.campaign.findMany({
-    where: {
-      status: 'ACTIVE',
-      NOT: {
-        applications: {
-          some: {
-            creatorId: creator.id
-          }
-        }
-      }
-    },
-    include: {
-      brand: {
-        include: {
-          user: {
-            select: {
-              name: true,
-              image: true
-            }
-          }
-        }
-      }
-    }
-  });
-
-  // Transform campaigns to match the interface
-  const transformCampaign = (campaign: any): Campaign => ({
-    id: campaign.id,
-    brand: {
-      name: campaign.brand.user.name,
-      logo: '/images/placeholder.svg'
-    },
-    title: campaign.title,
-    description: campaign.description,
-    platform: campaign.platformIds.map((id: string) => ({ id, name: id })),
-    category: JSON.parse(campaign.categories)[0],
-    compensation: `$${campaign.budget}`,
-    startDate: campaign.startDate,
-    endDate: campaign.endDate,
-    deadline: campaign.endDate.toISOString().split('T')[0], // Convert to YYYY-MM-DD string
-    status: campaign.status,
-    requirements: JSON.parse(campaign.requirements).list,
-    createdAt: campaign.createdAt,
-    platformIds: campaign.platformIds,
-    categories: campaign.categories,
-    deliverables: campaign.deliverables,
-    budget: campaign.budget
-  });
-
-  return {
-    currentCampaigns: currentCampaigns.map(transformCampaign),
-    availableCampaigns: availableCampaigns.map(transformCampaign)
-  };
-}
-
-export default async function Campaigns() {
-  const session = await getServerSession(authConfig);
-  
-  if (!session?.user) {
-    redirect('/login');
+  if (!session || session.user.role !== 'CREATOR') {
+    router.push('/login');
+    return null;
   }
 
-  const { currentCampaigns, availableCampaigns } = await getCampaigns(session.user.id);
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 text-sm text-red-600 hover:text-red-800"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

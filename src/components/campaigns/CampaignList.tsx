@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Platform, PLATFORMS, PLATFORM_LABELS } from '@/types/platform';
 import { Category, CATEGORIES, CATEGORY_LABELS } from '@/types/category';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Image from 'next/image';
 
 interface Brand {
   name: string;
@@ -20,9 +21,16 @@ interface Campaign {
   platform: Platform[];
   category: Category;
   compensation: string;
+  startDate: Date;
+  endDate: Date;
   deadline: string;
   status?: string;
   requirements: string[];
+  createdAt: Date;
+  platformIds: string[];
+  categories: string;
+  deliverables: string;
+  budget: number;
 }
 
 interface CampaignListProps {
@@ -44,11 +52,11 @@ export function CampaignList({ currentCampaigns, availableCampaigns }: CampaignL
       
       const matchesPlatform =
         platformFilter === 'all' ||
-        campaign.platform.includes(platformFilter);
+        campaign.platformIds.includes(platformFilter);
       
       const matchesCategory =
         categoryFilter === 'all' ||
-        campaign.category === categoryFilter;
+        JSON.parse(campaign.categories).includes(categoryFilter);
 
       return matchesSearch && matchesPlatform && matchesCategory;
     });
@@ -105,7 +113,7 @@ export function CampaignList({ currentCampaigns, availableCampaigns }: CampaignL
 
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <Tabs defaultValue="current" className="space-y-4">
+        <Tabs defaultValue="available" className="space-y-4">
           <TabsList className="bg-gray-100/80 p-1 rounded-lg">
             <TabsTrigger value="current" className="rounded-md px-6 py-2 data-[state=active]:bg-white">My Campaigns</TabsTrigger>
             <TabsTrigger value="available" className="rounded-md px-6 py-2 data-[state=active]:bg-white">Available Campaigns</TabsTrigger>
@@ -154,10 +162,15 @@ export function CampaignList({ currentCampaigns, availableCampaigns }: CampaignL
 
 function CampaignCard({ campaign, type }: { campaign: Campaign, type: 'current' | 'available' }) {
   const router = useRouter();
+  const [isApplying, setIsApplying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleApply = async () => {
     try {
-      const response = await fetch('/api/campaigns/apply', {
+      setIsApplying(true);
+      setError(null);
+      
+      const response = await fetch('/api/creator/campaigns/apply', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -167,13 +180,17 @@ function CampaignCard({ campaign, type }: { campaign: Campaign, type: 'current' 
         }),
       });
 
-      if (response.ok) {
-        router.push('/success');
-      } else {
-        console.error('Failed to apply for campaign');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to apply for campaign');
       }
+
+      router.refresh();
     } catch (error) {
       console.error('Error applying for campaign:', error);
+      setError(error instanceof Error ? error.message : 'Failed to apply for campaign');
+    } finally {
+      setIsApplying(false);
     }
   };
 
@@ -181,11 +198,14 @@ function CampaignCard({ campaign, type }: { campaign: Campaign, type: 'current' 
     <div className="bg-gradient-to-r from-white to-primary-light/5 rounded-lg p-6 shadow-sm border border-gray-100">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <img
-            src={campaign.brand.logo}
-            alt={campaign.brand.name}
-            className="w-12 h-12 rounded-full"
-          />
+          <div className="relative w-12 h-12">
+            <Image
+              src={campaign.brand.logo}
+              alt={campaign.brand.name}
+              fill
+              className="rounded-full object-cover"
+            />
+          </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">{campaign.title}</h3>
             <p className="text-sm font-medium text-indigo-600">{campaign.brand.name}</p>
@@ -195,50 +215,71 @@ function CampaignCard({ campaign, type }: { campaign: Campaign, type: 'current' 
           <div className="flex items-center gap-2">
             {campaign.status && (
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                campaign.status === 'approved' ? 'bg-green-100 text-green-800' :
-                campaign.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                campaign.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                campaign.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                campaign.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
-                {campaign.status.replace('_', ' ')}
+                {campaign.status.charAt(0) + campaign.status.slice(1).toLowerCase()}
               </span>
             )}
-            <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium">
-              {campaign.compensation}
-            </span>
           </div>
         ) : (
-          <button 
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            onClick={handleApply}
-          >
-            Apply Now
-          </button>
+          <div className="flex flex-col items-end gap-2">
+            <button
+              onClick={handleApply}
+              disabled={isApplying}
+              className={`px-4 py-2 rounded-md text-sm font-medium text-white ${
+                isApplying
+                  ? 'bg-indigo-400 cursor-not-allowed'
+                  : 'bg-indigo-600 hover:bg-indigo-700'
+              }`}
+            >
+              {isApplying ? 'Applying...' : 'Apply Now'}
+            </button>
+            {error && (
+              <p className="text-sm text-red-600">{error}</p>
+            )}
+          </div>
         )}
       </div>
-      
-      <p className="mt-4 text-gray-700">{campaign.description}</p>
-      
+
       <div className="mt-4">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-700 font-medium">Platform:</span>
-          <span className="text-gray-900">
-            {campaign.platform.map(platform => PLATFORM_LABELS[platform]).join(', ')}
+        <p className="text-gray-600">{campaign.description}</p>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {campaign.platformIds.map((platformId) => (
+          <span
+            key={platformId}
+            className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+          >
+            {PLATFORM_LABELS[platformId as Platform]}
           </span>
+        ))}
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <p className="text-gray-500">Budget</p>
+          <p className="font-medium text-gray-900">{campaign.compensation}</p>
         </div>
-        <div className="flex items-center gap-2 text-sm mt-1">
-          <span className="text-gray-700 font-medium">Deadline:</span>
-          <span className="text-gray-900">{campaign.deadline}</span>
+        <div>
+          <p className="text-gray-500">Deadline</p>
+          <p className="font-medium text-gray-900">{campaign.deadline}</p>
         </div>
       </div>
-      
-      <div className="mt-4">
-        <h4 className="text-sm font-semibold text-gray-900 mb-2">Requirements:</h4>
-        <ul className="list-disc list-inside text-sm text-gray-700 grid grid-cols-2 gap-2">
-          {campaign.requirements.map((req, index) => (
-            <li key={index}>{req}</li>
-          ))}
-        </ul>
-      </div>
+
+      {campaign.requirements.length > 0 && (
+        <div className="mt-4">
+          <p className="text-gray-500 text-sm mb-2">Requirements</p>
+          <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+            {campaign.requirements.map((req, index) => (
+              <li key={index}>{req}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
