@@ -109,9 +109,9 @@ export const mockBrands = [
     location: 'Los Angeles, CA',
     user: {
       name: 'FashionNova',
-      email: 'brand@fashionnova.com',
+      email: 'contact@fashionnova.com',
       password: 'password123',
-      image: '/images/brands/fashionnova.png'
+      image: '/images/placeholder.svg'
     }
   },
   {
@@ -122,9 +122,9 @@ export const mockBrands = [
     location: 'San Francisco, CA',
     user: {
       name: 'TechGear',
-      email: 'brand@techgear.com',
+      email: 'contact@techgear.com',
       password: 'password123',
-      image: '/images/brands/techgear.png'
+      image: '/images/placeholder.svg'
     }
   }
 ];
