@@ -64,6 +64,19 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model Platform {
+  id              String    @id @default(cuid())
+  name            String    @unique
+  displayName     String
+  description     String?
+  iconUrl         String?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  creatorPlatforms CreatorPlatform[]
+}
+
 model CreatorProfile {
   id              String    @id @default(cuid())
   userId          String    @unique
@@ -74,21 +87,8 @@ model CreatorProfile {
   followers       Int       @default(0)
   engagementRate  Float     @default(0)
   
-  // Platform Flags
-  instagram       Boolean   @default(false)
-  tiktok         Boolean   @default(false)
-  youtube        Boolean   @default(false)
-  weibo          Boolean   @default(false)
-  xiaohongshu    Boolean   @default(false)
-  douyin         Boolean   @default(false)
-  
-  // Platform Handles
-  instagramHandle     String?
-  tiktokHandle       String?
-  youtubeHandle      String?
-  weiboHandle        String?
-  xiaohongshuHandle  String?
-  douyinHandle       String?
+  // Platform connections
+  platforms       CreatorPlatform[]
   
   // Portfolio
   portfolioItems  PortfolioItem[]
@@ -105,6 +105,22 @@ model CreatorProfile {
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+}
+
+model CreatorPlatform {
+  id              String    @id @default(cuid())
+  creatorId       String
+  platformId      String
+  handle          String?
+  followers       Int       @default(0)
+  engagementRate  Float     @default(0)
+  isVerified      Boolean   @default(false)
+  lastUpdated     DateTime  @default(now())
+  
+  creator         CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  platform        Platform       @relation(fields: [platformId], references: [id], onDelete: Cascade)
+  
+  @@unique([creatorId, platformId])
 }
 
 model BrandProfile {

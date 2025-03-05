@@ -9,19 +9,33 @@ import { Suspense } from 'react';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-async function getCreatorsByPlatform(platform: string): Promise<Creator[]> {
+async function getCreatorsByPlatform(platformName: string): Promise<Creator[]> {
   try {
+    // Get platform
+    const platform = await prisma.platform.findUnique({
+      where: { name: platformName }
+    });
+
+    if (!platform) {
+      console.error(`Platform ${platformName} not found`);
+      return [];
+    }
+
     // Get creators from database
-    const creators = await prisma.creatorProfile.findMany({
+    const creatorPlatforms = await prisma.creatorPlatform.findMany({
       where: {
-        [platform.toLowerCase()]: true
+        platformId: platform.id
       },
       include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-            image: true
+        creator: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+                image: true
+              }
+            }
           }
         }
       },
@@ -30,53 +44,37 @@ async function getCreatorsByPlatform(platform: string): Promise<Creator[]> {
       }
     });
 
-    return creators;
+    // Transform data to match Creator type
+    return creatorPlatforms.map(cp => ({
+      ...cp.creator,
+      user: cp.creator.user,
+      followers: cp.followers,
+      engagementRate: cp.engagementRate,
+      handle: cp.handle || undefined
+    }));
   } catch (error) {
-    console.error(`Error fetching ${platform} creators:`, error);
+    console.error(`Error fetching ${platformName} creators:`, error);
     return [];
   }
 }
 
 export default async function Home() {
-  const instagramCreators = await getCreatorsByPlatform('instagram');
-  const tiktokCreators = await getCreatorsByPlatform('tiktok');
-  const youtubeCreators = await getCreatorsByPlatform('youtube');
-  const douyinCreators = await getCreatorsByPlatform('douyin');
-  const xiaohongshuCreators = await getCreatorsByPlatform('xiaohongshu');
-  const weiboCreators = await getCreatorsByPlatform('weibo');
+  // Get all active platforms
+  const platforms = await prisma.platform.findMany({
+    where: { isActive: true }
+  });
 
-  const platformSections = [
-    {
-      platform: 'Instagram',
-      creators: instagramCreators,
-      description: 'Connect with Instagram influencers who create engaging visual content and stories.'
-    },
-    {
-      platform: 'TikTok',
-      creators: tiktokCreators,
-      description: 'Partner with TikTok creators who make viral short-form videos.'
-    },
-    {
-      platform: 'YouTube',
-      creators: youtubeCreators,
-      description: 'Collaborate with YouTube content creators for in-depth product reviews and tutorials.'
-    },
-    {
-      platform: 'Douyin',
-      creators: douyinCreators,
-      description: 'Reach Chinese audiences through Douyin\'s top content creators.'
-    },
-    {
-      platform: 'Xiaohongshu',
-      creators: xiaohongshuCreators,
-      description: 'Partner with RED\'s lifestyle and beauty content creators.'
-    },
-    {
-      platform: 'Weibo',
-      creators: weiboCreators,
-      description: 'Connect with influential Weibo users for broader social media reach.'
-    }
-  ];
+  // Get creators for each platform
+  const platformSections = await Promise.all(
+    platforms.map(async platform => {
+      const creators = await getCreatorsByPlatform(platform.name);
+      return {
+        platform: platform.displayName,
+        creators,
+        description: platform.description || `Connect with ${platform.displayName} content creators.`
+      };
+    })
+  );
 
   return (
     <main className="min-h-screen bg-white">

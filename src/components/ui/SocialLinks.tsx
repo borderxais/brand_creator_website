@@ -1,86 +1,59 @@
-import { Instagram, Youtube } from 'lucide-react';
-import { FaTiktok, FaWeibo } from 'react-icons/fa';
-import { SiXiaohongshu } from 'react-icons/si';
+import { Instagram, Youtube, Globe, Video } from 'lucide-react';
+import Link from 'next/link';
 
 interface SocialLinksProps {
-  instagram?: string | null;
-  tiktok?: string | null;
-  youtube?: string | null;
-  weibo?: string | null;
-  xiaohongshu?: string | null;
-  douyin?: string | null;
+  [key: string]: string | undefined;
 }
 
-export function SocialLinks({
-  instagram,
-  tiktok,
-  youtube,
-  weibo,
-  xiaohongshu,
-  douyin,
-}: SocialLinksProps) {
+const platformConfig: { [key: string]: { icon: React.ElementType; baseUrl: string } } = {
+  instagram: {
+    icon: Instagram,
+    baseUrl: 'https://instagram.com'
+  },
+  tiktok: {
+    icon: Video,
+    baseUrl: 'https://tiktok.com/@'
+  },
+  youtube: {
+    icon: Youtube,
+    baseUrl: 'https://youtube.com/@'
+  },
+  weibo: {
+    icon: Globe,
+    baseUrl: 'https://weibo.com/'
+  },
+  xiaohongshu: {
+    icon: Globe,
+    baseUrl: 'https://xiaohongshu.com/user/profile/'
+  },
+  douyin: {
+    icon: Video,
+    baseUrl: 'https://douyin.com/user/'
+  }
+};
+
+export function SocialLinks(props: SocialLinksProps) {
   return (
-    <div className="flex space-x-4">
-      {instagram && (
-        <a
-          href={`https://instagram.com/${instagram}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-600 hover:text-purple-600 transition-colors"
-        >
-          <Instagram className="w-6 h-6" />
-        </a>
-      )}
-      {tiktok && (
-        <a
-          href={`https://tiktok.com/@${tiktok}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-600 hover:text-purple-600 transition-colors"
-        >
-          <FaTiktok className="w-6 h-6" />
-        </a>
-      )}
-      {youtube && (
-        <a
-          href={`https://youtube.com/@${youtube}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-600 hover:text-purple-600 transition-colors"
-        >
-          <Youtube className="w-6 h-6" />
-        </a>
-      )}
-      {weibo && (
-        <a
-          href={`https://weibo.com/${weibo}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-600 hover:text-purple-600 transition-colors"
-        >
-          <FaWeibo className="w-6 h-6" />
-        </a>
-      )}
-      {xiaohongshu && (
-        <a
-          href={`https://xiaohongshu.com/user/profile/${xiaohongshu}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-600 hover:text-purple-600 transition-colors"
-        >
-          <SiXiaohongshu className="w-6 h-6" />
-        </a>
-      )}
-      {douyin && (
-        <a
-          href={`https://douyin.com/user/${douyin}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-600 hover:text-purple-600 transition-colors"
-        >
-          <FaTiktok className="w-6 h-6" />
-        </a>
-      )}
+    <div className="flex flex-wrap gap-4">
+      {Object.entries(props).map(([platform, handle]) => {
+        if (!handle || !platformConfig[platform]) return null;
+
+        const { icon: Icon, baseUrl } = platformConfig[platform];
+        const url = handle.startsWith('http') ? handle : `${baseUrl}${handle.replace('@', '')}`;
+
+        return (
+          <Link
+            key={platform}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <Icon className="w-5 h-5" />
+            <span className="text-sm">{handle}</span>
+          </Link>
+        );
+      })}
     </div>
   );
 }

@@ -18,6 +18,11 @@ async function getCreatorProfile(id: string) {
             image: true,
           },
         },
+        platforms: {
+          include: {
+            platform: true
+          }
+        },
         portfolioItems: true,
         posts: {
           where: { published: true },
@@ -50,9 +55,8 @@ function parseCategories(categoriesStr: string | null): string[] {
   }
 }
 
-export async function generateMetadata({params}: {params: Promise<{ id: string }>}) {
-  const { id } = await params;
-  const creator = await getCreatorProfile(id);
+export async function generateMetadata({params}: {params: { id: string }}) {
+  const creator = await getCreatorProfile(params.id);
   
   if (!creator) {
     return {
@@ -66,15 +70,26 @@ export async function generateMetadata({params}: {params: Promise<{ id: string }
   };
 }
 
-export default async function CreatorProfile({params}: {params: Promise<{ id: string }>}) {
-  const { id } = await params;
-  const creator = await getCreatorProfile(id);
+export default async function CreatorProfile({params}: { params: { id: string }}) {
+  const creator = await getCreatorProfile(params.id);
   
   if (!creator) {
     notFound();
   }
 
   const categories = parseCategories(creator.categories);
+
+  // Calculate total followers and average engagement rate across all platforms
+  const totalFollowers = creator.platforms.reduce((sum, cp) => sum + cp.followers, 0);
+  const avgEngagementRate = creator.platforms.length > 0
+    ? creator.platforms.reduce((sum, cp) => sum + cp.engagementRate, 0) / creator.platforms.length
+    : 0;
+
+  // Create social links object
+  const socialLinks = creator.platforms.reduce((acc, cp) => ({
+    ...acc,
+    [cp.platform.name]: cp.handle
+  }), {});
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -105,8 +120,8 @@ export default async function CreatorProfile({params}: {params: Promise<{ id: st
                 <p className="text-gray-500">{creator.location}</p>
               </div>
               <Stats
-                followers={creator.followers}
-                engagementRate={creator.engagementRate}
+                followers={totalFollowers}
+                engagementRate={avgEngagementRate}
               />
             </div>
             
@@ -130,15 +145,46 @@ export default async function CreatorProfile({params}: {params: Promise<{ id: st
               </div>
             )}
 
+            {/* Platform Stats */}
+            {creator.platforms.length > 0 && (
+              <div className="mt-6">
+                <h2 className="text-lg font-semibold text-gray-900">Platforms</h2>
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {creator.platforms.map((cp) => (
+                    <div
+                      key={cp.platform.id}
+                      className="bg-gray-50 rounded-lg p-4 flex items-center space-x-4"
+                    >
+                      <div className="flex-shrink-0">
+                        {cp.platform.iconUrl ? (
+                          <Image
+                            src={cp.platform.iconUrl}
+                            alt={cp.platform.displayName}
+                            width={24}
+                            height={24}
+                          />
+                        ) : (
+                          <div className="w-6 h-6 bg-gray-200 rounded" />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">
+                          {cp.platform.displayName}
+                        </h3>
+                        <div className="text-sm text-gray-500">
+                          <p>{new Intl.NumberFormat().format(cp.followers)} followers</p>
+                          <p>{cp.engagementRate.toFixed(1)}% engagement</p>
+                          {cp.handle && <p className="text-gray-400">{cp.handle}</p>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="mt-6">
-              <SocialLinks
-                instagram={creator.instagramHandle}
-                tiktok={creator.tiktokHandle}
-                youtube={creator.youtubeHandle}
-                weibo={creator.weiboHandle}
-                xiaohongshu={creator.xiaohongshuHandle}
-                douyin={creator.douyinHandle}
-              />
+              <SocialLinks {...socialLinks} />
             </div>
           </div>
         </div>

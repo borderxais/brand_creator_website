@@ -3,13 +3,54 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+const platforms = [
+  {
+    name: 'instagram',
+    displayName: 'Instagram',
+    description: 'Photo and video sharing social network',
+    iconUrl: '/icons/instagram.svg'
+  },
+  {
+    name: 'tiktok',
+    displayName: 'TikTok',
+    description: 'Short-form video platform',
+    iconUrl: '/icons/tiktok.svg'
+  },
+  {
+    name: 'youtube',
+    displayName: 'YouTube',
+    description: 'Video sharing and streaming platform',
+    iconUrl: '/icons/youtube.svg'
+  },
+  {
+    name: 'douyin',
+    displayName: 'Douyin',
+    description: 'Chinese short-form video platform',
+    iconUrl: '/icons/douyin.svg'
+  },
+  {
+    name: 'xiaohongshu',
+    displayName: 'Xiaohongshu',
+    description: 'Chinese lifestyle and e-commerce platform',
+    iconUrl: '/icons/xiaohongshu.svg'
+  },
+  {
+    name: 'weibo',
+    displayName: 'Weibo',
+    description: 'Chinese microblogging platform',
+    iconUrl: '/icons/weibo.svg'
+  }
+];
+
 const mockCreators = {
   instagram: [
     {
       bio: 'Lifestyle and fashion influencer',
       location: 'Los Angeles, CA',
       followers: 500000,
-      categories: 'Fashion,Lifestyle',
+      engagementRate: 4.5,
+      handle: '@sarahjohnson',
+      categories: JSON.stringify(['Fashion', 'Lifestyle']),
       user: {
         name: 'Sarah Johnson',
         email: 'sarah@example.com',
@@ -21,7 +62,9 @@ const mockCreators = {
       bio: 'Travel and photography enthusiast',
       location: 'New York, NY',
       followers: 350000,
-      categories: 'Travel,Photography',
+      engagementRate: 3.8,
+      handle: '@mikechen',
+      categories: JSON.stringify(['Travel', 'Photography']),
       user: {
         name: 'Mike Chen',
         email: 'mike@example.com',
@@ -35,7 +78,9 @@ const mockCreators = {
       bio: 'Dance and entertainment',
       location: 'Miami, FL',
       followers: 1000000,
-      categories: 'Dance,Entertainment',
+      engagementRate: 5.2,
+      handle: '@lisadance',
+      categories: JSON.stringify(['Dance', 'Entertainment']),
       user: {
         name: 'Lisa Dance',
         email: 'lisa@example.com',
@@ -47,116 +92,14 @@ const mockCreators = {
       bio: 'Comedy sketches and humor',
       location: 'Austin, TX',
       followers: 890000,
-      categories: 'Comedy,Entertainment',
+      engagementRate: 4.8,
+      handle: '@funnyjake',
+      categories: JSON.stringify(['Comedy', 'Entertainment']),
       user: {
         name: 'Funny Jake',
         email: 'jake@example.com',
         password: 'password123',
         image: 'https://randomuser.me/api/portraits/men/4.jpg'
-      }
-    }
-  ],
-  youtube: [
-    {
-      bio: 'Tech reviews and tutorials',
-      location: 'San Francisco, CA',
-      followers: 750000,
-      categories: 'Tech,Reviews',
-      user: {
-        name: 'Tech David',
-        email: 'david@example.com',
-        password: 'password123',
-        image: 'https://randomuser.me/api/portraits/men/5.jpg'
-      }
-    },
-    {
-      bio: 'Gaming and esports content',
-      location: 'Seattle, WA',
-      followers: 1200000,
-      categories: 'Gaming,Entertainment',
-      user: {
-        name: 'Gamer Emily',
-        email: 'emily@example.com',
-        password: 'password123',
-        image: 'https://randomuser.me/api/portraits/women/6.jpg'
-      }
-    }
-  ],
-  douyin: [
-    {
-      bio: '生活方式和美食博主',
-      location: '上海',
-      followers: 2000000,
-      categories: 'Lifestyle,Food',
-      user: {
-        name: '小美',
-        email: 'xiaomei@example.com',
-        password: 'password123',
-        image: 'https://randomuser.me/api/portraits/women/7.jpg'
-      }
-    },
-    {
-      bio: '舞蹈和音乐创作者',
-      location: '北京',
-      followers: 1500000,
-      categories: 'Dance,Music',
-      user: {
-        name: '舞动天使',
-        email: 'dancer@example.com',
-        password: 'password123',
-        image: 'https://randomuser.me/api/portraits/women/8.jpg'
-      }
-    }
-  ],
-  xiaohongshu: [
-    {
-      bio: '美妆和护肤达人',
-      location: '广州',
-      followers: 800000,
-      categories: 'Beauty,Skincare',
-      user: {
-        name: '美丽说',
-        email: 'beauty@example.com',
-        password: 'password123',
-        image: 'https://randomuser.me/api/portraits/women/9.jpg'
-      }
-    },
-    {
-      bio: '时尚穿搭博主',
-      location: '深圳',
-      followers: 600000,
-      categories: 'Fashion,Lifestyle',
-      user: {
-        name: '潮流范儿',
-        email: 'fashion@example.com',
-        password: 'password123',
-        image: 'https://randomuser.me/api/portraits/women/10.jpg'
-      }
-    }
-  ],
-  weibo: [
-    {
-      bio: '娱乐和时尚评论家',
-      location: '北京',
-      followers: 3000000,
-      categories: 'Entertainment,Fashion',
-      user: {
-        name: '娱乐先锋',
-        email: 'entertainment@example.com',
-        password: 'password123',
-        image: 'https://randomuser.me/api/portraits/men/11.jpg'
-      }
-    },
-    {
-      bio: '美食和旅行分享',
-      location: '成都',
-      followers: 1800000,
-      categories: 'Food,Travel',
-      user: {
-        name: '吃货旅行家',
-        email: 'foodie@example.com',
-        password: 'password123',
-        image: 'https://randomuser.me/api/portraits/men/12.jpg'
       }
     }
   ]
@@ -188,88 +131,29 @@ const mockBrands = [
       password: 'password123',
       image: '/images/brands/techgear.png'
     }
-  },
-  {
-    companyName: 'HealthyLife',
-    industry: 'Health & Wellness',
-    description: 'Premium health supplements',
-    website: 'https://healthylife.com',
-    location: 'New York, NY',
-    user: {
-      name: 'HealthyLife',
-      email: 'brand@healthylife.com',
-      password: 'password123',
-      image: '/images/brands/healthylife.png'
-    }
-  }
-];
-
-const mockCampaigns = [
-  {
-    title: 'Summer Fashion Collection Launch',
-    description: 'Looking for fashion influencers to showcase our new summer collection. Must have a strong presence in fashion and lifestyle content.',
-    budget: 2000,
-    requirements: JSON.stringify({
-      platforms: ['INSTAGRAM', 'TIKTOK'],
-      category: 'FASHION',
-      list: [
-        'Minimum 50k followers',
-        'High engagement rate',
-        'Fashion/lifestyle focus',
-        '3 posts + 2 stories'
-      ]
-    }),
-    deadline: new Date('2025-06-01'),
-    status: 'ACTIVE'
-  },
-  {
-    title: 'Tech Review Campaign',
-    description: 'Seeking tech reviewers to create in-depth reviews of our latest smartphone accessories. Looking for detailed, honest reviews.',
-    budget: 1500,
-    requirements: JSON.stringify({
-      platforms: ['YOUTUBE'],
-      category: 'TECH',
-      list: [
-        'Minimum 100k subscribers',
-        'Tech-focused content',
-        '10+ minute review video',
-        'Hands-on demonstration'
-      ]
-    }),
-    deadline: new Date('2025-05-15'),
-    status: 'ACTIVE'
-  },
-  {
-    title: 'Fitness Challenge Partnership',
-    description: 'Partner with us for a 30-day fitness challenge. Looking for fitness enthusiasts to showcase our supplements and create workout content.',
-    budget: 3000,
-    requirements: JSON.stringify({
-      platforms: ['INSTAGRAM', 'YOUTUBE'],
-      category: 'FITNESS',
-      list: [
-        'Fitness/wellness focus',
-        'Before/after content',
-        'Daily stories',
-        'Weekly progress updates'
-      ]
-    }),
-    deadline: new Date('2025-07-01'),
-    status: 'ACTIVE'
   }
 ];
 
 async function main() {
   // Delete all existing data
-  await prisma.application.deleteMany();
-  await prisma.campaign.deleteMany();
-  await prisma.product.deleteMany();
+  await prisma.creatorPlatform.deleteMany();
+  await prisma.platform.deleteMany();
   await prisma.post.deleteMany();
   await prisma.portfolioItem.deleteMany();
   await prisma.creatorProfile.deleteMany();
   await prisma.brandProfile.deleteMany();
   await prisma.user.deleteMany();
 
-  // Create brands and their campaigns
+  // Create platforms
+  console.log('Seeding platforms...');
+  for (const platform of platforms) {
+    await prisma.platform.create({
+      data: platform
+    });
+  }
+  console.log('Platforms seeded successfully!');
+
+  // Create brands
   for (const brand of mockBrands) {
     const hashedPassword = await bcrypt.hash(brand.user.password, 10);
     
@@ -295,21 +179,20 @@ async function main() {
       }
     });
 
-    // Create campaigns for each brand
-    const brandCampaigns = mockCampaigns.map(campaign => ({
-      ...campaign,
-      brandId: user.brand!.id
-    }));
-
-    await prisma.campaign.createMany({
-      data: brandCampaigns
-    });
-
-    console.log(`Created brand and campaigns: ${user.name}`);
+    console.log(`Created brand: ${user.name}`);
   }
 
   // Helper function to create creators for a platform
-  async function createCreatorsForPlatform(platform: string, creators: any[]) {
+  async function createCreatorsForPlatform(platformName: string, creators: any[]) {
+    const platform = await prisma.platform.findUnique({
+      where: { name: platformName }
+    });
+
+    if (!platform) {
+      console.error(`Platform ${platformName} not found`);
+      return;
+    }
+
     for (const creator of creators) {
       const hashedPassword = await bcrypt.hash(creator.user.password, 10);
       
@@ -324,15 +207,22 @@ async function main() {
             create: {
               bio: creator.bio,
               location: creator.location,
-              followers: creator.followers,
               categories: creator.categories,
-              engagementRate: Number((Math.random() * 5 + 2).toFixed(2)),
-              [platform]: true
+              followers: creator.followers,
+              engagementRate: creator.engagementRate,
+              platforms: {
+                create: {
+                  platformId: platform.id,
+                  handle: creator.handle,
+                  followers: creator.followers,
+                  engagementRate: creator.engagementRate
+                }
+              }
             }
           }
         }
       });
-      console.log(`Created ${platform} creator: ${user.name}`);
+      console.log(`Created ${platformName} creator: ${user.name}`);
     }
   }
 
