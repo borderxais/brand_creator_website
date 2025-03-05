@@ -1,306 +1,305 @@
 'use client';
 
 import { useState } from 'react';
-import { Category } from '@/types/category';
-import { CategorySelector } from '@/components/ui/CategorySelector';
+import { Dialog } from '@/components/ui/Dialog';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import { Button } from '@/components/ui/Button';
+import { Calendar } from '@/components/ui/Calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { Calendar as CalendarIcon } from 'lucide-react';
+
+interface Platform {
+  id: string;
+  name: string;
+  displayName: string;
+}
 
 interface CreateCampaignModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: any) => void;
+  onSubmit: (formData: any) => Promise<void>;
+  platforms: Platform[];
 }
 
 const platforms = [
-  { id: 'instagram', name: 'Instagram' },
-  { id: 'tiktok', name: 'TikTok' },
-  { id: 'youtube', name: 'YouTube' },
-  { id: 'weibo', name: 'Weibo' },
-  { id: 'xiaohongshu', name: 'Xiaohongshu' },
-  { id: 'douyin', name: 'Douyin' }
+  { id: 'instagram', name: 'Instagram', displayName: 'Instagram' },
+  { id: 'tiktok', name: 'TikTok', displayName: 'TikTok' },
+  { id: 'youtube', name: 'YouTube', displayName: 'YouTube' },
+  { id: 'weibo', name: 'Weibo', displayName: 'Weibo' },
+  { id: 'xiaohongshu', name: 'Xiaohongshu', displayName: 'Xiaohongshu' },
+  { id: 'douyin', name: 'Douyin', displayName: 'Douyin' }
 ];
 
-export default function CreateCampaignModal({ isOpen, onClose, onSubmit }: CreateCampaignModalProps) {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    commissionRate: '',
-    minimumCommission: '',
-    maximumCommission: '',
-    bonusIncentives: '',
-    deadline: '',
-    requirements: '',
-    categories: [] as Category[],
-    platforms: [] as string[]
-  });
+export default function CreateCampaignModal({ isOpen, onClose, onSubmit, platforms }: CreateCampaignModalProps) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [budget, setBudget] = useState('');
+  const [requirements, setRequirements] = useState('');
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [newCategory, setNewCategory] = useState('');
+  const [deliverables, setDeliverables] = useState<string[]>([]);
+  const [newDeliverable, setNewDeliverable] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
-    // Reset form
-    setFormData({
-      title: '',
-      description: '',
-      commissionRate: '',
-      minimumCommission: '',
-      maximumCommission: '',
-      bonusIncentives: '',
-      deadline: '',
-      requirements: '',
-      categories: [],
-      platforms: []
-    });
+    
+    if (!startDate || !endDate) {
+      alert('Please select both start and end dates');
+      return;
+    }
+
+    const campaignData = {
+      title,
+      description,
+      budget: parseFloat(budget),
+      requirements: JSON.stringify({
+        platforms: selectedPlatforms,
+        list: requirements.split('\n').filter(r => r.trim())
+      }),
+      startDate,
+      endDate,
+      platformIds: selectedPlatforms,
+      categories: JSON.stringify(categories),
+      deliverables: JSON.stringify(deliverables)
+    };
+
+    await onSubmit(campaignData);
+    onClose();
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const addCategory = () => {
+    if (newCategory.trim() && !categories.includes(newCategory)) {
+      setCategories([...categories, newCategory.trim()]);
+      setNewCategory('');
+    }
   };
 
-  const handleCategoryChange = (categories: Category[]) => {
-    setFormData(prev => ({ ...prev, categories }));
+  const removeCategory = (category: string) => {
+    setCategories(categories.filter(c => c !== category));
   };
 
-  const handlePlatformChange = (platformId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      platforms: prev.platforms.includes(platformId)
-        ? prev.platforms.filter(p => p !== platformId)
-        : [...prev.platforms, platformId]
-    }));
+  const addDeliverable = () => {
+    if (newDeliverable.trim() && !deliverables.includes(newDeliverable)) {
+      setDeliverables([...deliverables, newDeliverable.trim()]);
+      setNewDeliverable('');
+    }
   };
 
-  if (!isOpen) return null;
+  const removeDeliverable = (deliverable: string) => {
+    setDeliverables(deliverables.filter(d => d !== deliverable));
+  };
 
   return (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-2xl font-semibold text-gray-900">Create New Campaign</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-500"
-          >
-            <span className="sr-only">Close</span>
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Campaign Title */}
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-              Campaign Title
-            </label>
-            <input
-              type="text"
-              name="title"
-              id="title"
-              required
-              value={formData.title}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-              Campaign Description
-            </label>
-            <textarea
-              name="description"
-              id="description"
-              rows={4}
-              required
-              value={formData.description}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-            />
-          </div>
-
-          {/* Commission Rate */}
-          <div>
-            <label htmlFor="commissionRate" className="block text-sm font-medium text-gray-700">
-              Commission Rate (%)
-            </label>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <input
-                type="number"
-                name="commissionRate"
-                id="commissionRate"
+    <Dialog open={isOpen} onClose={onClose}>
+      <div className="fixed inset-0 bg-black bg-opacity-25 backdrop-blur-sm flex items-center justify-center">
+        <div className="bg-white p-8 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <h2 className="text-2xl font-bold mb-6">Create New Campaign</h2>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <Input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 required
-                min="0"
-                max="100"
-                step="0.1"
-                value={formData.commissionRate}
-                onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                placeholder="e.g. 15.5"
+                placeholder="Campaign title"
               />
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <span className="text-gray-500 sm:text-sm">%</span>
-              </div>
-            </div>
-            <p className="mt-1 text-sm text-gray-500">
-              Percentage of sales that will be paid as commission
-            </p>
-          </div>
-
-          {/* Commission Range */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <label htmlFor="minimumCommission" className="block text-sm font-medium text-gray-700">
-                Minimum Commission (USD)
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500 sm:text-sm">$</span>
-                </div>
-                <input
-                  type="number"
-                  name="minimumCommission"
-                  id="minimumCommission"
-                  min="0"
-                  value={formData.minimumCommission}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 pl-7 pr-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="0.00"
-                />
-              </div>
             </div>
 
             <div>
-              <label htmlFor="maximumCommission" className="block text-sm font-medium text-gray-700">
-                Maximum Commission (USD)
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500 sm:text-sm">$</span>
-                </div>
-                <input
-                  type="number"
-                  name="maximumCommission"
-                  id="maximumCommission"
-                  min="0"
-                  value={formData.maximumCommission}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 pl-7 pr-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="0.00"
-                />
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+                placeholder="Campaign description"
+                rows={4}
+              />
             </div>
-          </div>
 
-          {/* Bonus Incentives */}
-          <div>
-            <label htmlFor="bonusIncentives" className="block text-sm font-medium text-gray-700">
-              Performance Bonuses & Additional Incentives
-            </label>
-            <textarea
-              name="bonusIncentives"
-              id="bonusIncentives"
-              rows={3}
-              value={formData.bonusIncentives}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              placeholder="e.g. +5% bonus for sales over $10,000, or additional $100 for first 50 sales"
-            />
-            <p className="mt-1 text-sm text-gray-500">
-              Describe any additional performance-based rewards or milestone bonuses
-            </p>
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Budget ($)</label>
+              <Input
+                type="number"
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+                required
+                placeholder="Campaign budget"
+                min="0"
+                step="100"
+              />
+            </div>
 
-          {/* Deadline */}
-          <div>
-            <label htmlFor="deadline" className="block text-sm font-medium text-gray-700">
-              Campaign Deadline
-            </label>
-            <input
-              type="date"
-              name="deadline"
-              id="deadline"
-              required
-              value={formData.deadline}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
+              <Textarea
+                value={requirements}
+                onChange={(e) => setRequirements(e.target.value)}
+                placeholder="Campaign requirements"
+                rows={3}
+              />
+            </div>
 
-          {/* Categories */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Categories
-            </label>
-            <CategorySelector
-              selectedCategories={formData.categories}
-              onChange={handleCategoryChange}
-              maxCategories={3}
-            />
-          </div>
-
-          {/* Platforms */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Target Platforms
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {platforms.map((platform) => (
-                <div key={platform.id} className="relative flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id={platform.id}
-                      type="checkbox"
-                      checked={formData.platforms.includes(platform.id)}
-                      onChange={() => handlePlatformChange(platform.id)}
-                      className="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      initialFocus
                     />
-                  </div>
-                  <div className="ml-3 text-sm">
-                    <label htmlFor={platform.id} className="font-medium text-gray-700">
-                      {platform.name}
-                    </label>
-                  </div>
-                </div>
-              ))}
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
-          </div>
 
-          {/* Requirements */}
-          <div>
-            <label htmlFor="requirements" className="block text-sm font-medium text-gray-700">
-              Campaign Requirements
-            </label>
-            <textarea
-              name="requirements"
-              id="requirements"
-              rows={4}
-              value={formData.requirements}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              placeholder="Specific requirements for creators..."
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Platforms</label>
+              <div className="flex flex-wrap gap-2">
+                {platforms.map((platform) => (
+                  <button
+                    key={platform.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedPlatforms(prev =>
+                        prev.includes(platform.id)
+                          ? prev.filter(id => id !== platform.id)
+                          : [...prev, platform.id]
+                      );
+                    }}
+                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                      selectedPlatforms.includes(platform.id)
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {platform.displayName}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-            >
-              Create Campaign
-            </button>
-          </div>
-        </form>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Categories</label>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  type="text"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  placeholder="Add a category"
+                  className="flex-1"
+                />
+                <Button type="button" onClick={addCategory}>Add</Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((category) => (
+                  <span
+                    key={category}
+                    className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-sm flex items-center gap-1"
+                  >
+                    {category}
+                    <button
+                      type="button"
+                      onClick={() => removeCategory(category)}
+                      className="hover:text-purple-900"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Deliverables</label>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  type="text"
+                  value={newDeliverable}
+                  onChange={(e) => setNewDeliverable(e.target.value)}
+                  placeholder="Add a deliverable"
+                  className="flex-1"
+                />
+                <Button type="button" onClick={addDeliverable}>Add</Button>
+              </div>
+              <ul className="space-y-2">
+                {deliverables.map((deliverable) => (
+                  <li
+                    key={deliverable}
+                    className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                  >
+                    <span>{deliverable}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeDeliverable(deliverable)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex justify-end gap-4 pt-4">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                Create Campaign
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </Dialog>
   );
 }

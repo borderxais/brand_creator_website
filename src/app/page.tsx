@@ -1,80 +1,87 @@
 import { SearchBar } from '@/components/ui/SearchBar';
-import { PlatformSection } from '@/components/ui/PlatformSection';
+import PlatformSection from '@/components/ui/PlatformSection';
 import { SearchParamsHandler } from '@/components/ui/SearchHandler';
 import { prisma } from '@/lib/prisma';
-import { Creator } from '@/types/creator';
+import { Prisma } from '@prisma/client';
 import { Suspense } from 'react';
 
 // Add dynamic rendering for this page
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-async function getCreatorsByPlatform(platformName: string): Promise<Creator[]> {
-  try {
-    // Get platform
-    const platform = await prisma.platform.findUnique({
-      where: { name: platformName }
-    });
+type PlatformWithCreators = {
+  name: string;
+  description: string;
+  creators: {
+    id: string;
+    user: {
+      name: string;
+      image: string | null;
+    };
+    platforms: {
+      handle: string;
+      platform: {
+        name: string;
+        displayName: string;
+      };
+    }[];
+    categories: string;
+    followers: number;
+    engagementRate: number;
+  }[];
+};
 
-    if (!platform) {
-      console.error(`Platform ${platformName} not found`);
-      return [];
-    }
-
-    // Get creators from database
-    const creatorPlatforms = await prisma.creatorPlatform.findMany({
-      where: {
-        platformId: platform.id
-      },
-      include: {
-        creator: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                email: true,
-                image: true
+async function getPlatformCreators(): Promise<PlatformWithCreators[]> {
+  const platforms = await prisma.platform.findMany({
+    where: { isActive: true },
+    include: {
+      creatorPlatforms: {
+        include: {
+          creator: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  image: true
+                }
+              },
+              platforms: {
+                include: {
+                  platform: true
+                }
               }
             }
           }
         }
-      },
-      orderBy: {
-        followers: 'desc'
       }
-    });
+    }
+  });
 
-    // Transform data to match Creator type
-    return creatorPlatforms.map(cp => ({
-      ...cp.creator,
-      user: cp.creator.user,
+  return platforms.map(platform => ({
+    name: platform.displayName,
+    description: platform.description || `Connect with top ${platform.displayName} creators`,
+    creators: platform.creatorPlatforms.map(cp => ({
+      id: cp.creator.id,
+      user: {
+        name: cp.creator.user.name || '',
+        image: cp.creator.user.image
+      },
+      platforms: cp.creator.platforms.map(p => ({
+        handle: p.handle || '',
+        platform: {
+          name: p.platform.name,
+          displayName: p.platform.displayName
+        }
+      })),
+      categories: cp.creator.categories,
       followers: cp.followers,
-      engagementRate: cp.engagementRate,
-      handle: cp.handle || undefined
-    }));
-  } catch (error) {
-    console.error(`Error fetching ${platformName} creators:`, error);
-    return [];
-  }
+      engagementRate: cp.engagementRate
+    }))
+  }));
 }
 
 export default async function Home() {
-  // Get all active platforms
-  const platforms = await prisma.platform.findMany({
-    where: { isActive: true }
-  });
-
-  // Get creators for each platform
-  const platformSections = await Promise.all(
-    platforms.map(async platform => {
-      const creators = await getCreatorsByPlatform(platform.name);
-      return {
-        platform: platform.displayName,
-        creators,
-        description: platform.description || `Connect with ${platform.displayName} content creators.`
-      };
-    })
-  );
+  const platformData = await getPlatformCreators();
 
   return (
     <main className="min-h-screen bg-white">
@@ -103,11 +110,11 @@ export default async function Home() {
       {/* Platform Sections */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="space-y-16">
-          {platformSections.map(({ platform, creators, description }) => (
+          {platformData.map(({ name, creators, description }) => (
             creators.length > 0 && (
               <PlatformSection
-                key={platform}
-                platform={platform}
+                key={name}
+                platform={name}
                 creators={creators}
                 description={description}
               />

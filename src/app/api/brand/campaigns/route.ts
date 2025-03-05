@@ -28,6 +28,7 @@ export async function GET() {
         brandId: user.brand.id
       },
       include: {
+        brand: true,
         applications: {
           include: {
             creator: {

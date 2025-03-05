@@ -190,8 +190,12 @@ model Campaign {
   description String
   budget      Float
   requirements String?
-  deadline    DateTime
-  status      String    @default("DRAFT")
+  startDate   DateTime
+  endDate     DateTime
+  status      String    @default("DRAFT") // DRAFT, ACTIVE, COMPLETED, CANCELLED
+  categories  String    @default("[]") // JSON string of categories
+  deliverables String   @default("[]") // JSON string of deliverables
+  platformIds String[]  // Array of platform IDs
   
   brand       BrandProfile    @relation(fields: [brandId], references: [id], onDelete: Cascade)
   applications Application[]

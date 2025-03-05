@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clock, DollarSign, Users, Filter, Search } from 'lucide-react';
+import { Clock, DollarSign, Users, Tag, Filter, Search } from 'lucide-react';
 import CreateCampaignModal from '@/components/campaigns/CreateCampaignModal';
-import Link from 'next/link';
 import Image from 'next/image';
 
 interface Campaign {
@@ -12,18 +11,97 @@ interface Campaign {
   description: string;
   budget: number;
   requirements: string | null;
-  deadline: string;
+  startDate: Date;
+  endDate: Date;
   status: string;
+  categories: string;
+  deliverables: string;
+  platformIds: string[];
+  brand: {
+    companyName: string;
+  };
   applications: Array<{
     id: string;
-    status: string;
-    creator: {
-      user: {
-        name: string;
-        image: string | null;
-      }
-    }
   }>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+function CampaignCard({ campaign }: { campaign: Campaign }) {
+  const requirements = campaign.requirements ? JSON.parse(campaign.requirements).list : [];
+  const categories = JSON.parse(campaign.categories);
+  const deliverables = JSON.parse(campaign.deliverables);
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm p-6 mb-4">
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center gap-4">
+          <div className="relative w-12 h-12">
+            <Image
+              src="/images/placeholder.svg"
+              alt={campaign.brand.companyName}
+              fill
+              className="rounded-full object-cover"
+            />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold mb-2">{campaign.title}</h3>
+            <p className="text-gray-600 mb-4">{campaign.description}</p>
+          </div>
+        </div>
+        <span className={`px-3 py-1 rounded-full text-sm ${
+          campaign.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+          campaign.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
+          campaign.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
+          'bg-red-100 text-red-800'
+        }`}>
+          {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1).toLowerCase()}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="flex items-center">
+          <Clock className="w-5 h-5 text-gray-400 mr-2" />
+          <div>
+            <p className="text-sm text-gray-600">Duration</p>
+            <p className="font-medium">
+              {new Date(campaign.startDate).toLocaleDateString()} - {new Date(campaign.endDate).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center">
+          <DollarSign className="w-5 h-5 text-gray-400 mr-2" />
+          <div>
+            <p className="text-sm text-gray-600">Budget</p>
+            <p className="font-medium">${campaign.budget.toLocaleString()}</p>
+          </div>
+        </div>
+        <div className="flex items-center">
+          <Users className="w-5 h-5 text-gray-400 mr-2" />
+          <div>
+            <p className="text-sm text-gray-600">Applications</p>
+            <p className="font-medium">{campaign.applications.length}</p>
+          </div>
+        </div>
+        <div className="flex items-center">
+          <Tag className="w-5 h-5 text-gray-400 mr-2" />
+          <div>
+            <p className="text-sm text-gray-600">Categories</p>
+            <p className="font-medium">{categories.join(', ')}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t pt-4">
+        <h4 className="font-medium mb-2">Requirements:</h4>
+        <ul className="list-disc list-inside text-gray-600">
+          {requirements.map((req: string, index: number) => (
+            <li key={index}>{req}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
 }
 
 export default function Campaigns() {
@@ -32,10 +110,25 @@ export default function Campaigns() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [platforms, setPlatforms] = useState([]);
 
   useEffect(() => {
+    fetchPlatforms();
     fetchCampaigns();
   }, []);
+
+  const fetchPlatforms = async () => {
+    try {
+      const response = await fetch('/api/platforms');
+      if (!response.ok) {
+        throw new Error('Failed to fetch platforms');
+      }
+      const data = await response.json();
+      setPlatforms(data);
+    } catch (error) {
+      console.error('Error fetching platforms:', error);
+    }
+  };
 
   const fetchCampaigns = async () => {
     try {
@@ -58,7 +151,7 @@ export default function Campaigns() {
 
   const handleCreateCampaign = async (formData: any) => {
     try {
-      const response = await fetch('/api/campaigns', {
+      const response = await fetch('/api/brand/campaigns', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,10 +163,11 @@ export default function Campaigns() {
         throw new Error('Failed to create campaign');
       }
 
+      await fetchCampaigns();
       setIsCreateModalOpen(false);
-      fetchCampaigns(); // Refresh the campaigns list
     } catch (error) {
       console.error('Error creating campaign:', error);
+      alert('Failed to create campaign. Please try again.');
     }
   };
 
@@ -82,19 +176,23 @@ export default function Campaigns() {
     campaign.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between backdrop-blur-xl bg-white/50 p-6 rounded-2xl border border-white/20 shadow-lg">
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Campaigns
-          </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Manage your ongoing and past campaigns
-          </p>
+          <h1 className="text-3xl font-bold">Campaigns</h1>
+          <p className="text-gray-600">Manage your campaigns and track their performance</p>
         </div>
-        <button 
+
+        <button
           onClick={() => setIsCreateModalOpen(true)}
           className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
         >
@@ -106,101 +204,31 @@ export default function Campaigns() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateCampaign}
+        platforms={platforms}
       />
 
-      {/* Filters */}
-      <div className="flex items-center space-x-4 mt-6">
+      <div className="mb-6 flex gap-4">
         <div className="flex-1 relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
           <input
             type="text"
+            placeholder="Search campaigns..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full rounded-xl border border-white/20 bg-white/50 backdrop-blur-xl py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            placeholder="Search campaigns..."
+            className="w-full pl-10 pr-4 py-2 border rounded-lg"
           />
+          <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
         </div>
+        <button className="px-4 py-2 border rounded-lg flex items-center gap-2">
+          <Filter className="w-5 h-5" />
+          Filter
+        </button>
       </div>
 
-      {/* Campaigns Grid */}
-      {isLoading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-        </div>
-      ) : error ? (
-        <div className="text-center py-12">
-          <p className="text-red-600">{error}</p>
-        </div>
-      ) : filteredCampaigns.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No campaigns found</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCampaigns.map((campaign) => (
-            <Link
-              key={campaign.id}
-              href={`/brandportal/campaigns/${campaign.id}`}
-              className="block transition-transform hover:scale-[1.02]"
-            >
-              <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="p-6">
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-semibold text-gray-900">{campaign.title}</h3>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      campaign.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                      campaign.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {campaign.status.charAt(0) + campaign.status.slice(1).toLowerCase()}
-                    </span>
-                  </div>
-                  
-                  <p className="mt-2 text-sm text-gray-600 line-clamp-2">{campaign.description}</p>
-                  
-                  <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex items-center">
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      <span>${campaign.budget.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="h-4 w-4 mr-1" />
-                      <span>{new Date(campaign.deadline).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Users className="h-4 w-4 mr-1" />
-                      <span>{campaign.applications.length}</span>
-                    </div>
-                  </div>
-
-                  {campaign.applications.length > 0 && (
-                    <div className="mt-4 flex -space-x-2">
-                      {campaign.applications.slice(0, 3).map((application) => (
-                        <div key={application.id} className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-white">
-                          <Image
-                            src={application.creator.user.image || "/images/placeholder-40.svg"}
-                            alt={application.creator.user.name}
-                            fill
-                            className="object-cover"
-                            sizes="32px"
-                          />
-                        </div>
-                      ))}
-                      {campaign.applications.length > 3 && (
-                        <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs text-gray-600">
-                          +{campaign.applications.length - 3}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+      <div className="space-y-4">
+        {filteredCampaigns.map(campaign => (
+          <CampaignCard key={campaign.id} campaign={campaign} />
+        ))}
+      </div>
     </div>
   );
 }

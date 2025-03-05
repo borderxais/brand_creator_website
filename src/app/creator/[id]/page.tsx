@@ -5,32 +5,36 @@ import { PortfolioGallery } from '@/components/ui/PortfolioGallery';
 import { SocialLinks } from '@/components/ui/SocialLinks';
 import { Stats } from '@/components/ui/Stats';
 import { Metadata } from 'next';
+import { Prisma } from '@prisma/client';
+
+type CreatorWithRelations = Prisma.CreatorProfileGetPayload<{
+  include: {
+    user: true;
+    platforms: {
+      include: {
+        platform: true;
+      };
+    };
+    portfolioItems: true;
+    posts: true;
+  };
+}>;
 
 async function getCreatorProfile(id: string) {
   try {
     const creator = await prisma.creatorProfile.findUnique({
       where: { id },
       include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-            image: true,
-          },
-        },
+        user: true,
         platforms: {
           include: {
             platform: true
           }
         },
         portfolioItems: true,
-        posts: {
-          where: { published: true },
-          orderBy: { createdAt: 'desc' },
-          take: 5,
-        },
+        posts: true
       },
-    });
+    }) as CreatorWithRelations;
 
     if (!creator) {
       return null;
@@ -71,19 +75,26 @@ export async function generateMetadata({params}: {params: { id: string }}) {
 }
 
 export default async function CreatorProfile({params}: { params: { id: string }}) {
-  const creator = await getCreatorProfile(params.id);
-  
+  const { id } = params;
+
+  const creator = await getCreatorProfile(id);
+
   if (!creator) {
     notFound();
   }
 
   const categories = parseCategories(creator.categories);
 
-  // Calculate total followers and average engagement rate across all platforms
-  const totalFollowers = creator.platforms.reduce((sum, cp) => sum + cp.followers, 0);
-  const avgEngagementRate = creator.platforms.length > 0
-    ? creator.platforms.reduce((sum, cp) => sum + cp.engagementRate, 0) / creator.platforms.length
-    : 0;
+  // Calculate total followers and engagement
+  const totalFollowers = creator.platforms.reduce((sum: number, cp) => sum + cp.followers, 0);
+  const weightedEngagement = creator.platforms.reduce((sum: number, cp) => sum + (cp.followers * cp.engagementRate), 0);
+  const averageEngagementRate = weightedEngagement / totalFollowers;
+
+  // Get active platforms
+  const activePlatforms = creator.platforms.reduce((acc: string[], cp) => {
+    acc.push(cp.platform.displayName);
+    return acc;
+  }, []);
 
   // Create social links object
   const socialLinks = creator.platforms.reduce((acc, cp) => ({
@@ -121,7 +132,7 @@ export default async function CreatorProfile({params}: { params: { id: string }}
               </div>
               <Stats
                 followers={totalFollowers}
-                engagementRate={avgEngagementRate}
+                engagementRate={averageEngagementRate}
               />
             </div>
             

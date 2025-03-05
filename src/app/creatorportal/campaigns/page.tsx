@@ -19,9 +19,16 @@ interface Campaign {
   platform: Platform[];
   category: Category;
   compensation: string;
+  startDate: Date;
+  endDate: Date;
   deadline: string;
   status?: string;
   requirements: string[];
+  createdAt: Date;
+  platformIds: string[];
+  categories: string;
+  deliverables: string;
+  budget: number;
 }
 
 async function getCampaigns(userId: string) {
@@ -57,32 +64,20 @@ async function getCampaigns(userId: string) {
             }
           }
         }
-      },
-      applications: {
-        where: {
-          creatorId: creator.id
-        },
-        select: {
-          status: true
-        }
       }
-    },
-    orderBy: {
-      deadline: 'asc'
     }
   });
 
-  // Get available campaigns the creator hasn't applied to
+  // Get available campaigns
   const availableCampaigns = await prisma.campaign.findMany({
     where: {
       status: 'ACTIVE',
-      applications: {
-        none: {
-          creatorId: creator.id
+      NOT: {
+        applications: {
+          some: {
+            creatorId: creator.id
+          }
         }
-      },
-      deadline: {
-        gt: new Date()
       }
     },
     include: {
@@ -96,69 +91,55 @@ async function getCampaigns(userId: string) {
           }
         }
       }
-    },
-    orderBy: {
-      deadline: 'asc'
     }
   });
 
+  // Transform campaigns to match the interface
+  const transformCampaign = (campaign: any): Campaign => ({
+    id: campaign.id,
+    brand: {
+      name: campaign.brand.user.name,
+      logo: '/images/placeholder.svg'
+    },
+    title: campaign.title,
+    description: campaign.description,
+    platform: campaign.platformIds.map((id: string) => ({ id, name: id })),
+    category: JSON.parse(campaign.categories)[0],
+    compensation: `$${campaign.budget}`,
+    startDate: campaign.startDate,
+    endDate: campaign.endDate,
+    deadline: campaign.endDate.toISOString().split('T')[0], // Convert to YYYY-MM-DD string
+    status: campaign.status,
+    requirements: JSON.parse(campaign.requirements).list,
+    createdAt: campaign.createdAt,
+    platformIds: campaign.platformIds,
+    categories: campaign.categories,
+    deliverables: campaign.deliverables,
+    budget: campaign.budget
+  });
+
   return {
-    currentCampaigns: currentCampaigns.map(campaign => ({
-      id: campaign.id,
-      brand: {
-        name: campaign.brand.user.name || 'Unknown Brand',
-        logo: campaign.brand.user.image || '/images/placeholder-40.svg'
-      },
-      title: campaign.title,
-      description: campaign.description,
-      platform: (campaign.requirements ? JSON.parse(campaign.requirements).platforms || [] : []) as Platform[],
-      category: (campaign.requirements ? JSON.parse(campaign.requirements).category || 'OTHER' : 'OTHER') as Category,
-      compensation: `$${campaign.budget}`,
-      deadline: campaign.deadline.toISOString().split('T')[0],
-      status: campaign.applications[0]?.status.toLowerCase(),
-      requirements: campaign.requirements ? 
-        JSON.parse(campaign.requirements).list || [] : []
-    })),
-    availableCampaigns: availableCampaigns.map(campaign => ({
-      id: campaign.id,
-      brand: {
-        name: campaign.brand.user.name || 'Unknown Brand',
-        logo: campaign.brand.user.image || '/images/placeholder-40.svg'
-      },
-      title: campaign.title,
-      description: campaign.description,
-      platform: (campaign.requirements ? JSON.parse(campaign.requirements).platforms || [] : []) as Platform[],
-      category: (campaign.requirements ? JSON.parse(campaign.requirements).category || 'OTHER' : 'OTHER') as Category,
-      compensation: `$${campaign.budget}`,
-      deadline: campaign.deadline.toISOString().split('T')[0],
-      requirements: campaign.requirements ? 
-        JSON.parse(campaign.requirements).list || [] : []
-    }))
+    currentCampaigns: currentCampaigns.map(transformCampaign),
+    availableCampaigns: availableCampaigns.map(transformCampaign)
   };
 }
 
 export default async function Campaigns() {
   const session = await getServerSession(authConfig);
   
-  if (!session?.user?.id) {
+  if (!session?.user) {
     redirect('/login');
   }
 
   const { currentCampaigns, availableCampaigns } = await getCampaigns(session.user.id);
 
   return (
-    <div>
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="page-header mb-6">
-          <h1>Campaigns</h1>
-          <p>Manage your brand collaborations and discover new opportunities</p>
-        </div>
-        
-        <CampaignList 
-          currentCampaigns={currentCampaigns}
-          availableCampaigns={availableCampaigns}
-        />
-      </div>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Your Campaigns</h1>
+      <CampaignList
+        currentCampaigns={currentCampaigns}
+        availableCampaigns={availableCampaigns}
+      />
     </div>
   );
 }

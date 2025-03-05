@@ -1,141 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { mockBrands, mockCreators, platforms } from './mockData';
 
 const prisma = new PrismaClient();
 
-const platforms = [
-  {
-    name: 'instagram',
-    displayName: 'Instagram',
-    description: 'Photo and video sharing social network',
-    iconUrl: '/icons/instagram.svg'
-  },
-  {
-    name: 'tiktok',
-    displayName: 'TikTok',
-    description: 'Short-form video platform',
-    iconUrl: '/icons/tiktok.svg'
-  },
-  {
-    name: 'youtube',
-    displayName: 'YouTube',
-    description: 'Video sharing and streaming platform',
-    iconUrl: '/icons/youtube.svg'
-  },
-  {
-    name: 'douyin',
-    displayName: 'Douyin',
-    description: 'Chinese short-form video platform',
-    iconUrl: '/icons/douyin.svg'
-  },
-  {
-    name: 'xiaohongshu',
-    displayName: 'Xiaohongshu',
-    description: 'Chinese lifestyle and e-commerce platform',
-    iconUrl: '/icons/xiaohongshu.svg'
-  },
-  {
-    name: 'weibo',
-    displayName: 'Weibo',
-    description: 'Chinese microblogging platform',
-    iconUrl: '/icons/weibo.svg'
-  }
-];
-
-const mockCreators = {
-  instagram: [
-    {
-      bio: 'Lifestyle and fashion influencer',
-      location: 'Los Angeles, CA',
-      followers: 500000,
-      engagementRate: 4.5,
-      handle: '@sarahjohnson',
-      categories: JSON.stringify(['Fashion', 'Lifestyle']),
-      user: {
-        name: 'Sarah Johnson',
-        email: 'sarah@example.com',
-        password: 'password123',
-        image: 'https://randomuser.me/api/portraits/women/1.jpg'
-      }
-    },
-    {
-      bio: 'Travel and photography enthusiast',
-      location: 'New York, NY',
-      followers: 350000,
-      engagementRate: 3.8,
-      handle: '@mikechen',
-      categories: JSON.stringify(['Travel', 'Photography']),
-      user: {
-        name: 'Mike Chen',
-        email: 'mike@example.com',
-        password: 'password123',
-        image: 'https://randomuser.me/api/portraits/men/2.jpg'
-      }
-    }
-  ],
-  tiktok: [
-    {
-      bio: 'Dance and entertainment',
-      location: 'Miami, FL',
-      followers: 1000000,
-      engagementRate: 5.2,
-      handle: '@lisadance',
-      categories: JSON.stringify(['Dance', 'Entertainment']),
-      user: {
-        name: 'Lisa Dance',
-        email: 'lisa@example.com',
-        password: 'password123',
-        image: 'https://randomuser.me/api/portraits/women/3.jpg'
-      }
-    },
-    {
-      bio: 'Comedy sketches and humor',
-      location: 'Austin, TX',
-      followers: 890000,
-      engagementRate: 4.8,
-      handle: '@funnyjake',
-      categories: JSON.stringify(['Comedy', 'Entertainment']),
-      user: {
-        name: 'Funny Jake',
-        email: 'jake@example.com',
-        password: 'password123',
-        image: 'https://randomuser.me/api/portraits/men/4.jpg'
-      }
-    }
-  ]
-};
-
-const mockBrands = [
-  {
-    companyName: 'FashionNova',
-    industry: 'Fashion',
-    description: 'Leading fast fashion brand',
-    website: 'https://fashionnova.com',
-    location: 'Los Angeles, CA',
-    user: {
-      name: 'FashionNova',
-      email: 'brand@fashionnova.com',
-      password: 'password123',
-      image: '/images/brands/fashionnova.png'
-    }
-  },
-  {
-    companyName: 'TechGear',
-    industry: 'Technology',
-    description: 'Innovative tech accessories',
-    website: 'https://techgear.com',
-    location: 'San Francisco, CA',
-    user: {
-      name: 'TechGear',
-      email: 'brand@techgear.com',
-      password: 'password123',
-      image: '/images/brands/techgear.png'
-    }
-  }
-];
-
 async function main() {
-  // Delete all existing data
+  // Delete all existing data in the correct order
+  await prisma.application.deleteMany();
+  await prisma.campaign.deleteMany();
   await prisma.creatorPlatform.deleteMany();
   await prisma.platform.deleteMany();
   await prisma.post.deleteMany();
@@ -146,11 +18,13 @@ async function main() {
 
   // Create platforms
   console.log('Seeding platforms...');
-  for (const platform of platforms) {
-    await prisma.platform.create({
-      data: platform
-    });
-  }
+  const createdPlatforms = await Promise.all(
+    platforms.map(platform => 
+      prisma.platform.create({
+        data: platform
+      })
+    )
+  );
   console.log('Platforms seeded successfully!');
 
   // Create brands
@@ -230,6 +104,61 @@ async function main() {
   for (const [platform, creators] of Object.entries(mockCreators)) {
     await createCreatorsForPlatform(platform, creators);
   }
+
+  // Create sample campaigns
+  console.log('Creating sample campaigns...');
+  const fashionNova = await prisma.brandProfile.findFirstOrThrow({ where: { companyName: 'FashionNova' } });
+  const techGear = await prisma.brandProfile.findFirstOrThrow({ where: { companyName: 'TechGear' } });
+
+  const campaigns = await Promise.all([
+    prisma.campaign.create({
+      data: {
+        title: 'Summer Fashion Collection Launch',
+        description: 'Looking for fashion influencers to promote our new summer collection',
+        budget: 5000,
+        requirements: JSON.stringify({
+          platforms: ['instagram', 'tiktok'],
+          category: 'FASHION',
+          list: ['Minimum 50k followers', 'fashion-focused content']
+        }),
+        startDate: new Date('2025-06-01'),
+        endDate: new Date('2025-08-31'),
+        status: 'ACTIVE',
+        platformIds: ['instagram', 'tiktok'],
+        brandId: fashionNova.id,
+        categories: JSON.stringify(['Fashion', 'Summer', 'Lifestyle']),
+        deliverables: JSON.stringify([
+          '2 Instagram posts',
+          '3 Instagram stories',
+          '1 TikTok video'
+        ])
+      }
+    }),
+    prisma.campaign.create({
+      data: {
+        title: 'Tech Review Series',
+        description: 'Seeking tech reviewers for our latest gadget launch',
+        budget: 8000,
+        requirements: JSON.stringify({
+          platforms: ['youtube'],
+          category: 'TECHNOLOGY',
+          list: ['Tech-focused content creators with proven track record']
+        }),
+        startDate: new Date('2025-04-01'),
+        endDate: new Date('2025-05-31'),
+        status: 'ACTIVE',
+        platformIds: ['youtube'],
+        brandId: techGear.id,
+        categories: JSON.stringify(['Technology', 'Reviews', 'Gadgets']),
+        deliverables: JSON.stringify([
+          '1 detailed review video (10-15 minutes)',
+          '2 short-form content pieces',
+          'Social media promotion'
+        ])
+      }
+    })
+  ]);
+  console.log('Sample campaigns created!');
 
   console.log('Database has been seeded!');
 }
