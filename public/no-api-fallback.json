@@ -1,0 +1,32 @@
+[
+  {
+    "adgroup_id": "123456789",
+    "status": "ENABLE",
+    "cost_per_conversion": "12.50",
+    "cpc": "2.35",
+    "spend": "1200.00",
+    "conversion": "96",
+    "impressions": "150000",
+    "cpm": "8.00"
+  },
+  {
+    "adgroup_id": "987654321",
+    "status": "ENABLE",
+    "cost_per_conversion": "9.75",
+    "cpc": "1.89",
+    "spend": "950.00",
+    "conversion": "98",
+    "impressions": "120000",
+    "cpm": "7.92"
+  },
+  {
+    "adgroup_id": "456789123",
+    "status": "ENABLE",
+    "cost_per_conversion": "11.20",
+    "cpc": "2.10",
+    "spend": "980.00",
+    "conversion": "88",
+    "impressions": "110000",
+    "cpm": "8.91"
+  }
+]

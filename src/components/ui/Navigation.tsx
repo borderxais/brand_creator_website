@@ -57,6 +57,7 @@ export default function Navigation() {
   const navLinks = [
     { href: '/find-creators', label: 'Find Creators', width: '120px' },
     { href: '/campaigns', label: 'Campaigns', width: '100px' },
+    { href: '/advertiserservice', label: 'Advertiser Service', width: '150px' },
     { href: '/how-it-works', label: 'How it Works', width: '120px' },
   ];
 
