@@ -1,242 +1,271 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import ErrorHandlingImage from '@/components/ui/ErrorHandlingImage';
 
-// Mock creators data - no API calls needed
-const mockCreators = [
-  {
-    id: '1',
-    bio: 'Lifestyle and travel content creator with a passion for sustainable living.',
-    location: 'Los Angeles, CA',
-    categories: ['Travel', 'Lifestyle', 'Sustainability'],
-    user: {
-      id: '1',
-      name: 'Jamie Smith',
-      image: 'https://randomuser.me/api/portraits/women/44.jpg'
-    },
-    platforms: [
-      {
-        platform: {
-          name: 'instagram',
-          displayName: 'Instagram',
-          iconUrl: '/icons/instagram.svg'
-        },
-        followers: 125000,
-        engagementRate: 3.8,
-        handle: '@jamiesmith'
-      },
-      {
-        platform: {
-          name: 'tiktok',
-          displayName: 'TikTok',
-          iconUrl: '/icons/tiktok.svg'
-        },
-        followers: 250000,
-        engagementRate: 5.2,
-        handle: '@jamiesmith'
-      }
-    ]
-  },
-  {
-    id: '2',
-    bio: 'Fitness enthusiast and wellness coach sharing workout routines and nutrition tips.',
-    location: 'Miami, FL',
-    categories: ['Fitness', 'Health', 'Nutrition'],
-    user: {
-      id: '2',
-      name: 'Alex Johnson',
-      image: 'https://randomuser.me/api/portraits/men/32.jpg'
-    },
-    platforms: [
-      {
-        platform: {
-          name: 'instagram',
-          displayName: 'Instagram',
-          iconUrl: '/icons/instagram.svg'
-        },
-        followers: 185000,
-        engagementRate: 4.2,
-        handle: '@alexjfit'
-      },
-      {
-        platform: {
-          name: 'youtube',
-          displayName: 'YouTube',
-          iconUrl: '/icons/youtube.svg'
-        },
-        followers: 320000,
-        engagementRate: 6.1,
-        handle: '@alexjfitness'
-      }
-    ]
-  },
-  {
-    id: '3',
-    bio: 'Food blogger and cooking enthusiast sharing recipes and culinary adventures from around the world.',
-    location: 'New York, NY',
-    categories: ['Food', 'Cooking', 'Travel'],
-    user: {
-      id: '3',
-      name: 'Sophia Chen',
-      image: 'https://randomuser.me/api/portraits/women/68.jpg'
-    },
-    platforms: [
-      {
-        platform: {
-          name: 'instagram',
-          displayName: 'Instagram',
-          iconUrl: '/icons/instagram.svg'
-        },
-        followers: 210000,
-        engagementRate: 4.5,
-        handle: '@sophiascooking'
-      },
-      {
-        platform: {
-          name: 'youtube',
-          displayName: 'YouTube',
-          iconUrl: '/icons/youtube.svg'
-        },
-        followers: 175000,
-        engagementRate: 6.8,
-        handle: '@sophiachencooking'
-      }
-    ]
-  },
-  {
-    id: '4',
-    bio: 'Beauty and skincare expert with a focus on natural and organic products.',
-    location: 'Chicago, IL',
-    categories: ['Beauty', 'Skincare', 'Wellness'],
-    user: {
-      id: '4',
-      name: 'Taylor Reed',
-      image: 'https://randomuser.me/api/portraits/women/22.jpg'
-    },
-    platforms: [
-      {
-        platform: {
-          name: 'instagram',
-          displayName: 'Instagram',
-          iconUrl: '/icons/instagram.svg'
-        },
-        followers: 145000,
-        engagementRate: 4.9,
-        handle: '@taylorbeauty'
-      },
-      {
-        platform: {
-          name: 'tiktok',
-          displayName: 'TikTok',
-          iconUrl: '/icons/tiktok.svg'
-        },
-        followers: 290000,
-        engagementRate: 7.1,
-        handle: '@taylorbeauty'
-      }
-    ]
-  },
-  {
-    id: '5',
-    bio: 'Tech reviewer and gaming enthusiast covering the latest gadgets and games.',
-    location: 'Seattle, WA',
-    categories: ['Technology', 'Gaming', 'Reviews'],
-    user: {
-      id: '5',
-      name: 'Marcus Kim',
-      image: 'https://randomuser.me/api/portraits/men/56.jpg'
-    },
-    platforms: [
-      {
-        platform: {
-          name: 'youtube',
-          displayName: 'YouTube',
-          iconUrl: '/icons/youtube.svg'
-        },
-        followers: 430000,
-        engagementRate: 5.8,
-        handle: '@marcustech'
-      },
-      {
-        platform: {
-          name: 'twitter',
-          displayName: 'Twitter',
-          iconUrl: '/icons/twitter.svg'
-        },
-        followers: 175000,
-        engagementRate: 3.2,
-        handle: '@marcustech'
-      }
-    ]
-  },
-  {
-    id: '6',
-    bio: 'Fashion influencer showcasing street style and upcoming trends.',
-    location: 'New York, NY',
-    categories: ['Fashion', 'Style', 'Shopping'],
-    user: {
-      id: '6',
-      name: 'Zoe Martinez',
-      image: 'https://randomuser.me/api/portraits/women/35.jpg'
-    },
-    platforms: [
-      {
-        platform: {
-          name: 'instagram',
-          displayName: 'Instagram',
-          iconUrl: '/icons/instagram.svg'
-        },
-        followers: 265000,
-        engagementRate: 4.1,
-        handle: '@zoestyle'
-      },
-      {
-        platform: {
-          name: 'tiktok',
-          displayName: 'TikTok',
-          iconUrl: '/icons/tiktok.svg'
-        },
-        followers: 380000,
-        engagementRate: 6.7,
-        handle: '@zoestyle'
-      }
-    ]
-  }
-];
+// Type definitions for creator data
+interface Platform {
+  platform: {
+    name: string;
+    displayName: string;
+    iconUrl: string;
+  };
+  followers: number;
+  engagementRate: number;
+  handle: string;
+}
+
+interface Creator {
+  id: string;
+  bio: string | null;
+  location: string;
+  categories: string[];
+  user: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  };
+  platforms: Platform[];
+}
+
+interface CreatorsResponse {
+  creators: Creator[];
+  totalCount: number;
+  hasMore: boolean;
+  error?: string;
+}
 
 export default function FindCreators() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('');
-  
-  // Filter creators based on search, category, and platform
-  const filteredCreators = mockCreators.filter(creator => {
-    // Filter by search query
-    const matchesSearch = searchQuery === '' || 
-      creator.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      creator.bio.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      creator.location.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Filter by category
-    const matchesCategory = selectedCategory === '' || 
-      creator.categories.some(cat => cat.toLowerCase() === selectedCategory.toLowerCase());
-    
-    // Filter by platform
-    const matchesPlatform = selectedPlatform === '' || 
-      creator.platforms.some(p => p.platform.name.toLowerCase() === selectedPlatform.toLowerCase());
-    
-    return matchesSearch && matchesCategory && matchesPlatform;
-  });
+  const [creators, setCreators] = useState<Creator[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [noCreators, setNoCreators] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [hasNewCreators, setHasNewCreators] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshProgress, setRefreshProgress] = useState({ current: 0, total: 0 });
+
+  // Check for creators (both new and existing)
+  const checkForCreators = useCallback(async (refreshAll = false) => {
+    try {
+      const url = refreshAll 
+        ? '/api/creators/check-new?refresh=true'
+        : '/api/creators/check-new';
+        
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to check for creators');
+      }
+
+      const data = await response.json();
+      setHasNewCreators(data.hasNewCreators);
+      
+      return {
+        hasNewCreators: data.hasNewCreators,
+        hasCreators: data.hasCreators,
+        allCreators: data.allCreators,
+        newCreators: data.newCreators,
+      };
+    } catch (err) {
+      console.error('Error checking for creators:', err);
+      return {
+        hasNewCreators: false,
+        hasCreators: false,
+        allCreators: [],
+        newCreators: [],
+      };
+    }
+  }, []);
+
+  // Fetch creators data from API
+  const fetchCreators = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (searchQuery) params.append('query', searchQuery);
+      if (selectedCategory) params.append('category', selectedCategory);
+      if (selectedPlatform) params.append('platform', selectedPlatform);
+
+      // Add a cache-busting parameter to ensure fresh data
+      params.append('_t', Date.now().toString());
+
+      const response = await fetch(`/api/creators?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch creators');
+
+      const data: CreatorsResponse = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setCreators(data.creators || []);
+      setNoCreators(data.totalCount === 0);
+      setError('');
+    } catch (err) {
+      console.error('Error fetching creators:', err);
+      setError('Failed to load creators. Please try again later.');
+      setCreators([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery, selectedCategory, selectedPlatform]);
+
+  // Function to sync TikTok creators (new or refresh all)
+  const syncCreators = useCallback(async (refreshAll = false) => {
+    try {
+      setIsSyncing(true);
+      
+      // Step 1: Get creators to sync (all or just new ones)
+      const creatorsData = await checkForCreators(refreshAll);
+      const creatorsToSync = refreshAll ? creatorsData.allCreators : creatorsData.newCreators;
+      
+      if (!creatorsToSync.length) {
+        // No creators to sync
+        await fetchCreators();
+        return;
+      }
+      
+      setRefreshProgress({ current: 0, total: creatorsToSync.length });
+      setIsRefreshing(true);
+      
+      // Step 2: Sync each creator individually to show progress
+      for (let i = 0; i < creatorsToSync.length; i++) {
+        const handle = creatorsToSync[i];
+        
+        // Update progress
+        setRefreshProgress({ current: i + 1, total: creatorsToSync.length });
+        
+        // Sync this creator
+        try {
+          await fetch(`/api/creators/sync?handle_name=${encodeURIComponent(handle)}`);
+        } catch (err) {
+          console.error(`Failed to sync creator ${handle}:`, err);
+        }
+      }
+      
+      setHasNewCreators(false);
+      
+      // After syncing, fetch creators again
+      await fetchCreators();
+    } catch (err) {
+      console.error('Error syncing creators:', err);
+      setError('Failed to sync creators. Please try again later.');
+    } finally {
+      setIsSyncing(false);
+      setIsRefreshing(false);
+    }
+  }, [checkForCreators, fetchCreators]);
+
+  // Function to refresh all creators
+  const handleRefreshAllCreators = () => {
+    syncCreators(true);
+  };
+
+  // Function to sync only new creators
+  const handleSyncNewCreators = () => {
+    syncCreators(false);
+  };
+
+  // Initial load logic - check for new creators and fetch
+  useEffect(() => {
+    const initPage = async () => {
+      const creatorsData = await checkForCreators();
+      if (creatorsData.hasNewCreators) {
+        // Auto-sync new creators on page load
+        await syncCreators(false);
+      } else {
+        await fetchCreators();
+      }
+    };
+
+    initPage();
+  }, [checkForCreators, syncCreators, fetchCreators]);
+
+  // Re-fetch when filters change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchCreators();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, selectedCategory, selectedPlatform, fetchCreators]);
+
+  // Function to handle filter clearing
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('');
+    setSelectedPlatform('');
+  };
+
+  // Function to refresh the page and check for new creators
+  const handleRefreshCreators = async () => {
+    const creatorsData = await checkForCreators(true);
+    if (creatorsData.hasNewCreators) {
+      await syncCreators(false); // Only sync new creators by default
+    } else if (creatorsData.hasCreators) {
+      // Ask if user wants to refresh all creators
+      if (confirm("No new creators found. Do you want to refresh data for all existing creators?")) {
+        await syncCreators(true);
+      } else {
+        await fetchCreators();
+      }
+    } else {
+      await fetchCreators();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-purple-900 text-white">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-extrabold">Find Creators</h1>
-          <p className="mt-2 text-lg">Discover and connect with top content creators for your next campaign</p>
+        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-extrabold">Find Creators</h1>
+            <p className="mt-2 text-lg">Discover and connect with top content creators for your next campaign</p>
+          </div>
+          <div className="flex space-x-2">
+            {hasNewCreators && (
+              <button
+                onClick={handleSyncNewCreators}
+                disabled={isSyncing}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+              >
+                <svg className="-ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+                Sync New Creators
+              </button>
+            )}
+            
+            <button
+              onClick={handleRefreshAllCreators}
+              disabled={isSyncing}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
+            >
+              {isSyncing ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {isRefreshing ? `Refreshing ${refreshProgress.current}/${refreshProgress.total}` : 'Refreshing...'}
+                </>
+              ) : (
+                <>
+                  <svg className="-ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 8 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh All Creators
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -246,7 +275,7 @@ export default function FindCreators() {
           <div className="md:col-span-2">
             <input
               type="text"
-              placeholder="Search creators by name, bio, or location"
+              placeholder="Search creators by name, bio, or handle"
               className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -259,13 +288,12 @@ export default function FindCreators() {
               onChange={(e) => setSelectedCategory(e.target.value)}
             >
               <option value="">All Categories</option>
-              <option value="travel">Travel</option>
-              <option value="lifestyle">Lifestyle</option>
-              <option value="fitness">Fitness</option>
-              <option value="beauty">Beauty</option>
-              <option value="fashion">Fashion</option>
-              <option value="food">Food</option>
-              <option value="technology">Technology</option>
+              <option value="Comedy">Comedy</option>
+              <option value="Beauty">Beauty</option>
+              <option value="Fashion">Fashion</option>
+              <option value="Fitness">Fitness</option>
+              <option value="News & Entertainment">News & Entertainment</option>
+              <option value="Sports">Sports</option>
             </select>
           </div>
           <div>
@@ -275,101 +303,170 @@ export default function FindCreators() {
               onChange={(e) => setSelectedPlatform(e.target.value)}
             >
               <option value="">All Platforms</option>
-              <option value="instagram">Instagram</option>
               <option value="tiktok">TikTok</option>
-              <option value="youtube">YouTube</option>
-              <option value="twitter">Twitter</option>
             </select>
           </div>
         </div>
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+          <p className="mt-2 text-gray-600">Loading creators...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+          <p className="text-red-500">{error}</p>
+          <button
+            onClick={handleClearFilters}
+            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+          >
+            Clear Filters & Try Again
+          </button>
+        </div>
+      )}
+
+      {/* Show refreshing progress indicator if applicable */}
+      {isRefreshing && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="animate-spin h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">Refreshing Creator Data</h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>Refreshing {refreshProgress.current} of {refreshProgress.total} creators...</p>
+                  <div className="mt-1 w-full bg-blue-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full" 
+                      style={{ width: `${(refreshProgress.current / refreshProgress.total) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Creator List */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {filteredCreators.length === 0 ? (
+        {!loading && !error && creators.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">No creators found matching your criteria</p>
-            <button 
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedCategory('');
-                setSelectedPlatform('');
-              }}
-              className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-            >
-              Clear Filters
-            </button>
+            {noCreators && (
+              <button
+                onClick={syncCreators}
+                className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              >
+                Sync TikTok Creators
+              </button>
+            )}
+            {!noCreators && (
+              <button
+                onClick={handleClearFilters}
+                className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-            {filteredCreators.map((creator) => (
-              <Link 
-                key={creator.id} 
-                href={`/creator/${creator.id}`}
-                className="block hover:shadow-lg transition-shadow duration-300"
-              >
-                <div className="bg-white rounded-lg shadow overflow-hidden h-full">
-                  <div className="p-6">
-                    <div className="flex items-center">
-                      <div className="relative h-16 w-16 mr-4">
-                        <Image
-                          src={creator.user.image}
-                          alt={creator.user.name}
-                          fill
-                          className="rounded-full object-cover"
-                        />
+          // Only render grid if not loading, no error, and we have creators
+          !loading && !error && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+              {creators.map((creator) => (
+                <Link
+                  key={creator.id}
+                  href={`/creator/${creator.id}`}
+                  className="block hover:shadow-lg transition-shadow duration-300"
+                >
+                  <div className="bg-white rounded-lg shadow overflow-hidden h-full">
+                    <div className="p-6">
+                      <div className="flex items-center">
+                        <div className="relative h-16 w-16 mr-4">
+                          {creator.user.image ? (
+                            <ErrorHandlingImage
+                              src={creator.user.image}
+                              alt={creator.user.name || 'Creator'}
+                              fill
+                              className="rounded-full object-cover"
+                              sizes="64px"
+                              fallback={
+                                <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
+                                  <span className="text-gray-500">{creator.user.name?.[0] || '?'}</span>
+                                </div>
+                              }
+                            />
+                          ) : (
+                            <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
+                              <span className="text-gray-500">{creator.user.name?.[0] || '?'}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900">{creator.user.name || 'Unknown Creator'}</h3>
+                          <p className="text-sm text-gray-500">{creator.location || 'TikTok Creator'}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">{creator.user.name}</h3>
-                        <p className="text-sm text-gray-500">{creator.location}</p>
+
+                      <p className="mt-4 text-gray-600 line-clamp-2">{creator.bio || 'No bio available'}</p>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {creator.categories && creator.categories.length > 0 ? (
+                          creator.categories.map((category, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+                            >
+                              {category}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-sm text-gray-400">No categories</span>
+                        )}
                       </div>
-                    </div>
-                    
-                    <p className="mt-4 text-gray-600 line-clamp-2">{creator.bio}</p>
-                    
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {creator.categories.map((category, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
-                        >
-                          {category}
-                        </span>
-                      ))}
-                    </div>
-                    
-                    <div className="mt-4 flex items-center justify-between">
-                      <div className="flex space-x-2">
-                        {creator.platforms.map((platform, index) => (
-                          <div key={index} className="flex items-center">
-                            {platform.platform.iconUrl && (
-                              <div className="relative h-5 w-5">
+
+                      <div className="mt-4 flex items-center justify-between">
+                        <div className="flex space-x-2">
+                          {creator.platforms.map((platform, index) => (
+                            <div key={index} className="flex items-center">
+                              {platform.platform.name === 'tiktok' && (
                                 <Image
-                                  src={platform.platform.iconUrl}
-                                  alt={platform.platform.displayName}
+                                  src="/icons/tiktok.svg"
+                                  alt="TikTok"
                                   width={20}
                                   height={20}
                                 />
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {creator.platforms[0]?.followers?.toLocaleString() || '0'} followers
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-500">
-                        {Math.max(...creator.platforms.map(p => p.followers)).toLocaleString()} followers
+
+                      <div className="mt-5 pt-5 border-t border-gray-200">
+                        <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                          View Profile
+                        </button>
                       </div>
-                    </div>
-                    
-                    <div className="mt-5 pt-5 border-t border-gray-200">
-                      <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                        View Profile
-                      </button>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )
         )}
       </div>
     </div>

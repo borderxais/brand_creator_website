@@ -2,8 +2,7 @@
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-
+  
   // Enable connection pooling
   relationMode = "prisma"
 }
@@ -40,19 +39,19 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  password      String?
-  image         String?
-  role          String    @default("CREATOR")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  name                String?
+  email               String?   @unique
+  emailVerified       DateTime?
+  password            String?
+  image               String?
+  role                String    @default("CREATOR")
+  creatorHandleName   String?   @unique @map("creator_handle_name")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
   
   accounts      Account[]
   sessions      Session[]
-  creator       CreatorProfile?
   brand         BrandProfile?
 }
 
@@ -73,54 +72,6 @@ model Platform {
   isActive        Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  
-  creatorPlatforms CreatorPlatform[]
-}
-
-model CreatorProfile {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  bio             String?
-  location        String?
-  website         String?
-  categories      String    @default("[]") // JSON string of categories
-  followers       Int       @default(0)
-  engagementRate  Float     @default(0)
-  
-  // Platform connections
-  platforms       CreatorPlatform[]
-  
-  // Portfolio
-  portfolioItems  PortfolioItem[]
-  
-  // Posts
-  posts          Post[]
-  
-  // Products
-  products       Product[]
-  
-  // Campaign Applications
-  applications   Application[]
-  
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-}
-
-model CreatorPlatform {
-  id              String    @id @default(cuid())
-  creatorId       String
-  platformId      String
-  handle          String?
-  followers       Int       @default(0)
-  engagementRate  Float     @default(0)
-  isVerified      Boolean   @default(false)
-  lastUpdated     DateTime  @default(now())
-  
-  creator         CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  platform        Platform       @relation(fields: [platformId], references: [id], onDelete: Cascade)
-  
-  @@unique([creatorId, platformId])
 }
 
 model BrandProfile {
@@ -143,42 +94,14 @@ model BrandProfile {
   updatedAt       DateTime        @updatedAt
 }
 
-model PortfolioItem {
-  id          String    @id @default(cuid())
-  creatorId   String
-  title       String
-  description String?
-  imageUrl    String?
-  link        String?
-  
-  creator     CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-}
-
-model Post {
-  id              String    @id @default(cuid())
-  creatorId       String
-  title           String
-  content         String
-  published       Boolean   @default(false)
-  imageUrl        String?
-  
-  creator         CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-}
-
 model Product {
   id          String    @id @default(cuid())
-  creatorId   String?
   brandId     String?
   name        String
   description String?
   price       Float?
   imageUrl    String?
   
-  creator     CreatorProfile? @relation(fields: [creatorId], references: [id])
   brand       BrandProfile?   @relation(fields: [brandId], references: [id])
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
@@ -199,20 +122,27 @@ model Campaign {
   platformIds String[]  // Array of platform IDs
   
   brand       BrandProfile    @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  applications Application[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 }
 
-model Application {
-  id          String    @id @default(cuid())
-  campaignId  String
-  creatorId   String
-  status      String    @default("PENDING")
-  proposal    String?
-  
-  campaign    Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  creator     CreatorProfile  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+// Model for TikTok creator data - this becomes our main creator model
+model FindCreator {
+  id                  Int      @id @default(autoincrement())
+  created_at          DateTime @default(now())
+  creator_handle_name String   @unique
+  display_name        String?
+  bio                 String?
+  content_label_name  String?
+  industry_label_name String?
+  follower_count      Int?
+  creator_id          String?  // Changed from numeric type to String to properly handle TikTok's large IDs
+  creator_price       Int?
+  currency            String?
+  following_count     Int?
+  like_count          Int?
+  median_views        Int?
+  profile_image       String?
+  videos_count        Int?
+  engagement_rate     Float?
 }

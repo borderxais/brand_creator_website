@@ -1,132 +1,113 @@
-'use client';
-
-import { useRef } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ScrollButtons } from '@/components/ui/ScrollButtons';
-import { Prisma } from '@prisma/client';
 
-type CreatorWithPlatforms = {
+interface Creator {
   id: string;
-  user: {
-    name: string;
-    image: string | null;
-  };
-  platforms: {
-    handle: string;
+  name: string;
+  image?: string | null;
+  followers: number;
+  engagementRate: number;
+  platforms?: Array<{
     platform: {
       name: string;
       displayName: string;
+      iconUrl?: string;
     };
-  }[];
-  categories: string;
-  followers: number;
-  engagementRate: number;
-};
+    followers: number;
+    engagementRate: number;
+  }>;
+}
 
 interface PlatformSectionProps {
   platform: string;
-  creators: CreatorWithPlatforms[];
-  description: string;
+  creators: Creator[];
+  iconUrl?: string | null;
 }
 
-export default function PlatformSection({ platform, creators, description }: PlatformSectionProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const handleScroll = (direction: 'left' | 'right') => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = direction === 'left' ? -400 : 400;
-      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
+export default function PlatformSection({ platform, creators, iconUrl }: PlatformSectionProps) {
+  if (!creators || creators.length === 0) {
+    return null;
+  }
 
   return (
-    <section className="py-8 relative">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-3xl font-bold mb-4 text-gray-900">{platform} Creators</h2>
-            <p className="text-gray-600">{description}</p>
-          </div>
-          <Link 
-            href={`/find-creators?platform=${platform.toLowerCase()}`}
-            className="text-blue-600 hover:text-blue-800 font-medium"
-          >
-            View All
-          </Link>
+    <section className="py-8">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          {iconUrl && (
+            <div className="mr-2 w-6 h-6 relative">
+              <Image
+                src={iconUrl}
+                alt={platform}
+                width={24}
+                height={24}
+              />
+            </div>
+          )}
+          <h2 className="text-2xl font-bold">{platform} Creators</h2>
         </div>
 
-        {/* Left scroll button */}
-        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
-          <ScrollButtons 
-            direction="left"
-            onScrollLeft={() => handleScroll('left')}
-            className="p-2 rounded-full bg-white shadow-lg hover:bg-gray-50 transition-colors"
-          />
-        </div>
+        <Link href={`/platforms/${platform.toLowerCase()}`} className="text-purple-600 hover:text-purple-800">
+          View all
+        </Link>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {creators.slice(0, 6).map((creator) => {
+          // Check if platforms exists before using find
+          const platformData = creator.platforms ? 
+            creator.platforms.find(p => p.platform.name === platform.toLowerCase()) : undefined;
+          
+          // If no platform data, use the creator's direct properties
+          const followers = platformData ? platformData.followers : creator.followers;
+          const engagementRate = platformData ? platformData.engagementRate : creator.engagementRate;
 
-        {/* Right scroll button */}
-        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10">
-          <ScrollButtons 
-            direction="right"
-            onScrollRight={() => handleScroll('right')}
-            className="p-2 rounded-full bg-white shadow-lg hover:bg-gray-50 transition-colors"
-          />
-        </div>
-        
-        <div 
-          ref={scrollContainerRef}
-          className="flex overflow-x-auto gap-6 pb-4 hide-scrollbar px-12"
-          style={{ scrollBehavior: 'smooth' }}
-        >
-          {creators.slice(0, 6).map((creator) => {
-            const platformData = creator.platforms.find(p => p.platform.name === platform.toLowerCase());
-            if (!platformData) return null;
-            
-            return (
-              <Link href={`/creator/${creator.id}`} key={creator.id}>
-                <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow min-w-[300px]">
-                  <div className="flex items-center mb-4">
-                    <Image
-                      src={creator.user.image || '/images/placeholder-40.svg'}
-                      alt={creator.user.name}
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                    />
-                    <div className="ml-3">
-                      <h3 className="font-semibold text-gray-900">{creator.user.name}</h3>
-                      <p className="text-sm text-gray-600">@{platformData.handle}</p>
+          return (
+            <Link 
+              href={`/creator/${creator.id}`}
+              key={creator.id}
+              className="block hover:shadow-lg transition-shadow duration-300"
+            >
+              <div className="bg-white rounded-lg shadow overflow-hidden h-full">
+                <div className="p-6">
+                  <div className="flex items-center">
+                    <div className="mr-4">
+                      {creator.image ? (
+                        <div className="w-16 h-16 relative">
+                          <Image
+                            src={creator.image}
+                            alt={creator.name}
+                            className="rounded-full object-cover"
+                            width={64}
+                            height={64}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/images/default-avatar.png';
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+                          <span className="text-gray-500 text-lg font-bold">
+                            {creator.name ? creator.name[0].toUpperCase() : '?'}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-600">Categories:</span>
-                      <span className="text-gray-900">{
-                        (() => {
-                          try {
-                            const parsed = JSON.parse(creator.categories);
-                            if (Array.isArray(parsed)) {
-                              return parsed.slice(0, 2).join(', ');
-                            } else {
-                              return parsed;
-                            }
-                          } catch (e) {
-                            return creator.categories || 'N/A';
-                          }
-                        })()
-                      }</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Followers:</span>
-                      <span className="text-gray-900">{creator.followers.toLocaleString()}</span>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">{creator.name}</h3>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <span>{followers.toLocaleString()} followers</span>
+                        <span className="mx-2">•</span>
+                        <span>{engagementRate.toFixed(2)}% engagement</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </Link>
-            );
-          })}
-        </div>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );

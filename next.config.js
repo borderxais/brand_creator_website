@@ -13,7 +13,27 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'randomuser.me',
-      }
+      },
+      {
+        protocol: 'https',
+        hostname: 'p16-sign.tiktokcdn-us.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'p19-sign.tiktokcdn-us.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'p16-sign.tiktokcdn.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.tiktokcdn.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.tiktokcdn-us.com',
+      },
     ],
   },
   eslint: {

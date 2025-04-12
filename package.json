@@ -25,6 +25,7 @@
     "@radix-ui/react-tabs": "^1.1.2",
     "@supabase/supabase-js": "^2.48.1",
     "@tailwindcss/line-clamp": "^0.4.4",
+    "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "chart.js": "^4.4.7",
     "class-variance-authority": "^0.7.1",
@@ -45,6 +46,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@faker-js/faker": "^9.5.1",
+    "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.17.16",
     "@types/react": "^18",

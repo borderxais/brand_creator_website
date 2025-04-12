@@ -13,6 +13,7 @@ interface FormData {
   platforms: string[];
   audienceSize: string;
   bio: string;
+  creatorHandleName: string;
 }
 
 export default function JoinAsCreator() {
@@ -28,6 +29,7 @@ export default function JoinAsCreator() {
     platforms: [],
     audienceSize: '',
     bio: '',
+    creatorHandleName: '',
   });
 
   const platforms = [
@@ -79,7 +81,7 @@ export default function JoinAsCreator() {
         }
 
         // Register the user
-        const response = await fetch('/api/register', {
+        const response = await fetch('/api/auth/register/creator', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -88,7 +90,7 @@ export default function JoinAsCreator() {
             email: formData.email,
             password: formData.password,
             name: formData.name,
-            role: 'CREATOR'
+            creatorHandleName: formData.creatorHandleName
           }),
         });
 
@@ -192,6 +194,23 @@ export default function JoinAsCreator() {
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-black"
                     required
                   />
+                </div>
+                <div>
+                  <label htmlFor="creatorHandleName" className="block text-sm font-medium text-black">
+                    Creator Handle Name
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      id="creatorHandleName"
+                      name="creatorHandleName"
+                      type="text"
+                      required
+                      value={formData.creatorHandleName}
+                      onChange={(e) => setFormData({...formData, creatorHandleName: e.target.value})}
+                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-black"
+                      placeholder="Your unique creator handle"
+                    />
+                  </div>
                 </div>
               </div>
             )}
