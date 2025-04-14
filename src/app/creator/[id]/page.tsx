@@ -5,6 +5,8 @@ import { PortfolioGallery } from '@/components/ui/PortfolioGallery';
 import ErrorHandlingImage from '@/components/ui/ErrorHandlingImage';
 import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
+import ClientAudienceChartWrapper from '@/components/charts/ClientAudienceChartWrapper';
+import ClientPerformanceChartWrapper from '@/components/charts/ClientPerformanceChartWrapper';
 
 // Function to get creator profile from database
 async function getCreatorProfile(id: string) {
@@ -41,7 +43,19 @@ async function getCreatorProfile(id: string) {
         }
       ],
       portfolioItems: [],
-      posts: []
+      posts: [],
+      creator_handle_name: creator.creator_handle_name,
+      creator_id: creator.creator_id,
+      industry_label_name: creator.industry_label_name,
+      follower_count: creator.follower_count,
+      following_count: creator.following_count,
+      like_count: creator.like_count,
+      videos_count: creator.videos_count,
+      engagement_rate: creator.engagement_rate,
+      median_views: creator.median_views,
+      content_label_name: creator.content_label_name,
+      creator_price: creator.creator_price,
+      currency: creator.currency
     };
   } catch (error) {
     console.error('Error fetching creator profile:', error);
@@ -287,6 +301,150 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
                   </div>
                 </div>
               )}
+
+              {/* Creator Detailed Stats */}
+              <div className="mt-8">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Creator Details</h2>
+                
+                {/* Account Information */}
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-6 mb-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-purple-800 mb-3 border-b border-purple-200 pb-2">
+                    Account Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <p className="text-sm font-medium text-gray-500">Creator Handle</p>
+                      <p className="text-lg font-bold text-gray-900">@{creator?.creator_handle_name || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <p className="text-sm font-medium text-gray-500">Creator ID</p>
+                      <p className="text-lg font-bold text-gray-900">{creator?.creator_id || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <p className="text-sm font-medium text-gray-500">Industry</p>
+                      <p className="text-lg font-bold text-gray-900">{creator?.industry_label_name || 'Not specified'}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Audience Metrics */}
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-blue-800 mb-3 border-b border-blue-200 pb-2">
+                    Audience Metrics
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <p className="text-sm font-medium text-gray-500">Followers</p>
+                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(creator?.follower_count || 0)}</p>
+                    </div>
+                    <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <p className="text-sm font-medium text-gray-500">Following</p>
+                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(creator?.following_count || 0)}</p>
+                    </div>
+                    <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <p className="text-sm font-medium text-gray-500">Total Likes</p>
+                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(creator?.like_count || 0)}</p>
+                    </div>
+                    <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <p className="text-sm font-medium text-gray-500">Videos Count</p>
+                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(creator?.videos_count || 0)}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Audience Chart */}
+                  <ClientAudienceChartWrapper 
+                    followerCount={creator?.follower_count || 0}
+                    followingCount={creator?.following_count || 0}
+                    likeCount={creator?.like_count || 0}
+                    videosCount={creator?.videos_count || 0}
+                  />
+                  
+                  <div className="mt-4 p-3 bg-blue-50 rounded-md">
+                    <p className="text-sm text-blue-800">
+                      <span className="font-semibold">Audience Insight:</span> With {new Intl.NumberFormat().format(creator?.follower_count || 0)} followers and {new Intl.NumberFormat().format(creator?.like_count || 0)} likes, this creator has built a substantial audience base in their niche.
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Performance Metrics */}
+                <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-lg p-6 mb-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-green-800 mb-3 border-b border-green-200 pb-2">
+                    Performance Metrics
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <p className="text-sm font-medium text-gray-500">Engagement Rate</p>
+                      <p className="text-xl font-bold text-gray-900">{(creator?.engagement_rate || 0).toFixed(2)}%</p>
+                    </div>
+                    <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <p className="text-sm font-medium text-gray-500">Median Views</p>
+                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(creator?.median_views || 0)}</p>
+                    </div>
+                    <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <p className="text-sm font-medium text-gray-500">Content Category</p>
+                      <p className="text-xl font-bold text-gray-900">{creator?.content_label_name || 'Not specified'}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Performance Chart */}
+                  <ClientPerformanceChartWrapper 
+                    engagementRate={creator?.engagement_rate || 0}
+                    medianViews={creator?.median_views || 0}
+                    contentCategory={creator?.content_label_name || ''}
+                  />
+                  
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-3 bg-green-50 rounded-md">
+                      <p className="text-sm text-green-800">
+                        <span className="font-semibold">Engagement Analysis:</span> This creator's {(creator?.engagement_rate || 0).toFixed(2)}% engagement rate is {creator?.engagement_rate && creator.engagement_rate > 2.7 ? 'above' : 'below'} the platform average of 2.7%.
+                      </p>
+                    </div>
+                    <div className="p-3 bg-teal-50 rounded-md">
+                      <p className="text-sm text-teal-800">
+                        <span className="font-semibold">View Performance:</span> With {new Intl.NumberFormat().format(creator?.median_views || 0)} median views, this creator consistently reaches a significant audience with each post.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Business Information */}
+                <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-amber-800 mb-3 border-b border-amber-200 pb-2">
+                    Collaboration Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white rounded-md p-4 shadow-sm hover:shadow-md transition-shadow flex items-center">
+                      <div className="bg-amber-100 rounded-full p-3 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Creator Rate</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {creator?.creator_price 
+                            ? `${creator.currency || '$'}${new Intl.NumberFormat().format(creator.creator_price)}`
+                            : 'Contact for pricing'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-md p-4 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm font-medium text-gray-500">Availability</p>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          Available
+                        </span>
+                      </div>
+                      <button className="mt-3 w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Schedule Collaboration
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div className="mt-6">
                 <SocialLinks {...socialLinks} />
