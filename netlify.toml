@@ -3,7 +3,7 @@
   publish = ".next"
 
 [functions]
-  external_node_modules = ["@prisma/client"]
+  external_node_modules = ["@prisma/client", "axios"]
   included_files = ["prisma/**"]
 
 [[plugins]]
