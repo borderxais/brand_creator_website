@@ -34,7 +34,7 @@ if __name__ == "__main__":
     MY_TCM_ACCOUNT_ID = "7491077961832202247"
 
     # Example handle name for testing
-    CREATOR_HANDLE_NAME = "noahandlori"
+    CREATOR_HANDLE_NAME = "jess.judith"
 
     try:
         result = get_public_account_insights(

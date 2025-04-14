@@ -29,7 +29,7 @@ export function SearchBar({ initialPlatform = 'all', initialCategory = 'all' }: 
     const platform = formData.get('platform') as string;
     const category = formData.get('category') as string;
 
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams?.toString() || '');
 
     if (platform && platform !== 'all') params.set('platform', platform);
     else params.delete('platform');

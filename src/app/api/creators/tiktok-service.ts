@@ -70,6 +70,30 @@ export async function fetchTikTokCreatorData(access_token: string, tto_tcm_accou
 
 export async function saveCreatorData(creatorData: TikTokCreatorResponse["data"]) {
   try {
+    // Debug complete incoming data structure
+    console.log("==================== INCOMING CREATOR DATA ====================");
+    console.log(JSON.stringify(creatorData, null, 2));
+    
+    // Debug data types
+    console.log("==================== DATA TYPES ====================");
+    console.log({
+      bio: typeof creatorData.bio,
+      content_labels: typeof creatorData.content_labels,
+      creator_id: typeof creatorData.creator_id,
+      creator_price: typeof creatorData.creator_price,
+      currency: typeof creatorData.currency,
+      display_name: typeof creatorData.display_name,
+      engagement_rate: typeof creatorData.engagement_rate,
+      followers_count: typeof creatorData.followers_count,
+      following_count: typeof creatorData.following_count,
+      handle_name: typeof creatorData.handle_name,
+      industry_labels: typeof creatorData.industry_labels,
+      likes_count: typeof creatorData.likes_count,
+      median_views: typeof creatorData.median_views,
+      profile_image: typeof creatorData.profile_image,
+      videos_count: typeof creatorData.videos_count
+    });
+    
     // Extract content label name and industry label name
     const contentLabelName = creatorData.content_labels?.length > 0 
       ? safeText(creatorData.content_labels[0].label_name) 
@@ -84,6 +108,18 @@ export async function saveCreatorData(creatorData: TikTokCreatorResponse["data"]
     
     console.log("Attempting to save creator data for:", handleName);
     
+    // Raw numeric values debug
+    console.log("==================== NUMERIC VALUES (RAW) ====================");
+    console.log({
+      followers: creatorData.followers_count,
+      following: creatorData.following_count,
+      likes: creatorData.likes_count,
+      views: creatorData.median_views,
+      videos: creatorData.videos_count,
+      engagement: creatorData.engagement_rate,
+      creator_price: creatorData.creator_price
+    });
+    
     // Let's try a simplified insertion with fewer fields first
     const minimalData = {
       creator_handle_name: handleName,
@@ -91,20 +127,22 @@ export async function saveCreatorData(creatorData: TikTokCreatorResponse["data"]
       bio: safeText(creatorData.bio),
       content_label_name: contentLabelName,
       industry_label_name: industryLabelName,
-      follower_count: safeFloat(creatorData.followers_count) !== null ? Math.round(safeFloat(creatorData.followers_count)!) : null,
-      creator_id: safeText(creatorData.creator_id), // Now properly included as a string
-      creator_price: safeFloat(creatorData.creator_price) !== null ? Math.round(safeFloat(creatorData.creator_price)!) : null,
+      // Fix: Directly use number values when available instead of processing through safeFloat
+      follower_count: typeof creatorData.followers_count === 'number' ? Math.round(creatorData.followers_count) : null,
+      creator_id: safeText(creatorData.creator_id),
+      creator_price: typeof creatorData.creator_price === 'number' ? Math.round(creatorData.creator_price) : null,
       currency: safeText(creatorData.currency),
-      following_count: safeFloat(creatorData.following_count) !== null ? Math.round(safeFloat(creatorData.following_count)!) : null,
-      like_count: safeFloat(creatorData.likes_count) !== null ? Math.round(safeFloat(creatorData.likes_count)!) : null,
-      median_views: safeFloat(creatorData.median_views) !== null ? Math.round(safeFloat(creatorData.median_views)!) : null,
+      following_count: typeof creatorData.following_count === 'number' ? Math.round(creatorData.following_count) : null,
+      like_count: typeof creatorData.likes_count === 'number' ? Math.round(creatorData.likes_count) : null,
+      median_views: typeof creatorData.median_views === 'number' ? Math.round(creatorData.median_views) : null,
       profile_image: safeText(creatorData.profile_image),
-      videos_count: safeFloat(creatorData.videos_count) !== null ? Math.round(safeFloat(creatorData.videos_count)!) : null,
-      engagement_rate: safeFloat(creatorData.engagement_rate)
+      videos_count: typeof creatorData.videos_count === 'number' ? Math.round(creatorData.videos_count) : null,
+      engagement_rate: typeof creatorData.engagement_rate === 'number' ? creatorData.engagement_rate : null
     };
     
-    // For debugging
-    console.log("Using minimal data set with creator_id");
+    // Debug processed data before saving
+    console.log("==================== PROCESSED DATA (TO BE SAVED) ====================");
+    console.log(JSON.stringify(minimalData, null, 2));
     
     // Try finding the creator first
     const existingCreator = await prisma.findCreator.findUnique({
@@ -113,61 +151,24 @@ export async function saveCreatorData(creatorData: TikTokCreatorResponse["data"]
     
     let result;
     
-    // Use a direct SQL approach to avoid Prisma type conversion issues
+    // Use Prisma's type-safe operations instead of raw SQL
     if (existingCreator) {
       console.log(`Found existing creator: ${handleName}`);
       
-      // Update existing creator with raw SQL
-      await prisma.$executeRaw`
-        UPDATE "FindCreator" 
-        SET 
-          "display_name" = ${minimalData.display_name},
-          "bio" = ${minimalData.bio},
-          "content_label_name" = ${minimalData.content_label_name},
-          "industry_label_name" = ${minimalData.industry_label_name},
-          "follower_count" = ${minimalData.follower_count},
-          "creator_id" = ${minimalData.creator_id},
-          "creator_price" = ${minimalData.creator_price},
-          "currency" = ${minimalData.currency},
-          "following_count" = ${minimalData.following_count},
-          "like_count" = ${minimalData.like_count},
-          "median_views" = ${minimalData.median_views},
-          "profile_image" = ${minimalData.profile_image},
-          "videos_count" = ${minimalData.videos_count},
-          "engagement_rate" = ${minimalData.engagement_rate}
-        WHERE "id" = ${existingCreator.id}
-      `;
-      
-      // Fetch updated record
-      result = await prisma.findCreator.findUnique({
-        where: { id: existingCreator.id }
+      result = await prisma.findCreator.update({
+        where: { id: existingCreator.id },
+        data: minimalData
       });
       
-      console.log("Updated creator with SQL:", result);
+      console.log("Updated creator:", result);
     } else {
       console.log(`Creating new creator: ${handleName}`);
       
-      // Insert with raw SQL - now including creator_id
-      await prisma.$executeRaw`
-        INSERT INTO "FindCreator" (
-          "created_at", "creator_handle_name", "display_name", "bio",
-          "content_label_name", "industry_label_name", "follower_count",
-          "creator_id", "creator_price", "currency", "following_count", "like_count", 
-          "median_views", "profile_image", "videos_count", "engagement_rate"
-        ) VALUES (
-          NOW(), ${minimalData.creator_handle_name}, ${minimalData.display_name}, ${minimalData.bio},
-          ${minimalData.content_label_name}, ${minimalData.industry_label_name}, ${minimalData.follower_count},
-          ${minimalData.creator_id}, ${minimalData.creator_price}, ${minimalData.currency}, ${minimalData.following_count}, ${minimalData.like_count},
-          ${minimalData.median_views}, ${minimalData.profile_image}, ${minimalData.videos_count}, ${minimalData.engagement_rate}
-        )
-      `;
-      
-      // Fetch the created record
-      result = await prisma.findCreator.findUnique({
-        where: { creator_handle_name: handleName }
+      result = await prisma.findCreator.create({
+        data: minimalData
       });
       
-      console.log("Created creator with SQL:", result);
+      console.log("Created creator:", result);
     }
     
     return result;
@@ -187,14 +188,13 @@ export async function saveCreatorData(creatorData: TikTokCreatorResponse["data"]
       });
       
       if (!existingMinimal) {
-        // Only create if doesn't exist, with absolute minimal fields
-        await prisma.$executeRaw`
-          INSERT INTO "FindCreator" (
-            "created_at", "creator_handle_name", "display_name"
-          ) VALUES (
-            NOW(), ${handleName}, ${displayName}
-          )
-        `;
+        // Use Prisma create instead of raw SQL
+        await prisma.findCreator.create({
+          data: {
+            creator_handle_name: handleName,
+            display_name: displayName
+          }
+        });
         
         console.log("Created minimal record for:", handleName);
       }

@@ -72,10 +72,11 @@ function parseCategories(categoriesStr: string | null): string[] {
 }
 
 // Generate metadata for the page
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata(props: any): Promise<Metadata> {
+  const params = await props.params;
   const { id } = params;
   const creator = await getCreatorProfile(id);
-  
+
   if (!creator) {
     return {
       title: 'Creator Not Found',
@@ -88,7 +89,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   };
 }
 
-export default async function CreatorProfile({ params }: { params: { id: string } }) {
+export default async function CreatorProfile(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const { id } = params;
     const creator = await getCreatorProfile(id);

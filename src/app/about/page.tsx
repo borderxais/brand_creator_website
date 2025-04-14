@@ -1,3 +1,14 @@
+import { Metadata } from 'next'
+
+// Tell Next.js this is static content that can be prerendered
+export const dynamic = 'force-static'
+
+// Add proper metadata
+export const metadata: Metadata = {
+  title: 'About Us | Brand Creator Platform',
+  description: 'Learn more about our mission to connect brands with authentic creators and revolutionize the creator economy.'
+}
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">

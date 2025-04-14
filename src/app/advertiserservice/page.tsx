@@ -3,6 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 
+// Add this interface above your component
+interface AdGroup {
+  adgroup_id: string;
+  status: string;
+  cost_per_conversion: string;
+  cpc: string;
+  spend: string;
+  conversion: string;
+  impressions: string;
+  cpm: string;
+  name?: string;
+  date_range?: string;
+}
+
 // Set fixed advertiser ID as specified
 const ADVERTISER_ID = '7385681808811294736';
 
@@ -33,7 +47,10 @@ const mockAdGroups = [
 export default function AdvertiserService() {
   const { data: session } = useSession();
   const [searchTerm, setSearchTerm] = useState('');
-  const [adGroups, setAdGroups] = useState([]);
+  
+  // Add the type annotation here
+  const [adGroups, setAdGroups] = useState<AdGroup[]>([]);
+  
   const [loading, setLoading] = useState(true);
   const [metricsLoading, setMetricsLoading] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
@@ -70,7 +87,7 @@ export default function AdvertiserService() {
         }
         
         // Check each ad group for missing metrics and add defaults if needed
-        const enhancedAdGroups = adGroupsData.map(group => ({
+        const enhancedAdGroups = adGroupsData.map((group: Partial<AdGroup>) => ({
           ...group,
           status: group.status || 'ENABLE',
           impressions: group.impressions || '0',
@@ -82,7 +99,7 @@ export default function AdvertiserService() {
         }));
         
         // Filter to only keep ENABLE status ad groups
-        const enabledAdGroups = enhancedAdGroups.filter(group => group.status === 'ENABLE');
+        const enabledAdGroups = enhancedAdGroups.filter((group: Partial<AdGroup>) => group.status === 'ENABLE');
         console.log('Enhanced ad groups with defaults:', enabledAdGroups);
         setAdGroups(enabledAdGroups);
       }
@@ -124,13 +141,13 @@ export default function AdvertiserService() {
       // Update adGroups with metrics data, keeping only ENABLE status
       if (result.data && Array.isArray(result.data)) {
         const newAdGroups = [...adGroups];
-        result.data.forEach(metric => {
-          const adGroupIndex = newAdGroups.findIndex(ag => ag.adgroup_id === metric.adgroup_id);
+        result.data.forEach((metric: Partial<AdGroup>) => {
+          const adGroupIndex: number = newAdGroups.findIndex(ag => ag.adgroup_id === metric.adgroup_id);
           if (adGroupIndex !== -1) {
             newAdGroups[adGroupIndex] = { ...newAdGroups[adGroupIndex], ...metric };
           } else if (metric.status === 'ENABLE') {
             // Only add new ad groups if they have ENABLE status
-            newAdGroups.push(metric);
+            newAdGroups.push(metric as AdGroup);
           }
         });
         setAdGroups(newAdGroups);
@@ -188,11 +205,15 @@ export default function AdvertiserService() {
   console.log('Filtered adGroups:', filteredAdGroups);
 
   // Card rendering function for ad groups
-  const renderAdGroupCard = (group) => {
+  const renderAdGroupCard = (group: Partial<AdGroup>) => {
     console.log('Rendering card for group:', group);
     
     // Helper function to safely format numeric values
-    const formatNumber = (value, decimals = 2) => {
+    interface NumberFormatter {
+      (value: string | number | undefined | null, decimals?: number): string;
+    }
+
+    const formatNumber: NumberFormatter = (value, decimals = 2) => {
       if (!value) return '0.00';
       const number = parseFloat(String(value).replace(/[^0-9.-]+/g, ''));
       return isNaN(number) ? '0.00' : number.toFixed(decimals);
