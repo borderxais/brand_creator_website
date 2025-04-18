@@ -3,69 +3,70 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get query parameters
     const searchParams = request.nextUrl.searchParams;
-    const platform = searchParams.get('platform') || 'all';
-    const category = searchParams.get('category') || '';
     const query = searchParams.get('query') || '';
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const skip = (page - 1) * limit;
+    const category = searchParams.get('category') || '';
+    const platform = searchParams.get('platform') || '';
     
-    // Base query conditions
-    let whereCondition: any = {};
+    // Pagination parameters
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const pageSize = parseInt(searchParams.get('pageSize') || '24', 10);
+    const skip = (page - 1) * pageSize;
+
+    // Build filter based on query params
+    const filters: any = {};
     
-    // Filter by platform - assuming TikTok for now since we're using TikTok API
-    if (platform !== 'all' && platform !== 'tiktok') {
-      // If specifically asking for non-TikTok platforms, return empty for now
-      return NextResponse.json({ 
-        creators: [],
-        totalCount: 0,
-        hasMore: false
-      });
-    }
-    
-    // Filter by content label/category
-    if (category) {
-      whereCondition.content_label_name = {
-        contains: category,
-        mode: 'insensitive'
-      };
-    }
-    
-    // Filter by search query
+    // Search for creators by name, bio, or handle name
     if (query) {
-      whereCondition.OR = [
+      filters.OR = [
         { display_name: { contains: query, mode: 'insensitive' } },
         { bio: { contains: query, mode: 'insensitive' } },
         { creator_handle_name: { contains: query, mode: 'insensitive' } }
       ];
     }
     
-    // Get total count for pagination
-    const totalCount = await prisma.findCreator.count({
-      where: whereCondition
+    // Filter by category if specified
+    if (category) {
+      filters.industry_label_name = { contains: category, mode: 'insensitive' };
+    }
+    
+    // Filter by platform (here we only have TikTok, but keeping for future extensibility)
+    if (platform && platform !== 'tiktok') {
+      return NextResponse.json({
+        creators: [],
+        totalCount: 0,
+        hasMore: false
+      });
+    }
+    
+    // Count total records for pagination
+    const totalCount = await prisma.findCreator.count({ where: filters });
+    
+    // Fetch creators with pagination
+    const creatorRecords = await prisma.findCreator.findMany({
+      where: filters,
+      skip,
+      take: pageSize,
+      orderBy: { follower_count: 'desc' }
     });
     
-    // Get creators with pagination
-    const creators = await prisma.findCreator.findMany({
-      where: whereCondition,
-      take: limit,
-      skip: skip,
-      orderBy: {
-        follower_count: 'desc'
+    // Format creators for the frontend
+    const creators = creatorRecords.map(creator => {
+      const categories = creator.industry_label_name 
+        ? [creator.industry_label_name] 
+        : [];
+        
+      if (creator.content_label_name && !categories.includes(creator.content_label_name)) {
+        categories.push(creator.content_label_name);
       }
-    });
-    
-    // Format the response to match the structure expected by the frontend
-    const formattedCreators = creators.map(creator => {
+      
       return {
-        id: creator.id.toString(),
+        id: creator.id,
         bio: creator.bio,
-        location: "TikTok Creator",
-        categories: creator.content_label_name ? [creator.content_label_name] : [],
+        location: 'TikTok Creator', // Can be enhanced with actual location data
+        categories,
         user: {
-          id: creator.id.toString(),
+          id: creator.id,
           name: creator.display_name,
           image: creator.profile_image
         },
@@ -78,21 +79,22 @@ export async function GET(request: NextRequest) {
             },
             followers: creator.follower_count || 0,
             engagementRate: creator.engagement_rate || 0,
-            handle: `@${creator.creator_handle_name}`
+            handle: creator.creator_handle_name
           }
         ]
       };
     });
     
-    return NextResponse.json({ 
-      creators: formattedCreators,
+    return NextResponse.json({
+      creators,
       totalCount,
-      hasMore: totalCount > skip + limit
+      hasMore: skip + creators.length < totalCount
     });
+    
   } catch (error) {
-    console.error('Error in /api/creators route:', error);
+    console.error('Error fetching creators:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch creators', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Failed to fetch creators' },
       { status: 500 }
     );
   }

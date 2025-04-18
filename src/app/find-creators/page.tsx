@@ -49,6 +49,10 @@ export default function FindCreators() {
   const [hasNewCreators, setHasNewCreators] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshProgress, setRefreshProgress] = useState({ current: 0, total: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasMorePages, setHasMorePages] = useState(false);
+  const PAGE_SIZE = 24;
 
   // Check for creators (both new and existing)
   const checkForCreators = useCallback(async (refreshAll = false) => {
@@ -91,6 +95,10 @@ export default function FindCreators() {
       if (searchQuery) params.append('query', searchQuery);
       if (selectedCategory) params.append('category', selectedCategory);
       if (selectedPlatform) params.append('platform', selectedPlatform);
+      
+      // Add pagination parameters
+      params.append('page', currentPage.toString());
+      params.append('pageSize', PAGE_SIZE.toString());
 
       // Add a cache-busting parameter to ensure fresh data
       params.append('_t', Date.now().toString());
@@ -105,6 +113,8 @@ export default function FindCreators() {
       }
 
       setCreators(data.creators || []);
+      setTotalPages(Math.ceil(data.totalCount / PAGE_SIZE));
+      setHasMorePages(data.hasMore);
       setNoCreators(data.totalCount === 0);
       setError('');
     } catch (err) {
@@ -114,7 +124,7 @@ export default function FindCreators() {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedCategory, selectedPlatform]);
+  }, [searchQuery, selectedCategory, selectedPlatform, currentPage]);
 
   // Function to sync TikTok creators (new or refresh all)
   const syncCreators = useCallback(async (refreshAll = false) => {
@@ -196,6 +206,11 @@ export default function FindCreators() {
     return () => clearTimeout(timeoutId);
   }, [searchQuery, selectedCategory, selectedPlatform, fetchCreators]);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedPlatform]);
+
   // Function to handle filter clearing
   const handleClearFilters = () => {
     setSearchQuery('');
@@ -218,6 +233,23 @@ export default function FindCreators() {
     } else {
       await fetchCreators();
     }
+  };
+
+  // Handlers for pagination
+  const handleNextPage = () => {
+    if (hasMorePages) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -383,89 +415,162 @@ export default function FindCreators() {
         ) : (
           // Only render grid if not loading, no error, and we have creators
           !loading && !error && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-              {creators.map((creator) => (
-                <Link
-                  key={creator.id}
-                  href={`/creator/${creator.id}`}
-                  className="block hover:shadow-lg transition-shadow duration-300"
-                >
-                  <div className="bg-white rounded-lg shadow overflow-hidden h-full">
-                    <div className="p-6">
-                      <div className="flex items-center">
-                        <div className="relative h-16 w-16 mr-4">
-                          {creator.user.image ? (
-                            <ErrorHandlingImage
-                              src={creator.user.image}
-                              alt={creator.user.name || 'Creator'}
-                              fill
-                              className="rounded-full object-cover"
-                              sizes="64px"
-                              fallback={
-                                <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
-                                  <span className="text-gray-500">{creator.user.name?.[0] || '?'}</span>
-                                </div>
-                              }
-                            />
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                {creators.map((creator) => (
+                  <Link
+                    key={creator.id}
+                    href={`/creator/${creator.id}`}
+                    className="block hover:shadow-lg transition-shadow duration-300"
+                  >
+                    <div className="bg-white rounded-lg shadow overflow-hidden h-full">
+                      <div className="p-6">
+                        <div className="flex items-center">
+                          <div className="relative h-16 w-16 mr-4">
+                            {creator.user.image ? (
+                              <ErrorHandlingImage
+                                src={creator.user.image}
+                                alt={creator.user.name || 'Creator'}
+                                fill
+                                className="rounded-full object-cover"
+                                sizes="64px"
+                                fallback={
+                                  <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <span className="text-gray-500">{creator.user.name?.[0] || '?'}</span>
+                                  </div>
+                                }
+                              />
+                            ) : (
+                              <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
+                                <span className="text-gray-500">{creator.user.name?.[0] || '?'}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900">{creator.user.name || 'Unknown Creator'}</h3>
+                            <p className="text-sm text-gray-500">{creator.location || 'TikTok Creator'}</p>
+                          </div>
+                        </div>
+
+                        <p className="mt-4 text-gray-600 line-clamp-2">{creator.bio || 'No bio available'}</p>
+
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {creator.categories && creator.categories.length > 0 ? (
+                            creator.categories.map((category, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+                              >
+                                {category}
+                              </span>
+                            ))
                           ) : (
-                            <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
-                              <span className="text-gray-500">{creator.user.name?.[0] || '?'}</span>
-                            </div>
+                            <span className="text-sm text-gray-400">No categories</span>
                           )}
                         </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900">{creator.user.name || 'Unknown Creator'}</h3>
-                          <p className="text-sm text-gray-500">{creator.location || 'TikTok Creator'}</p>
+
+                        <div className="mt-4 flex items-center justify-between">
+                          <div className="flex space-x-2">
+                            {creator.platforms.map((platform, index) => (
+                              <div key={index} className="flex items-center">
+                                {platform.platform.name === 'tiktok' && (
+                                  <Image
+                                    src="/icons/tiktok.svg"
+                                    alt="TikTok"
+                                    width={20}
+                                    height={20}
+                                  />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {creator.platforms[0]?.followers?.toLocaleString() || '0'} followers
+                          </div>
                         </div>
-                      </div>
 
-                      <p className="mt-4 text-gray-600 line-clamp-2">{creator.bio || 'No bio available'}</p>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {creator.categories && creator.categories.length > 0 ? (
-                          creator.categories.map((category, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
-                            >
-                              {category}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-sm text-gray-400">No categories</span>
-                        )}
-                      </div>
-
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="flex space-x-2">
-                          {creator.platforms.map((platform, index) => (
-                            <div key={index} className="flex items-center">
-                              {platform.platform.name === 'tiktok' && (
-                                <Image
-                                  src="/icons/tiktok.svg"
-                                  alt="TikTok"
-                                  width={20}
-                                  height={20}
-                                />
-                              )}
-                            </div>
-                          ))}
+                        <div className="mt-5 pt-5 border-t border-gray-200">
+                          <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                            View Profile
+                          </button>
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {creator.platforms[0]?.followers?.toLocaleString() || '0'} followers
-                        </div>
-                      </div>
-
-                      <div className="mt-5 pt-5 border-t border-gray-200">
-                        <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                          View Profile
-                        </button>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Pagination UI */}
+              {totalPages > 1 && (
+                <div className="mt-10 flex justify-center">
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    {/* Previous page button */}
+                    <button
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                      className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
+                        currentPage === 1 
+                          ? 'text-gray-300 cursor-not-allowed' 
+                          : 'text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="sr-only">Previous</span>
+                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    
+                    {/* Page number buttons */}
+                    {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                      // Show current page and nearby pages
+                      let pageToShow = currentPage - 2 + i;
+                      
+                      // Adjustments for edges
+                      if (currentPage < 3) {
+                        pageToShow = i + 1;
+                      } else if (currentPage > totalPages - 2) {
+                        pageToShow = totalPages - 4 + i;
+                      }
+                      
+                      // Ensure page is in valid range
+                      if (pageToShow < 1 || pageToShow > totalPages) {
+                        return null;
+                      }
+                      
+                      return (
+                        <button
+                          key={pageToShow}
+                          onClick={() => handlePageChange(pageToShow)}
+                          className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium ${
+                            currentPage === pageToShow
+                              ? 'z-10 bg-purple-50 border-purple-500 text-purple-600'
+                              : 'bg-white text-gray-500 hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageToShow}
+                        </button>
+                      );
+                    })}
+                    
+                    {/* Next page button */}
+                    <button
+                      onClick={handleNextPage}
+                      disabled={!hasMorePages}
+                      className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
+                        !hasMorePages
+                          ? 'text-gray-300 cursor-not-allowed' 
+                          : 'text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="sr-only">Next</span>
+                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4-4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              )}
+            </>
           )
         )}
       </div>
