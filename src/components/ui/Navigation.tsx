@@ -4,20 +4,46 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Globe } from 'lucide-react';
 
 export default function Navigation() {
-  const pathname = usePathname();
-  const { data: session } = useSession();
+  const pathname = usePathname() || ''; // Ensure pathname is never undefined
   const router = useRouter();
+  const { data: session, status } = useSession(); // Get status too
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDesktopView, setIsDesktopView] = useState(true); // Start with desktop view by default
+  const [isDesktopView, setIsDesktopView] = useState(true);
+
+  // Determine current language from URL path - with non-null pathname
+  const isChinesePath = pathname.startsWith('/zh');
+
+  // Debug logging - temporarily add this
+  useEffect(() => {
+    console.log('Navigation render:', { 
+      pathname, 
+      sessionStatus: status,
+      userRole: session?.user?.role,
+      isDesktopView 
+    });
+  }, [pathname, status, session, isDesktopView]);
+
+  // Function to switch language
+  const switchLanguage = () => {
+    if (isChinesePath) {
+      // Switch from Chinese to English
+      const englishPath = pathname.replace(/^\/zh/, '') || '/';
+      router.push(englishPath);
+    } else {
+      // Switch from English to Chinese
+      const chinesePath = `/zh${pathname}`;
+      router.push(chinesePath);
+    }
+  };
 
   // Calculate view on mount and window resize
   useEffect(() => {
     const calculateView = () => {
       if (typeof window === 'undefined') return;
-      
+
       const logoWidth = 150;
       const findCreatorsWidth = 120;
       const campaignsWidth = 100;
@@ -26,9 +52,16 @@ export default function Navigation() {
       const creatorButtonWidth = 140;
       const brandButtonWidth = 140;
       const spacing = 120;
-      const minWidth = logoWidth + findCreatorsWidth + campaignsWidth + howItWorksWidth + 
-                      loginWidth + creatorButtonWidth + brandButtonWidth + spacing;
-      
+      const minWidth =
+        logoWidth +
+        findCreatorsWidth +
+        campaignsWidth +
+        howItWorksWidth +
+        loginWidth +
+        creatorButtonWidth +
+        brandButtonWidth +
+        spacing;
+
       setIsDesktopView(window.innerWidth >= minWidth);
     };
 
@@ -44,22 +77,53 @@ export default function Navigation() {
     }
   }, [isDesktopView]);
 
-  // Don't show navigation in portals
-  if (pathname?.startsWith('/brandportal') || pathname?.startsWith('/creatorportal')) {
+  // Loading state - show placeholder instead of nothing
+  if (status === 'loading') {
+    return (
+      <nav className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex-shrink-0 flex items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                <div className="w-24 h-6 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
+  // Don't show navigation in portals - more defensive check
+  if (pathname && (pathname.startsWith('/brandportal') || pathname.startsWith('/creatorportal'))) {
     return null;
   }
 
-  // Only hide navigation for authenticated users with specific roles
-  if (session?.user && (session.user.role === 'BRAND' || session.user.role === 'CREATOR')) {
+  // Only hide navigation for authenticated users with specific roles - more robust check
+  if (status === 'authenticated' && session?.user && 
+      (session.user.role === 'BRAND' || session.user.role === 'CREATOR')) {
     return null;
   }
 
-  const navLinks = [
-    { href: '/find-creators', label: 'Find Creators', width: '120px' },
-    { href: '/campaigns', label: 'Campaigns', width: '100px' },
-    { href: '/advertiserservice', label: 'Advertiser Service', width: '150px' },
-    { href: '/how-it-works', label: 'How it Works', width: '120px' },
-  ];
+  // Define navigation links for both languages
+  const navLinks = {
+    en: [
+      { href: '/find-creators', label: 'Find Creators', width: '120px' },
+      { href: '/campaigns', label: 'Campaigns', width: '100px' },
+      { href: '/advertiserservice', label: 'Advertiser Service', width: '150px' },
+      { href: '/how-it-works', label: 'How it Works', width: '120px' },
+    ],
+    zh: [
+      { href: '/zh/find-creators', label: '寻找创作者', width: '120px' },
+      { href: '/zh/campaigns', label: '广告活动', width: '100px' },
+      { href: '/zh/advertiser-services', label: '广告主服务', width: '150px' },
+      { href: '/zh/about', label: '关于我们', width: '120px' },
+    ],
+  };
+
+  // Select current language navigation items
+  const currentNavLinks = isChinesePath ? navLinks.zh : navLinks.en;
 
   const isActive = (path: string) => pathname === path;
 
@@ -68,12 +132,8 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center gap-3">
-              <img
-                src="/logo.jpg"
-                alt="BorderX Logo"
-                className="w-6 h-6"
-              />
+            <Link href={isChinesePath ? '/zh' : '/'} className="flex items-center gap-3">
+              <img src="/logo.jpg" alt="BorderX Logo" className="w-6 h-6" />
               <span className="text-2xl font-bold text-gray-600 whitespace-nowrap">BorderX</span>
             </Link>
           </div>
@@ -81,7 +141,7 @@ export default function Navigation() {
           {isDesktopView && (
             <>
               <div className="flex items-center w-full space-x-6 ml-8">
-                {navLinks.map((link) => (
+                {currentNavLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
@@ -92,7 +152,7 @@ export default function Navigation() {
                     }`}
                     style={{
                       width: link.width,
-                      textOverflow: 'ellipsis'
+                      textOverflow: 'ellipsis',
                     }}
                   >
                     {link.label}
@@ -102,35 +162,44 @@ export default function Navigation() {
 
               {!session && (
                 <div className="flex items-center space-x-4">
+                  {/* Language switcher button */}
+                  <button
+                    onClick={switchLanguage}
+                    className="flex items-center px-2 py-1 text-sm text-gray-600 hover:text-purple-600 border border-gray-200 rounded"
+                  >
+                    <Globe className="w-4 h-4 mr-1" />
+                    {isChinesePath ? 'English' : '中文'}
+                  </button>
+
                   <Link
-                    href="/login"
+                    href={isChinesePath ? '/zh/login' : '/login'}
                     className="text-base font-medium text-gray-600 hover:text-purple-600 whitespace-nowrap overflow-hidden text-center"
                     style={{
                       width: '80px',
-                      textOverflow: 'ellipsis'
+                      textOverflow: 'ellipsis',
                     }}
                   >
-                    Log in
+                    {isChinesePath ? '登录' : 'Log in'}
                   </Link>
                   <Link
-                    href="/join-creator"
+                    href={isChinesePath ? '/zh/join-creator' : '/join-creator'}
                     className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 whitespace-nowrap overflow-hidden"
                     style={{
                       width: '140px',
-                      textOverflow: 'ellipsis'
+                      textOverflow: 'ellipsis',
                     }}
                   >
-                    Join as Creator
+                    {isChinesePath ? '成为创作者' : 'Join as Creator'}
                   </Link>
                   <Link
-                    href="/join-brand"
+                    href={isChinesePath ? '/zh/join-brand' : '/join-brand'}
                     className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 whitespace-nowrap overflow-hidden"
                     style={{
                       width: '140px',
-                      textOverflow: 'ellipsis'
+                      textOverflow: 'ellipsis',
                     }}
                   >
-                    Join as Brand
+                    {isChinesePath ? '成为品牌' : 'Join as Brand'}
                   </Link>
                 </div>
               )}
@@ -138,18 +207,28 @@ export default function Navigation() {
           )}
 
           {!isDesktopView && (
-            <button
-              type="button"
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <X className="block h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Menu className="block h-6 w-6" aria-hidden="true" />
-              )}
-            </button>
+            <div className="flex items-center">
+              {/* Mobile language switcher */}
+              <button
+                onClick={switchLanguage}
+                className="mr-2 p-2 text-gray-400 hover:text-gray-500"
+              >
+                <Globe className="h-6 w-6" />
+              </button>
+
+              <button
+                type="button"
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                <span className="sr-only">Open main menu</span>
+                {isMenuOpen ? (
+                  <X className="block h-6 w-6" aria-hidden="true" />
+                ) : (
+                  <Menu className="block h-6 w-6" aria-hidden="true" />
+                )}
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -157,7 +236,7 @@ export default function Navigation() {
       {/* Mobile menu */}
       {!isDesktopView && isMenuOpen && (
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          {navLinks.map((link) => (
+          {currentNavLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -174,25 +253,25 @@ export default function Navigation() {
           {!session && (
             <>
               <Link
-                href="/login"
+                href={isChinesePath ? '/zh/login' : '/login'}
                 className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-purple-600 hover:bg-purple-50"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Log in
+                {isChinesePath ? '登录' : 'Log in'}
               </Link>
               <Link
-                href="/join-creator"
+                href={isChinesePath ? '/zh/join-creator' : '/join-creator'}
                 className="block px-3 py-2 rounded-md text-base font-medium text-purple-600 bg-purple-50 hover:bg-purple-100"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Join as Creator
+                {isChinesePath ? '成为创作者' : 'Join as Creator'}
               </Link>
               <Link
-                href="/join-brand"
+                href={isChinesePath ? '/zh/join-brand' : '/join-brand'}
                 className="block px-3 py-2 rounded-md text-base font-medium text-purple-600 bg-purple-50 hover:bg-purple-100"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Join as Brand
+                {isChinesePath ? '成为品牌' : 'Join as Brand'}
               </Link>
             </>
           )}
