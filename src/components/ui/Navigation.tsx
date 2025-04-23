@@ -16,16 +16,6 @@ export default function Navigation() {
   // Determine current language from URL path - with non-null pathname
   const isChinesePath = pathname.startsWith('/zh');
 
-  // Debug logging - temporarily add this
-  useEffect(() => {
-    console.log('Navigation render:', { 
-      pathname, 
-      sessionStatus: status,
-      userRole: session?.user?.role,
-      isDesktopView 
-    });
-  }, [pathname, status, session, isDesktopView]);
-
   // Function to switch language
   const switchLanguage = () => {
     if (isChinesePath) {
@@ -100,12 +90,6 @@ export default function Navigation() {
     return null;
   }
 
-  // Only hide navigation for authenticated users with specific roles - more robust check
-  if (status === 'authenticated' && session?.user && 
-      (session.user.role === 'BRAND' || session.user.role === 'CREATOR')) {
-    return null;
-  }
-
   // Define navigation links for both languages
   const navLinks = {
     en: [
@@ -160,49 +144,67 @@ export default function Navigation() {
                 ))}
               </div>
 
-              {!session && (
-                <div className="flex items-center space-x-4">
-                  {/* Language switcher button */}
-                  <button
-                    onClick={switchLanguage}
-                    className="flex items-center px-2 py-1 text-sm text-gray-600 hover:text-purple-600 border border-gray-200 rounded"
-                  >
-                    <Globe className="w-4 h-4 mr-1" />
-                    {isChinesePath ? 'English' : '中文'}
-                  </button>
+              <div className="flex items-center space-x-4">
+                {/* Language switcher button */}
+                <button
+                  onClick={switchLanguage}
+                  className="flex items-center px-2 py-1 text-sm text-gray-600 hover:text-purple-600 border border-gray-200 rounded"
+                >
+                  <Globe className="w-4 h-4 mr-1" />
+                  {isChinesePath ? 'English' : '中文'}
+                </button>
 
-                  <Link
-                    href={isChinesePath ? '/zh/login' : '/login'}
-                    className="text-base font-medium text-gray-600 hover:text-purple-600 whitespace-nowrap overflow-hidden text-center"
-                    style={{
-                      width: '80px',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {isChinesePath ? '登录' : 'Log in'}
-                  </Link>
-                  <Link
-                    href={isChinesePath ? '/zh/join-creator' : '/join-creator'}
-                    className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 whitespace-nowrap overflow-hidden"
-                    style={{
-                      width: '140px',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {isChinesePath ? '成为创作者' : 'Join as Creator'}
-                  </Link>
-                  <Link
-                    href={isChinesePath ? '/zh/join-brand' : '/join-brand'}
-                    className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 whitespace-nowrap overflow-hidden"
-                    style={{
-                      width: '140px',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {isChinesePath ? '成为品牌' : 'Join as Brand'}
-                  </Link>
-                </div>
-              )}
+                {/* Show different buttons based on authentication state */}
+                {!session ? (
+                  // For unauthenticated users - show login and join buttons
+                  <>
+                    <Link
+                      href={isChinesePath ? '/zh/login' : '/login'}
+                      className="text-base font-medium text-gray-600 hover:text-purple-600 whitespace-nowrap overflow-hidden text-center"
+                      style={{
+                        width: '80px',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {isChinesePath ? '登录' : 'Log in'}
+                    </Link>
+                    <Link
+                      href={isChinesePath ? '/zh/join-creator' : '/join-creator'}
+                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 whitespace-nowrap overflow-hidden"
+                      style={{
+                        width: '140px',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {isChinesePath ? '成为创作者' : 'Join as Creator'}
+                    </Link>
+                    <Link
+                      href={isChinesePath ? '/zh/join-brand' : '/join-brand'}
+                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 whitespace-nowrap overflow-hidden"
+                      style={{
+                        width: '140px',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {isChinesePath ? '成为品牌' : 'Join as Brand'}
+                    </Link>
+                  </>
+                ) : (
+                  // For authenticated users - show user info and dashboard link
+                  <>
+                    <span className="text-sm text-gray-600">
+                      {isChinesePath ? '欢迎，' : 'Welcome, '} 
+                      {session.user?.name || (isChinesePath ? '用户' : 'User')}
+                    </span>
+                    <Link
+                      href={session.user?.role === 'BRAND' ? '/brandportal/dashboard' : '/creatorportal/dashboard'}
+                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
+                    >
+                      {isChinesePath ? '仪表板' : 'Dashboard'}
+                    </Link>
+                  </>
+                )}
+              </div>
             </>
           )}
 
@@ -250,7 +252,9 @@ export default function Navigation() {
               {link.label}
             </Link>
           ))}
-          {!session && (
+          
+          {/* Update mobile menu with authenticated user options */}
+          {!session ? (
             <>
               <Link
                 href={isChinesePath ? '/zh/login' : '/login'}
@@ -272,6 +276,20 @@ export default function Navigation() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 {isChinesePath ? '成为品牌' : 'Join as Brand'}
+              </Link>
+            </>
+          ) : (
+            <>
+              <div className="block px-3 py-2 rounded-md text-base font-medium text-gray-600">
+                {isChinesePath ? '欢迎，' : 'Welcome, '} 
+                {session.user?.name || (isChinesePath ? '用户' : 'User')}
+              </div>
+              <Link
+                href={session.user?.role === 'BRAND' ? '/brandportal/dashboard' : '/creatorportal/dashboard'}
+                className="block px-3 py-2 rounded-md text-base font-medium text-purple-600 bg-purple-50 hover:bg-purple-100"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {isChinesePath ? '仪表板' : 'Dashboard'}
               </Link>
             </>
           )}
