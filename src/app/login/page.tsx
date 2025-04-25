@@ -5,12 +5,18 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { loginAttemptsLimiter } from "@/lib/rate-limiter";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
+  const [showResendButton, setShowResendButton] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [rateLimitTime, setRateLimitTime] = useState(0);
   const router = useRouter();
   const { data: session, status } = useSession();
 
@@ -28,8 +34,32 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setIsLoading(true);
+    setShowResendButton(false);
 
     try {
+      // Check if the user is rate limited (client-side check)
+      const ip = "client"; // We'll use a placeholder since we can't get IP on client
+      const key = `login-attempt:${ip}:${email}`;
+      
+      // Actually check on the server side through the API
+      const rateLimitCheck = await fetch("/api/auth/check-rate-limit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+      
+      const rateLimitData = await rateLimitCheck.json();
+      
+      if (rateLimitData.limited) {
+        setIsRateLimited(true);
+        setRateLimitTime(rateLimitData.remainingTime);
+        setError(`Too many login attempts. Please try again in ${rateLimitData.remainingTime} seconds.`);
+        setIsLoading(false);
+        return;
+      }
+
       const result = await signIn("credentials", {
         email,
         password,
@@ -37,7 +67,13 @@ export default function Login() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password");
+        // Check if the error is due to unverified email
+        if (result.error === "EmailNotVerified") {
+          setError("Your email is not verified. Please verify your email before logging in.");
+          setShowResendButton(true);
+        } else {
+          setError("Invalid email or password");
+        }
       } else {
         const response = await fetch("/api/auth/session");
         const sessionData = await response.json();
@@ -55,6 +91,41 @@ export default function Login() {
       setError("An error occurred during login. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Function to resend verification email
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError("Please enter your email address");
+      return;
+    }
+
+    setIsResendingEmail(true);
+    setResendSuccess(false);
+
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setResendSuccess(true);
+        setError("");
+      } else {
+        setError(data.error || "Failed to resend verification email");
+      }
+    } catch (error) {
+      console.error("Error resending verification:", error);
+      setError("An error occurred. Please try again.");
+    } finally {
+      setIsResendingEmail(false);
     }
   };
 
@@ -76,7 +147,6 @@ export default function Login() {
         </p>
       </div>
 
-      {/* ✅ Wrap useSearchParams() inside a Suspense Boundary */}
       <Suspense fallback={<div>Loading...</div>}>
         <SearchParamsHandler />
       </Suspense>
@@ -89,6 +159,13 @@ export default function Login() {
                 {error}
               </div>
             )}
+            
+            {resendSuccess && (
+              <div className="bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+                Verification email has been resent. Please check your inbox.
+              </div>
+            )}
+            
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-black">
                 Email address
@@ -136,6 +213,19 @@ export default function Login() {
                 {isLoading ? "Signing in..." : "Sign in"}
               </button>
             </div>
+            
+            {showResendButton && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={isResendingEmail}
+                  className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-purple-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                >
+                  {isResendingEmail ? "Sending..." : "Resend verification email"}
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>
@@ -143,15 +233,23 @@ export default function Login() {
   );
 }
 
-// ✅ Extract `useSearchParams()` into a Separate Component
 function SearchParamsHandler() {
   const searchParams = useSearchParams();
   const justRegistered = searchParams?.get("registered") === "true";
+  const justVerified = searchParams?.get("verified") === "true";
 
+  if (justVerified) {
+    return (
+      <div className="mb-4 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+        Your email has been verified successfully! You can now log in to your account.
+      </div>
+    );
+  }
+  
   if (justRegistered) {
     return (
       <div className="mb-4 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-        Account created successfully! Please sign in.
+        Account created successfully! Please check your email to verify your account before logging in.
       </div>
     );
   }

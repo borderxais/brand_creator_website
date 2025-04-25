@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-
+import { createVerificationToken } from '@/lib/tokens' 
+import { sendVerificationEmail } from '@/lib/email'
 
 export async function POST(request: Request) {
   try {
@@ -60,13 +61,14 @@ export async function POST(request: Request) {
 
     // Create user with transaction to ensure both user and profile are created
     const result = await prisma.$transaction(async (prisma) => {
-      // Create user
+      // Create user with emailVerified set to null
       const user = await prisma.user.create({
         data: {
           email,
           password: hashedPassword,
           name,
-          role
+          role,
+          emailVerified: null // Explicitly set to null until verified
         }
       });
 
@@ -113,6 +115,13 @@ export async function POST(request: Request) {
 
       return user;
     });
+
+    // Generate verification token
+    const verificationToken = await createVerificationToken(email);
+    
+    // Send verification email
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    await sendVerificationEmail(email, verificationToken, baseUrl);
 
     console.log('Registration successful:', {
       id: result.id,

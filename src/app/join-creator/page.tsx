@@ -97,7 +97,7 @@ export default function JoinAsCreator() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Registration failed');
+          throw new Error(data.message || 'Registration failed');
         }
 
         // Redirect to login with success message

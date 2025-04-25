@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import prisma from "@/lib/prisma";
+import { createVerificationToken } from "@/lib/tokens";
+import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -35,7 +37,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if handle name is already taken - FIX THE FIELD NAME HERE
+    // Check if handle name is already taken
     const existingHandleName = await prisma.user.findUnique({
       where: { creatorHandleName: creatorHandleName },
     });
@@ -50,16 +52,24 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user - ALSO UPDATE THE FIELD NAME HERE
+    // Create user with emailVerified set to null
     const user = await prisma.user.create({
       data: {
         email,
         name,
         password: hashedPassword,
         role: "CREATOR",
-        creatorHandleName: creatorHandleName, // Use camelCase here too
+        creatorHandleName: creatorHandleName,
+        emailVerified: null // Explicitly set to null until verified
       },
     });
+
+    // Generate verification token
+    const verificationToken = await createVerificationToken(email);
+    
+    // Send verification email
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    await sendVerificationEmail(email, verificationToken, baseUrl);
 
     return NextResponse.json(user);
   } catch (error) {
