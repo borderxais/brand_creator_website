@@ -80,8 +80,8 @@ export default function JoinAsCreatorChinese() {
           return;
         }
 
-        // Register the user
-        const response = await fetch('/api/auth/register/creator', {
+        // Register the user - Now using the standard registration endpoint
+        const response = await fetch('/api/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -90,6 +90,7 @@ export default function JoinAsCreatorChinese() {
             email: formData.email,
             password: formData.password,
             name: formData.name,
+            role: 'CREATOR',
             creatorHandleName: formData.creatorHandleName
           }),
         });

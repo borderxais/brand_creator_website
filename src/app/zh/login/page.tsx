@@ -11,6 +11,9 @@ export default function LoginChinese() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
+  const [showResendButton, setShowResendButton] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
 
@@ -28,6 +31,7 @@ export default function LoginChinese() {
     e.preventDefault();
     setError("");
     setIsLoading(true);
+    setShowResendButton(false);
 
     try {
       const result = await signIn("credentials", {
@@ -37,7 +41,12 @@ export default function LoginChinese() {
       });
 
       if (result?.error) {
-        setError("邮箱或密码无效");
+        if (result.error === "EmailNotVerified") {
+          setError("您的邮箱尚未验证。请在登录前验证您的邮箱。");
+          setShowResendButton(true);
+        } else {
+          setError("邮箱或密码无效");
+        }
       } else {
         const response = await fetch("/api/auth/session");
         const sessionData = await response.json();
@@ -55,6 +64,40 @@ export default function LoginChinese() {
       setError("登录过程中发生错误。请重试。");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError("请输入您的邮箱地址");
+      return;
+    }
+
+    setIsResendingEmail(true);
+    setResendSuccess(false);
+
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setResendSuccess(true);
+        setError("");
+      } else {
+        setError(data.error || "重新发送验证邮件失败");
+      }
+    } catch (error) {
+      console.error("重新发送验证错误:", error);
+      setError("发生错误。请重试。");
+    } finally {
+      setIsResendingEmail(false);
     }
   };
 
@@ -76,7 +119,6 @@ export default function LoginChinese() {
         </p>
       </div>
 
-      {/* ✅ Wrap useSearchParams() inside a Suspense Boundary */}
       <Suspense fallback={<div>加载中...</div>}>
         <SearchParamsHandler />
       </Suspense>
@@ -89,6 +131,13 @@ export default function LoginChinese() {
                 {error}
               </div>
             )}
+            
+            {resendSuccess && (
+              <div className="bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+                验证邮件已重新发送。请检查您的收件箱。
+              </div>
+            )}
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-black">
                 电子邮箱
@@ -136,6 +185,19 @@ export default function LoginChinese() {
                 {isLoading ? "登录中..." : "登录"}
               </button>
             </div>
+
+            {showResendButton && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={isResendingEmail}
+                  className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-purple-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                >
+                  {isResendingEmail ? "发送中..." : "重新发送验证邮件"}
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>
@@ -143,15 +205,23 @@ export default function LoginChinese() {
   );
 }
 
-// ✅ Extract `useSearchParams()` into a Separate Component
 function SearchParamsHandler() {
   const searchParams = useSearchParams();
   const justRegistered = searchParams?.get("registered") === "true";
+  const justVerified = searchParams?.get("verified") === "true";
 
+  if (justVerified) {
+    return (
+      <div className="mb-4 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+        您的邮箱已成功验证！现在您可以登录您的账户了。
+      </div>
+    );
+  }
+  
   if (justRegistered) {
     return (
       <div className="mb-4 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-        账户创建成功！请登录。
+        账户创建成功！请查看您的邮箱以验证您的账户，然后再登录。
       </div>
     );
   }
