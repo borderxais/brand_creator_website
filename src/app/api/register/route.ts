@@ -19,7 +19,8 @@ export async function POST(request: Request) {
       email, 
       password, 
       name, 
-      role = 'CREATOR' // Default to CREATOR if not specified
+      role = 'CREATOR', // Default to CREATOR if not specified
+      creatorHandleName = null // New parameter for creator handle
     } = body;
 
     console.log('Registration attempt:', { email, name, role });
@@ -31,29 +32,46 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email },
-          { name }
-        ]
+    // For creators, validate handle name
+    if (role === 'CREATOR') {
+      if (!creatorHandleName) {
+        return NextResponse.json(
+          { error: 'Creator handle name is required' },
+          { status: 400 }
+        );
       }
+      
+      // Validate handle name length
+      if (creatorHandleName.length < 3) {
+        return NextResponse.json(
+          { error: 'Creator handle name must be at least 3 characters long' },
+          { status: 400 }
+        );
+      }
+      
+      // Check if handle name is already taken
+      const existingHandleName = await prisma.user.findUnique({
+        where: { creatorHandleName }
+      });
+      
+      if (existingHandleName) {
+        return NextResponse.json(
+          { error: 'Creator handle name already taken' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Check if user already exists by email
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
     });
 
     if (existingUser) {
-      if (existingUser.email === email) {
-        return NextResponse.json(
-          { error: 'Email already registered' },
-          { status: 400 }
-        );
-      }
-      if (existingUser.name === name) {
-        return NextResponse.json(
-          { error: 'Username already taken' },
-          { status: 400 }
-        );
-      }
+      return NextResponse.json(
+        { error: 'Email already registered' },
+        { status: 400 }
+      );
     }
 
     // Hash password
@@ -68,6 +86,7 @@ export async function POST(request: Request) {
           password: hashedPassword,
           name,
           role,
+          creatorHandleName: role === 'CREATOR' ? creatorHandleName : null,
           emailVerified: null // Explicitly set to null until verified
         }
       });

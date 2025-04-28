@@ -80,8 +80,8 @@ export default function JoinAsCreator() {
           return;
         }
 
-        // Register the user
-        const response = await fetch('/api/auth/register/creator', {
+        // Register the user - Now using the standard registration endpoint
+        const response = await fetch('/api/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -90,6 +90,7 @@ export default function JoinAsCreator() {
             email: formData.email,
             password: formData.password,
             name: formData.name,
+            role: 'CREATOR',
             creatorHandleName: formData.creatorHandleName
           }),
         });
@@ -97,7 +98,7 @@ export default function JoinAsCreator() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || 'Registration failed');
+          throw new Error(data.error || 'Registration failed');
         }
 
         // Redirect to login with success message

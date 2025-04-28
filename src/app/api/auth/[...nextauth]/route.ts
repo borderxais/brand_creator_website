@@ -4,7 +4,8 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { compare } from "bcrypt";
 import { prisma } from "@/lib/prisma";
 
-export const authOptions: NextAuthOptions = {
+// Define authOptions but don't export it directly
+const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
@@ -75,5 +76,6 @@ export const authOptions: NextAuthOptions = {
   },
 };
 
+// Only export the handler functions
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
