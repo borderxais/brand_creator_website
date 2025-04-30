@@ -4,7 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, Image, DollarSign, Share2, MessageSquare, Settings, LogOut, Menu, ChevronDown, Users } from 'lucide-react';
+import { LayoutDashboard, Image, DollarSign, Share2, MessageSquare, Settings, LogOut, Menu, ChevronDown, Users, CheckCircle } from 'lucide-react';
 import Loading from '@/components/ui/Loading';
 import '@/styles/portals.css';
 
@@ -13,6 +13,7 @@ const navigationItems = [
   { name: 'Dashboard', href: '/creatorportal/dashboard', icon: LayoutDashboard },
   { name: 'Campaigns', href: '/creatorportal/campaigns', icon: DollarSign },
   { name: 'Posts', href: '/creatorportal/posts', icon: Image },
+  { name: 'TikTok Verify', href: '/creatorportal/tiktok-verify', icon: CheckCircle },
   { name: 'Social Media', href: '/creatorportal/social', icon: Share2 },
   { name: 'Earnings', href: '/creatorportal/earnings', icon: DollarSign },
 ];
