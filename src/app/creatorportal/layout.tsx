@@ -11,7 +11,7 @@ import '@/styles/portals.css';
 // All navigation items
 const navigationItems = [
   { name: 'Dashboard', href: '/creatorportal/dashboard', icon: LayoutDashboard },
-  { name: 'Campaigns', href: '/creatorportal/campaigns', icon: DollarSign },
+  { name: 'Income', href: '/creatorportal/income', icon: DollarSign },
   { name: 'Posts', href: '/creatorportal/posts', icon: Image },
   { name: 'TikTok Verify', href: '/creatorportal/tiktok-verify', icon: CheckCircle },
   { name: 'Social Media', href: '/creatorportal/social', icon: Share2 },
