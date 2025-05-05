@@ -148,10 +148,11 @@ export default function Navigation() {
                 {/* Language switcher button */}
                 <button
                   onClick={switchLanguage}
-                  className="flex items-center px-2 py-1 text-sm text-gray-600 hover:text-purple-600 border border-gray-200 rounded"
+                  className="flex items-center justify-center px-2 py-1 text-sm text-gray-600 hover:text-purple-600 border border-gray-200 rounded"
+                  style={{ minWidth: "80px" }} // Added minimum width to ensure text fits on one line
                 >
                   <Globe className="w-4 h-4 mr-1" />
-                  {isChinesePath ? 'English' : '中文'}
+                  <span className="text-center">{isChinesePath ? 'English' : '中文'}</span>
                 </button>
 
                 {/* Show different buttons based on authentication state */}
