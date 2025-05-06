@@ -16,6 +16,7 @@ interface IncomePeriodData {
   douyin: number;
   live: number;
   xingtu: number;
+  [key: string]: number; // Add this line to make the type compatible
 }
 
 // Define income data type
@@ -114,9 +115,6 @@ const timePeriods: Array<{ id: IncomePeriod; label: string; previous: string }> 
   { id: 'month', label: 'Last Month', previous: 'previous month' }
 ];
 
-// Define a type for chart data
-type ChartDataFormat = { [key: string]: number };
-
 export default function IncomePage() {
   const [activeTimeFilter, setActiveTimeFilter] = useState<IncomePeriod>('week');
   const [selectedIncomeType, setSelectedIncomeType] = useState<IncomeTypeID>('total');
@@ -147,18 +145,6 @@ export default function IncomePage() {
       };
       return rgbValues[colorClass] || 'rgba(59, 130, 246, 0.8)';
     });
-  
-  // Transform the income data for the chart
-  const getPieChartData = (data: IncomePeriodData): ChartDataFormat => {
-    const chartData: ChartDataFormat = {};
-    // Only include non-total values for the pie chart
-    Object.entries(data).forEach(([key, value]) => {
-      if (key !== 'total') {
-        chartData[key] = value;
-      }
-    });
-    return chartData;
-  };
   
   return (
     <div className="space-y-6">
@@ -327,7 +313,11 @@ export default function IncomePage() {
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-4">Income Distribution</h3>
             <IncomePieChart 
-              incomeData={getPieChartData(incomeData[activeTimeFilter])}
+              // Filter out the 'total' property as it's not part of the distribution
+              incomeData={Object.fromEntries(
+                Object.entries(incomeData[activeTimeFilter])
+                  .filter(([key]) => key !== 'total')
+              )}
               labels={incomeTypes.filter(type => type.id !== 'total').map(type => type.label)}
               colors={pieChartColors}
             />

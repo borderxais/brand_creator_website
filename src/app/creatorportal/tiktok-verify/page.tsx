@@ -1,34 +1,37 @@
 'use client';
 
 import { useState } from 'react';
-import { Upload, FileText, ExternalLink, Save, Check, Info } from 'lucide-react';
+import { Upload, FileText, ExternalLink, Save, Check, Info, AlertTriangle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function TikTokVerify() {
-  // Form state
+  const router = useRouter();
+  
+  // Form state - renamed to match backend parameters
   const [formData, setFormData] = useState({
     // Identity Information
-    passportName: '',
+    passport_name: '',
     nationality: '',
-    realName: '',
-    stageName: '',
-    idType: 'passport',
-    idNumber: '',
+    real_name: '',
+    stage_name: '',
+    id_type: 'passport',
+    id_number: '',
     gender: '',
-    dateOfBirth: '',
-    idFrontFile: null,
-    handheldIdFile: null,
+    date_of_birth: '',
+    id_front_file: null,
+    handheld_id_file: null,
     
     // Influencer Information
-    accountIntro: '',
-    platformUrl: '',
-    followerCount: '',
-    backendScreenshotFile: null,
-    otherPlatforms: '',
+    account_intro: '',
+    overseas_platform_url: '',
+    follower_count: '',
+    backend_ss_file: null,
+    other_platforms: '',
     
     // Cooperation Information
-    signedAuthFile: null,
-    agentEmail: '@bytedance.com',
-    identityVideoFile: null,
+    signed_auth_file: null,
+    agent_email: '@bytedance.com',
+    identity_video_file: null,
     
     // Terms agreement
     termsAgreed: false
@@ -37,6 +40,7 @@ export default function TikTokVerify() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -83,27 +87,37 @@ export default function TikTokVerify() {
     });
   };
 
+  // Format date to mm/dd/yy
+  const formatDate = (isoDate: string): string => {
+    if (!isoDate) return '';
+    const date = new Date(isoDate);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(2);
+    return `${month}/${day}/${year}`;
+  };
+
   // Validate form
   const validateForm = () => {
     const errors: Record<string, string> = {};
     
     // Required fields validation
-    if (!formData.passportName) errors.passportName = 'Passport name is required';
+    if (!formData.passport_name) errors.passport_name = 'Passport name is required';
     if (!formData.nationality) errors.nationality = 'Nationality is required';
-    if (!formData.realName) errors.realName = 'Real name is required';
-    if (!formData.idType) errors.idType = 'ID type is required';
-    if (!formData.idNumber) errors.idNumber = 'ID number is required';
+    if (!formData.real_name) errors.real_name = 'Real name is required';
+    if (!formData.id_type) errors.id_type = 'ID type is required';
+    if (!formData.id_number) errors.id_number = 'ID number is required';
     if (!formData.gender) errors.gender = 'Gender is required';
-    if (!formData.dateOfBirth) errors.dateOfBirth = 'Date of birth is required';
-    if (!formData.idFrontFile) errors.idFrontFile = 'ID front image is required';
-    if (!formData.handheldIdFile) errors.handheldIdFile = 'Handheld ID photo is required';
-    if (!formData.accountIntro) errors.accountIntro = 'Account introduction is required';
-    if (!formData.platformUrl) errors.platformUrl = 'Platform URL is required';
-    if (!formData.followerCount) errors.followerCount = 'Follower count is required';
-    if (!formData.backendScreenshotFile) errors.backendScreenshotFile = 'Backend screenshot is required';
-    if (!formData.signedAuthFile) errors.signedAuthFile = 'Signed authorization file is required';
-    if (!formData.agentEmail || !formData.agentEmail.includes('@bytedance.com')) 
-      errors.agentEmail = 'Valid ByteDance email is required';
+    if (!formData.date_of_birth) errors.date_of_birth = 'Date of birth is required';
+    if (!formData.id_front_file) errors.id_front_file = 'ID front image is required';
+    if (!formData.handheld_id_file) errors.handheld_id_file = 'Handheld ID photo is required';
+    if (!formData.account_intro) errors.account_intro = 'Account introduction is required';
+    if (!formData.overseas_platform_url) errors.overseas_platform_url = 'Platform URL is required';
+    if (!formData.follower_count) errors.follower_count = 'Follower count is required';
+    if (!formData.backend_ss_file) errors.backend_ss_file = 'Backend screenshot is required';
+    if (!formData.signed_auth_file) errors.signed_auth_file = 'Signed authorization file is required';
+    if (!formData.agent_email || !formData.agent_email.includes('@bytedance.com')) 
+      errors.agent_email = 'Valid ByteDance email is required';
     if (!formData.termsAgreed) errors.termsAgreed = 'You must agree to the terms and conditions';
     
     setFormErrors(errors);
@@ -111,22 +125,69 @@ export default function TikTokVerify() {
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setApiError(null);
     
     if (validateForm()) {
       setIsSubmitting(true);
       
-      // Mock API call
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setSubmitSuccess(true);
+      try {
+        // Create FormData object for multipart/form-data submission
+        const formDataToSubmit = new FormData();
         
-        // Reset form after success message
-        setTimeout(() => {
-          setSubmitSuccess(false);
-        }, 5000);
-      }, 2000);
+        // Add all text fields
+        formDataToSubmit.append('passport_name', formData.passport_name);
+        formDataToSubmit.append('real_name', formData.real_name);
+        formDataToSubmit.append('id_type', formData.id_type);
+        formDataToSubmit.append('gender', formData.gender);
+        formDataToSubmit.append('nationality', formData.nationality);
+        if (formData.stage_name) formDataToSubmit.append('stage_name', formData.stage_name);
+        formDataToSubmit.append('id_number', formData.id_number);
+        formDataToSubmit.append('date_of_birth', formatDate(formData.date_of_birth));
+        formDataToSubmit.append('account_intro', formData.account_intro);
+        formDataToSubmit.append('overseas_platform_url', formData.overseas_platform_url);
+        formDataToSubmit.append('follower_count', formData.follower_count.toString());
+        if (formData.other_platforms) formDataToSubmit.append('other_platforms', formData.other_platforms);
+        formDataToSubmit.append('agent_email', formData.agent_email);
+        
+        // Add file fields with null checking
+        if (formData.id_front_file) formDataToSubmit.append('id_front_file', formData.id_front_file as File);
+        if (formData.handheld_id_file) formDataToSubmit.append('handheld_id_file', formData.handheld_id_file as File);
+        if (formData.backend_ss_file) formDataToSubmit.append('backend_ss_file', formData.backend_ss_file as File);
+        if (formData.signed_auth_file) formDataToSubmit.append('signed_auth_file', formData.signed_auth_file as File);
+        
+        // For optional video file, check if it exists and if it's too large
+        if (formData.identity_video_file) {
+          const videoSize = (formData.identity_video_file as File).size;
+          // If video is less than 5MB, include it in the initial request
+          if (videoSize < 5 * 1024 * 1024) {
+            formDataToSubmit.append('identity_video_file', formData.identity_video_file as File);
+          } else {
+            // Otherwise, we'll need to send it separately
+            console.log("Video file is large, will be processed separately");
+          }
+        }
+        
+        // Submit to API - Use the correct API path
+        const response = await fetch('/api/tiktokverification', {
+          method: 'POST',
+          body: formDataToSubmit,
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Error submitting form');
+        }
+        
+        // Redirect to success page instead of showing inline success message
+        router.push('/creatorportal/tiktok-verify/success');
+      } catch (error) {
+        console.error('Form submission error:', error);
+        setApiError(error instanceof Error ? error.message : 'Failed to submit form');
+      } finally {
+        setIsSubmitting(false);
+      }
     } else {
       // Scroll to first error
       const firstErrorField = Object.keys(formErrors)[0];
@@ -170,6 +231,23 @@ export default function TikTokVerify() {
         </div>
       )}
 
+      {/* API Error Message */}
+      {apiError && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Submission failed</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{apiError}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Form */}
       <form onSubmit={handleSubmit}>
         {/* Section 1: Identity Information */}
@@ -183,21 +261,21 @@ export default function TikTokVerify() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Passport Name */}
               <div>
-                <label htmlFor="passportName" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="passport_name" className="block text-sm font-medium text-gray-700">
                   Passport Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  name="passportName"
-                  id="passportName"
+                  name="passport_name"
+                  id="passport_name"
                   className={`mt-1 block w-full rounded-md shadow-sm ${
-                    formErrors.passportName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                    formErrors.passport_name ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                   }`}
-                  value={formData.passportName}
+                  value={formData.passport_name}
                   onChange={handleChange}
                 />
-                {formErrors.passportName && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.passportName}</p>
+                {formErrors.passport_name && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.passport_name}</p>
                 )}
               </div>
               
@@ -231,51 +309,51 @@ export default function TikTokVerify() {
               
               {/* Real Name */}
               <div>
-                <label htmlFor="realName" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="real_name" className="block text-sm font-medium text-gray-700">
                   Real Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  name="realName"
-                  id="realName"
+                  name="real_name"
+                  id="real_name"
                   className={`mt-1 block w-full rounded-md shadow-sm ${
-                    formErrors.realName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                    formErrors.real_name ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                   }`}
-                  value={formData.realName}
+                  value={formData.real_name}
                   onChange={handleChange}
                 />
-                {formErrors.realName && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.realName}</p>
+                {formErrors.real_name && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.real_name}</p>
                 )}
               </div>
               
               {/* Stage Name */}
               <div>
-                <label htmlFor="stageName" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="stage_name" className="block text-sm font-medium text-gray-700">
                   Stage Name (Optional)
                 </label>
                 <input
                   type="text"
-                  name="stageName"
-                  id="stageName"
+                  name="stage_name"
+                  id="stage_name"
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  value={formData.stageName}
+                  value={formData.stage_name}
                   onChange={handleChange}
                 />
               </div>
               
               {/* ID Type */}
               <div>
-                <label htmlFor="idType" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="id_type" className="block text-sm font-medium text-gray-700">
                   ID Type <span className="text-red-500">*</span>
                 </label>
                 <select
-                  name="idType"
-                  id="idType"
+                  name="id_type"
+                  id="id_type"
                   className={`mt-1 block w-full rounded-md shadow-sm ${
-                    formErrors.idType ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                    formErrors.id_type ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                   }`}
-                  value={formData.idType}
+                  value={formData.id_type}
                   onChange={handleChange}
                 >
                   <option value="passport">Passport</option>
@@ -283,28 +361,28 @@ export default function TikTokVerify() {
                   <option value="nationalId">National ID Card</option>
                   <option value="other">Other Government ID</option>
                 </select>
-                {formErrors.idType && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.idType}</p>
+                {formErrors.id_type && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.id_type}</p>
                 )}
               </div>
               
               {/* ID Number */}
               <div>
-                <label htmlFor="idNumber" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="id_number" className="block text-sm font-medium text-gray-700">
                   ID Number <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  name="idNumber"
-                  id="idNumber"
+                  name="id_number"
+                  id="id_number"
                   className={`mt-1 block w-full rounded-md shadow-sm ${
-                    formErrors.idNumber ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                    formErrors.id_number ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                   }`}
-                  value={formData.idNumber}
+                  value={formData.id_number}
                   onChange={handleChange}
                 />
-                {formErrors.idNumber && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.idNumber}</p>
+                {formErrors.id_number && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.id_number}</p>
                 )}
               </div>
               
@@ -344,21 +422,21 @@ export default function TikTokVerify() {
               
               {/* Date of Birth */}
               <div>
-                <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700">
                   Date of Birth <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
-                  name="dateOfBirth"
-                  id="dateOfBirth"
+                  name="date_of_birth"
+                  id="date_of_birth"
                   className={`mt-1 block w-full rounded-md shadow-sm ${
-                    formErrors.dateOfBirth ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                    formErrors.date_of_birth ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                   }`}
-                  value={formData.dateOfBirth}
+                  value={formData.date_of_birth}
                   onChange={handleChange}
                 />
-                {formErrors.dateOfBirth && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.dateOfBirth}</p>
+                {formErrors.date_of_birth && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.date_of_birth}</p>
                 )}
               </div>
             </div>
@@ -373,13 +451,13 @@ export default function TikTokVerify() {
                   <Upload className="mx-auto h-12 w-12 text-gray-400" />
                   <div className="flex text-sm text-gray-600">
                     <label
-                      htmlFor="idFrontFile"
+                      htmlFor="id_front_file"
                       className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
                     >
                       <span>Upload a file</span>
                       <input
-                        id="idFrontFile"
-                        name="idFrontFile"
+                        id="id_front_file"
+                        name="id_front_file"
                         type="file"
                         className="sr-only"
                         accept="image/*"
@@ -389,15 +467,15 @@ export default function TikTokVerify() {
                     <p className="pl-1">or drag and drop</p>
                   </div>
                   <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                  {formData.idFrontFile && (
+                  {formData.id_front_file && (
                     <p className="text-xs text-green-500">
-                      File selected: {(formData.idFrontFile as File).name}
+                      File selected: {(formData.id_front_file as File).name}
                     </p>
                   )}
                 </div>
               </div>
-              {formErrors.idFrontFile && (
-                <p className="mt-1 text-sm text-red-600">{formErrors.idFrontFile}</p>
+              {formErrors.id_front_file && (
+                <p className="mt-1 text-sm text-red-600">{formErrors.id_front_file}</p>
               )}
             </div>
             
@@ -412,13 +490,13 @@ export default function TikTokVerify() {
                   <Upload className="mx-auto h-12 w-12 text-gray-400" />
                   <div className="flex text-sm text-gray-600">
                     <label
-                      htmlFor="handheldIdFile"
+                      htmlFor="handheld_id_file"
                       className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
                     >
                       <span>Upload a file</span>
                       <input
-                        id="handheldIdFile"
-                        name="handheldIdFile"
+                        id="handheld_id_file"
+                        name="handheld_id_file"
                         type="file"
                         className="sr-only"
                         accept="image/*"
@@ -428,15 +506,15 @@ export default function TikTokVerify() {
                     <p className="pl-1">or drag and drop</p>
                   </div>
                   <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                  {formData.handheldIdFile && (
+                  {formData.handheld_id_file && (
                     <p className="text-xs text-green-500">
-                      File selected: {(formData.handheldIdFile as File).name}
+                      File selected: {(formData.handheld_id_file as File).name}
                     </p>
                   )}
                 </div>
               </div>
-              {formErrors.handheldIdFile && (
-                <p className="mt-1 text-sm text-red-600">{formErrors.handheldIdFile}</p>
+              {formErrors.handheld_id_file && (
+                <p className="mt-1 text-sm text-red-600">{formErrors.handheld_id_file}</p>
               )}
             </div>
           </div>
@@ -452,65 +530,65 @@ export default function TikTokVerify() {
           <div className="p-6 space-y-6">
             {/* Account Introduction */}
             <div>
-              <label htmlFor="accountIntro" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="account_intro" className="block text-sm font-medium text-gray-700">
                 Account Introduction <span className="text-red-500">*</span>
               </label>
               <textarea
-                name="accountIntro"
-                id="accountIntro"
+                name="account_intro"
+                id="account_intro"
                 rows={4}
                 className={`mt-1 block w-full rounded-md shadow-sm ${
-                  formErrors.accountIntro ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                  formErrors.account_intro ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                 }`}
                 placeholder="Describe your content style, audience demographics, and typical engagement"
-                value={formData.accountIntro}
+                value={formData.account_intro}
                 onChange={handleChange}
               />
-              {formErrors.accountIntro && (
-                <p className="mt-1 text-sm text-red-600">{formErrors.accountIntro}</p>
+              {formErrors.account_intro && (
+                <p className="mt-1 text-sm text-red-600">{formErrors.account_intro}</p>
               )}
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Platform URL */}
               <div>
-                <label htmlFor="platformUrl" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="overseas_platform_url" className="block text-sm font-medium text-gray-700">
                   Overseas Platform URL <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="url"
-                  name="platformUrl"
-                  id="platformUrl"
+                  name="overseas_platform_url"
+                  id="overseas_platform_url"
                   className={`mt-1 block w-full rounded-md shadow-sm ${
-                    formErrors.platformUrl ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                    formErrors.overseas_platform_url ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                   }`}
                   placeholder="https://www.example.com/your-profile"
-                  value={formData.platformUrl}
+                  value={formData.overseas_platform_url}
                   onChange={handleChange}
                 />
-                {formErrors.platformUrl && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.platformUrl}</p>
+                {formErrors.overseas_platform_url && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.overseas_platform_url}</p>
                 )}
               </div>
               
               {/* Follower Count */}
               <div>
-                <label htmlFor="followerCount" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="follower_count" className="block text-sm font-medium text-gray-700">
                   Follower Count <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
-                  name="followerCount"
-                  id="followerCount"
+                  name="follower_count"
+                  id="follower_count"
                   className={`mt-1 block w-full rounded-md shadow-sm ${
-                    formErrors.followerCount ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                    formErrors.follower_count ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                   }`}
                   min="0"
-                  value={formData.followerCount}
+                  value={formData.follower_count}
                   onChange={handleChange}
                 />
-                {formErrors.followerCount && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.followerCount}</p>
+                {formErrors.follower_count && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.follower_count}</p>
                 )}
               </div>
             </div>
@@ -526,13 +604,13 @@ export default function TikTokVerify() {
                   <Upload className="mx-auto h-12 w-12 text-gray-400" />
                   <div className="flex text-sm text-gray-600">
                     <label
-                      htmlFor="backendScreenshotFile"
+                      htmlFor="backend_ss_file"
                       className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
                     >
                       <span>Upload a file</span>
                       <input
-                        id="backendScreenshotFile"
-                        name="backendScreenshotFile"
+                        id="backend_ss_file"
+                        name="backend_ss_file"
                         type="file"
                         className="sr-only"
                         accept="image/*"
@@ -542,30 +620,30 @@ export default function TikTokVerify() {
                     <p className="pl-1">or drag and drop</p>
                   </div>
                   <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                  {formData.backendScreenshotFile && (
+                  {formData.backend_ss_file && (
                     <p className="text-xs text-green-500">
-                      File selected: {(formData.backendScreenshotFile as File).name}
+                      File selected: {(formData.backend_ss_file as File).name}
                     </p>
                   )}
                 </div>
               </div>
-              {formErrors.backendScreenshotFile && (
-                <p className="mt-1 text-sm text-red-600">{formErrors.backendScreenshotFile}</p>
+              {formErrors.backend_ss_file && (
+                <p className="mt-1 text-sm text-red-600">{formErrors.backend_ss_file}</p>
               )}
             </div>
             
             {/* Other Platforms */}
             <div>
-              <label htmlFor="otherPlatforms" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="other_platforms" className="block text-sm font-medium text-gray-700">
                 Other Platforms Joined (Optional)
               </label>
               <input
                 type="text"
-                name="otherPlatforms"
-                id="otherPlatforms"
+                name="other_platforms"
+                id="other_platforms"
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 placeholder="Instagram, YouTube, etc."
-                value={formData.otherPlatforms}
+                value={formData.other_platforms}
                 onChange={handleChange}
               />
             </div>
@@ -608,13 +686,13 @@ export default function TikTokVerify() {
                   <Upload className="mx-auto h-12 w-12 text-gray-400" />
                   <div className="flex text-sm text-gray-600">
                     <label
-                      htmlFor="signedAuthFile"
+                      htmlFor="signed_auth_file"
                       className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
                     >
                       <span>Upload a file</span>
                       <input
-                        id="signedAuthFile"
-                        name="signedAuthFile"
+                        id="signed_auth_file"
+                        name="signed_auth_file"
                         type="file"
                         className="sr-only"
                         accept=".pdf,.jpg,.jpeg,.png"
@@ -624,43 +702,43 @@ export default function TikTokVerify() {
                     <p className="pl-1">or drag and drop</p>
                   </div>
                   <p className="text-xs text-gray-500">PDF, JPG, PNG up to 10MB</p>
-                  {formData.signedAuthFile && (
+                  {formData.signed_auth_file && (
                     <p className="text-xs text-green-500">
-                      File selected: {(formData.signedAuthFile as File).name}
+                      File selected: {(formData.signed_auth_file as File).name}
                     </p>
                   )}
                 </div>
               </div>
-              {formErrors.signedAuthFile && (
-                <p className="mt-1 text-sm text-red-600">{formErrors.signedAuthFile}</p>
+              {formErrors.signed_auth_file && (
+                <p className="mt-1 text-sm text-red-600">{formErrors.signed_auth_file}</p>
               )}
             </div>
             
             {/* Agent Email */}
             <div>
-              <label htmlFor="agentEmail" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="agent_email" className="block text-sm font-medium text-gray-700">
                 Agent Email <span className="text-red-500">*</span>
               </label>
               <div className="mt-1 flex rounded-md shadow-sm">
                 <input
                   type="text"
-                  name="agentEmail"
-                  id="agentEmail"
+                  name="agent_email"
+                  id="agent_email"
                   className={`flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-l-md ${
-                    formErrors.agentEmail ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                    formErrors.agent_email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                   }`}
-                  value={formData.agentEmail.split('@')[0]}
+                  value={formData.agent_email.split('@')[0]}
                   onChange={(e) => setFormData({
                     ...formData,
-                    agentEmail: e.target.value + '@bytedance.com'
+                    agent_email: e.target.value + '@bytedance.com'
                   })}
                 />
                 <span className="inline-flex items-center px-3 py-2 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
                   @bytedance.com
                 </span>
               </div>
-              {formErrors.agentEmail && (
-                <p className="mt-1 text-sm text-red-600">{formErrors.agentEmail}</p>
+              {formErrors.agent_email && (
+                <p className="mt-1 text-sm text-red-600">{formErrors.agent_email}</p>
               )}
             </div>
             
@@ -675,13 +753,13 @@ export default function TikTokVerify() {
                   <Upload className="mx-auto h-12 w-12 text-gray-400" />
                   <div className="flex text-sm text-gray-600">
                     <label
-                      htmlFor="identityVideoFile"
+                      htmlFor="identity_video_file"
                       className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
                     >
                       <span>Upload a file</span>
                       <input
-                        id="identityVideoFile"
-                        name="identityVideoFile"
+                        id="identity_video_file"
+                        name="identity_video_file"
                         type="file"
                         className="sr-only"
                         accept="video/*"
@@ -691,9 +769,9 @@ export default function TikTokVerify() {
                     <p className="pl-1">or drag and drop</p>
                   </div>
                   <p className="text-xs text-gray-500">MP4, MOV up to 50MB</p>
-                  {formData.identityVideoFile && (
+                  {formData.identity_video_file && (
                     <p className="text-xs text-green-500">
-                      File selected: {(formData.identityVideoFile as File).name}
+                      File selected: {(formData.identity_video_file as File).name}
                     </p>
                   )}
                 </div>
