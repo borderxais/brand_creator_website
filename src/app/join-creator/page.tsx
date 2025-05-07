@@ -14,6 +14,7 @@ interface FormData {
   audienceSize: string;
   bio: string;
   creatorHandleName: string;
+  termsAccepted: boolean; // New field for terms acceptance
 }
 
 export default function JoinAsCreator() {
@@ -30,6 +31,7 @@ export default function JoinAsCreator() {
     audienceSize: '',
     bio: '',
     creatorHandleName: '',
+    termsAccepted: false, // Initialize as false
   });
 
   const platforms = [
@@ -59,6 +61,12 @@ export default function JoinAsCreator() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Add checkbox change handler
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData(prev => ({ ...prev, [name]: checked }));
+  };
+
   const handlePlatformToggle = (platform: string) => {
     setFormData(prev => ({
       ...prev,
@@ -70,6 +78,13 @@ export default function JoinAsCreator() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Validate terms acceptance on step 3
+    if (step === 3 && !formData.termsAccepted) {
+      setError('You must accept the Terms of Service and Privacy Policy');
+      return;
+    }
+    
     if (step < 3) {
       setStep(step + 1);
     } else {
@@ -288,6 +303,45 @@ export default function JoinAsCreator() {
                       )}
                     </button>
                   ))}
+                </div>
+                
+                {/* Terms and Privacy Policy Acceptance */}
+                <div className="mt-6">
+                  <div className="flex items-start">
+                    <div className="flex items-center h-5">
+                      <input
+                        id="termsAccepted"
+                        name="termsAccepted"
+                        type="checkbox"
+                        checked={formData.termsAccepted}
+                        onChange={handleCheckboxChange}
+                        className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
+                        required
+                      />
+                    </div>
+                    <div className="ml-3 text-sm">
+                      <label htmlFor="termsAccepted" className="font-medium text-gray-700">
+                        I agree to the
+                      </label>{" "}
+                      <a 
+                        href="https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/sign/terms/Terms.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXJtcy9UZXJtcy5wZGYiLCJpYXQiOjE3NDY2MzkzMTMsImV4cCI6MjA2MTk5OTMxM30.ONaP6D4wReFTY5z6MuXzX3cm3WKJHqwxceIwncJpDIQ" 
+                        className="text-purple-600 hover:text-purple-500"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Terms of Service
+                      </a>{" "}
+                      and{" "}
+                      <a 
+                        href="https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/sign/terms/Privacy%20Policy.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXJtcy9Qcml2YWN5IFBvbGljeS5wZGYiLCJpYXQiOjE3NDY2Mzg4NDUsImV4cCI6MjA2MTk5ODg0NX0.x-zvJQc76-FnGAyUWhBW95PeaV9_4UNm8n7cKM6vko0" 
+                        className="text-purple-600 hover:text-purple-500"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Privacy Policy
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

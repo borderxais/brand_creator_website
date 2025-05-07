@@ -668,7 +668,10 @@ export default function TikTokVerify() {
                 Please download, fill out, and sign the authorization template below.
               </p>
               <a 
-                href="#" 
+                href="https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/sign/terms/authorization_temp.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXJtcy9hdXRob3JpemF0aW9uX3RlbXAucGRmIiwiaWF0IjoxNzQ2NjM4MDExLCJleHAiOjIzNzczNTgwMTF9.N_OzVc84s8rygGnviU5WR8I_H83N_GTUyDfkGRg9oqs"
+                target="_blank" 
+                rel="noopener noreferrer" 
+                download="TikTok_Authorization_Template.pdf"
                 className="mt-2 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
@@ -802,11 +805,21 @@ export default function TikTokVerify() {
                 </label>
                 <p className="text-gray-500">
                   By checking this box, you agree to our{' '}
-                  <a href="#" className="text-blue-600 hover:text-blue-500">
+                  <a 
+                    href="https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/sign/terms/Terms.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXJtcy9UZXJtcy5wZGYiLCJpYXQiOjE3NDY2MzkzMTMsImV4cCI6MjA2MTk5OTMxM30.ONaP6D4wReFTY5z6MuXzX3cm3WKJHqwxceIwncJpDIQ" 
+                    className="text-blue-600 hover:text-blue-500"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Terms of Service
                   </a>{' '}
                   and{' '}
-                  <a href="#" className="text-blue-600 hover:text-blue-500">
+                  <a 
+                    href="https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/sign/terms/Privacy%20Policy.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXJtcy9Qcml2YWN5IFBvbGljeS5wZGYiLCJpYXQiOjE3NDY2Mzg4NDUsImV4cCI6MjA2MTk5ODg0NX0.x-zvJQc76-FnGAyUWhBW95PeaV9_4UNm8n7cKM6vko0" 
+                    className="text-blue-600 hover:text-blue-500"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Privacy Policy
                   </a>
                   .
