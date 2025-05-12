@@ -1,122 +1,43 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authConfig } from '@/app/api/auth/[...nextauth]/auth.config';
-import { prisma } from '@/lib/prisma';
+import type { NextRequest } from 'next/server';
 
-export async function POST(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
-    
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get the brand profile for the current user
-    const brandProfile = await prisma.brandProfile.findUnique({
-      where: { userId: session.user.id },
-    });
-
-    if (!brandProfile) {
-      return NextResponse.json(
-        { error: 'Brand profile not found' },
-        { status: 404 }
-      );
-    }
-
-    const data = await request.json();
-    
-    // Create the campaign
-    const campaign = await prisma.campaign.create({
-      data: {
-        brandId: brandProfile.id,
-        title: data.title,
-        description: data.description,
-        budget: data.budget,
-        requirements: data.requirements,
-        startDate: new Date(data.startDate),
-        endDate: new Date(data.endDate),
-        status: data.status || 'DRAFT',
-        categories: data.categories,
-        deliverables: data.deliverables,
-        platformIds: data.platformIds,
-      },
-    });
-
-    return NextResponse.json(campaign);
-  } catch (error) {
-    console.error('Error creating campaign:', error);
-    return NextResponse.json(
-      { error: 'Failed to create campaign' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(request: Request) {
-  try {
-    const session = await getServerSession(authConfig);
-    
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
-    const take = parseInt(searchParams.get('take') || '100');
-    const skip = parseInt(searchParams.get('skip') || '0');
-    const status = searchParams.get('status');
-    const platform = searchParams.get('platform');
-
-    // Get the brand profile for the current user
-    const brandProfile = await prisma.brandProfile.findUnique({
-      where: { userId: session.user.id },
+    
+    // Get API URL from environment variable or use default
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    
+    // Determine if we're calling the main API or a utility endpoint
+    const path = searchParams.get('path') || '/';
+    
+    // Create the URL to forward to the FastAPI app
+    const url = new URL(`${apiBaseUrl}${path}`);
+    
+    // Forward all query parameters except 'path'
+    searchParams.forEach((value, key) => {
+      if (key !== 'path') {
+        url.searchParams.append(key, value);
+      }
     });
-
-    if (!brandProfile) {
-      return NextResponse.json(
-        { error: 'Brand profile not found' },
-        { status: 404 }
-      );
-    }
-
-    // Build the query
-    const where = {
-      brandId: brandProfile.id,
-      ...(status && { status }),
-      ...(platform && { platformIds: { has: platform } }),
-    };
-
-    // Get campaigns
-    const [campaigns, total] = await Promise.all([
-      prisma.campaign.findMany({
-        where,
-        take,
-        skip,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          brand: {
-            select: {
-              companyName: true,
-            },
-          },
-          applications: {
-            select: {
-              id: true,
-            },
-          },
-        },
-      }),
-      prisma.campaign.count({ where }),
-    ]);
-
-    return NextResponse.json({
-      campaigns,
-      total,
-      hasMore: skip + take < total,
+    
+    console.log(`Forwarding request to: ${url.toString()}`);
+    
+    // Make the request to the FastAPI app
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Accept': 'application/json'
+      }
     });
-  } catch (error) {
-    console.error('Error fetching campaigns:', error);
+    
+    const data = await response.json();
+    
+    // Even if status is not OK, we want to return the data as it may contain error details
+    return NextResponse.json(data, { status: response.status });
+  } catch (error: any) {
+    console.error('API route error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch campaigns' },
+      { error: 'Internal server error', message: error.message },
       { status: 500 }
     );
   }
