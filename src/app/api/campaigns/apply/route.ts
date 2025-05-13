@@ -1,44 +1,94 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { authConfig } from '@/app/api/auth/[...nextauth]/auth.config';
-import { prisma } from '@/lib/prisma';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  console.log("Campaign application API route called");
   try {
+    // Check authentication 
     const session = await getServerSession(authConfig);
+    console.log("Session in apply API:", session?.user);
     
-    if (!session?.user?.id) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    if (!session || !session.user) {
+      console.error("Authentication required");
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
-    const { campaignId } = await request.json();
-
+    if (session.user.role !== 'CREATOR') {
+      console.error("Only creators can apply");
+      return NextResponse.json(
+        { error: 'Only creators can apply to campaigns' },
+        { status: 403 }
+      );
+    }
+    
+    // Get user ID directly from session
+    const userId = session.user.id;
+    
+    console.log("User ID in API:", userId);
+    if (!userId) {
+      console.error("User ID not found");
+      return NextResponse.json(
+        { error: 'User ID not found' },
+        { status: 404 }
+      );
+    }
+    
+    // Parse request body
+    const data = await request.json();
+    console.log("Request data:", data);
+    const { campaignId, sampleText, sampleVideoUrl } = data;
+    
     if (!campaignId) {
-      return new NextResponse('Campaign ID is required', { status: 400 });
+      console.error("Campaign ID is required");
+      return NextResponse.json(
+        { error: 'Campaign ID is required' },
+        { status: 400 }
+      );
     }
-
-    // Get creator profile
-    const creator = await prisma.creatorProfile.findUnique({
-      where: { userId: session.user.id },
-      select: { id: true }
+    
+    // Check if creator has already applied to this campaign
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    
+    // Just pass the user ID directly without the check since we'll handle it in the create endpoint
+    console.log("Creating new campaign claim with user ID:", userId);
+    
+    const createResponse = await fetch(`${apiUrl}/campaign-claims`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        campaign_id: campaignId,
+        user_id: userId,
+        sample_text: sampleText || null,
+        sample_video_url: sampleVideoUrl || null,
+      }),
     });
-
-    if (!creator) {
-      return new NextResponse('Creator profile not found', { status: 404 });
+    
+    console.log("Create response status:", createResponse.status);
+    if (!createResponse.ok) {
+      const errorData = await createResponse.json();
+      console.error("Error creating campaign claim:", errorData);
+      throw new Error(errorData.detail || 'Failed to apply for campaign');
     }
-
-    // Create application
-    const application = await prisma.application.create({
-      data: {
-        campaignId,
-        creatorId: creator.id,
-        status: 'PENDING'
-      }
+    
+    const responseData = await createResponse.json();
+    console.log("Create response data:", responseData);
+    
+    return NextResponse.json({
+      status: 'success',
+      message: 'Application submitted successfully!',
+      claimId: responseData.claim_id
     });
-
-    return NextResponse.json(application);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error applying for campaign:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json(
+      { error: error.message || 'Failed to apply for campaign' },
+      { status: 500 }
+    );
   }
 }

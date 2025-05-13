@@ -6,6 +6,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { JWT } from 'next-auth/jwt';
 import { Session } from 'next-auth';
+import { getServerSession } from 'next-auth';
 
 declare module 'next-auth' {
   interface Session {
@@ -118,3 +119,5 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
+
+export const auth = () => getServerSession(authOptions);

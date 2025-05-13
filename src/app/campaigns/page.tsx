@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 // Campaign type definition based on Supabase schema
 interface Campaign {
@@ -21,13 +22,22 @@ interface Campaign {
 }
 
 export default function Campaigns() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [platformFilter, setPlatformFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [applyingTo, setApplyingTo] = useState<string | null>(null);
+  const [applicationSuccess, setApplicationSuccess] = useState<boolean | null>(null);
+  const [applicationMessage, setApplicationMessage] = useState<string>('');
+  const [showModal, setShowModal] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [sampleText, setSampleText] = useState('');
+  const [sampleVideoUrl, setSampleVideoUrl] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // Fetch campaigns from the API
   useEffect(() => {
@@ -76,6 +86,132 @@ export default function Campaigns() {
     const matchesPlatform = platformFilter === 'all' || campaign.platform.toLowerCase() === platformFilter.toLowerCase();
     return matchesSearch && matchesPlatform;
   });
+
+  // Open application modal
+  const openApplicationModal = (campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+    setShowModal(true);
+    setSampleText('');
+    setSampleVideoUrl('');
+  };
+
+  // Close modal
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedCampaign(null);
+    setSampleText('');
+    setSampleVideoUrl('');
+  };
+
+  // Handle campaign application
+  const handleApply = async (campaignId: string, campaignTitle: string) => {
+    console.log("Apply button clicked for campaign:", campaignId);
+    
+    if (status === 'unauthenticated') {
+      console.log("User not authenticated, redirecting to login");
+      router.push('/login');
+      return;
+    }
+
+    if (session?.user?.role !== 'CREATOR') {
+      console.log("User not a creator:", session?.user?.role);
+      setApplicationSuccess(false);
+      setApplicationMessage('Only creators can apply to campaigns');
+      return;
+    }
+
+    console.log("Opening application modal for campaign:", campaignTitle);
+    // Find the campaign to display in the modal
+    const campaign = campaigns.find(c => c.id === campaignId);
+    if (campaign) {
+      setSelectedCampaign(campaign);
+      setShowModal(true);
+      setSampleText('');
+      setSampleVideoUrl('');
+    } else {
+      console.error("Campaign not found:", campaignId);
+    }
+  };
+
+  // Submit application with samples
+  const submitApplication = async () => {
+    if (!selectedCampaign) {
+      console.error("No campaign selected for application");
+      return;
+    }
+
+    console.log("Submitting application for campaign:", selectedCampaign.id);
+    try {
+      setSubmitting(true);
+      
+      // Get user ID from session instead of creatorId
+      const userId = session?.user?.id;
+      
+      console.log("User ID from session:", userId);
+      if (!userId) {
+        console.error("User ID not found in session");
+        setApplicationSuccess(false);
+        setApplicationMessage('User ID not found. Please try logging in again.');
+        closeModal();
+        return;
+      }
+
+      const payload = {
+        campaignId: selectedCampaign.id,
+        userId, // Send userId instead of creatorId
+        sampleText,
+        sampleVideoUrl,
+      };
+      console.log("Sending application payload:", payload);
+
+      const response = await fetch('/api/campaigns/apply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      console.log("Application response status:", response.status);
+      const data = await response.json();
+      console.log("Application response data:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to apply to campaign');
+      }
+
+      setApplicationSuccess(true);
+      setApplicationMessage(data.status === 'already_applied' 
+        ? 'You have already applied to this campaign'
+        : 'Application submitted successfully!');
+      
+      // Close modal after successful submission
+      closeModal();
+      
+      // Set the campaign ID for displaying success message
+      setApplyingTo(selectedCampaign.id);
+      
+      // Reset states after delay
+      setTimeout(() => {
+        setApplyingTo(null);
+        setTimeout(() => {
+          setApplicationSuccess(null);
+          setApplicationMessage('');
+        }, 3000);
+      }, 500);
+      
+    } catch (err: any) {
+      console.error('Error applying to campaign:', err);
+      setApplicationSuccess(false);
+      setApplicationMessage(err.message || 'Failed to apply. Please try again.');
+      closeModal();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Check if user can apply (is authenticated and has CREATOR role)
+  const canApply = status === 'authenticated' && session?.user?.role === 'CREATOR';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -186,20 +322,49 @@ export default function Campaigns() {
                     </div>
                   </div>
                   <p className="text-sm text-gray-600 mb-4">{campaign.brief}</p>
+                  
+                  {/* Application status message */}
+                  {applicationSuccess !== null && applyingTo === campaign.id && (
+                    <div className={`mb-4 p-2 text-sm rounded ${
+                      applicationSuccess 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {applicationMessage}
+                    </div>
+                  )}
+                  
                   <div className="mt-4">
-                    {session ? (
-                      <a
-                        href={`/campaigns/${campaign.id}`}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                      >
-                        View Details
-                      </a>
+                    {status === 'authenticated' ? (
+                      canApply ? (
+                        <button
+                          onClick={() => handleApply(campaign.id, campaign.title)}
+                          disabled={applyingTo === campaign.id}
+                          className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white 
+                            ${applyingTo === campaign.id
+                              ? 'bg-purple-400 cursor-not-allowed'
+                              : 'bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500'
+                            }`}
+                        >
+                          {applyingTo === campaign.id ? 'Applying...' : 'Apply Now'}
+                        </button>
+                      ) : (
+                        <div className="text-sm text-amber-600 mb-2">
+                          Only creator accounts can apply to campaigns.
+                          <a
+                            href="/creatorportal/dashboard"
+                            className="block mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700"
+                          >
+                            Go to Creator Dashboard
+                          </a>
+                        </div>
+                      )
                     ) : (
                       <a
                         href="/login"
                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
                       >
-                        Apply
+                        Log in to Apply
                       </a>
                     )}
                   </div>
@@ -209,6 +374,78 @@ export default function Campaigns() {
           </div>
         )}
       </div>
+
+      {/* Application Modal - Ensure it's properly rendered with high z-index */}
+      {showModal && selectedCampaign && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
+            <h2 className="text-xl font-bold mb-4">Apply to Campaign: {selectedCampaign.title}</h2>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                Please provide additional information to support your application:
+              </p>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sample Script or Content Idea
+              </label>
+              <textarea
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                rows={4}
+                placeholder="Share your content idea or script for this campaign..."
+                value={sampleText}
+                onChange={(e) => setSampleText(e.target.value)}
+              />
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sample Video URL (optional)
+              </label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                placeholder="e.g., https://www.youtube.com/watch?v=example"
+                value={sampleVideoUrl}
+                onChange={(e) => setSampleVideoUrl(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Link to a previous video that demonstrates your content style
+              </p>
+            </div>
+            
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  console.log("Modal close button clicked");
+                  closeModal();
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  console.log("Submit button clicked");
+                  submitApplication();
+                }}
+                disabled={submitting || !sampleText.trim()}
+                className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+                  submitting || !sampleText.trim()
+                    ? 'bg-purple-400 cursor-not-allowed'
+                    : 'bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500'
+                }`}
+              >
+                {submitting ? 'Submitting...' : 'Submit Application'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

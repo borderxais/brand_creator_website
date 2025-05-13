@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BarChart3, DollarSign, Eye, ThumbsUp, MessageSquare, Calendar, Bell, ArrowRight, Image } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
@@ -76,29 +76,6 @@ const recentPosts = [
   }
 ];
 
-const upcomingCampaigns = [
-  {
-    id: 1,
-    brand: 'StyleCo',
-    campaign: 'Spring Collection Launch',
-    deadline: '2024-02-15',
-    budget: '$800',
-    status: 'Pending',
-    description: 'Create 3 Instagram posts featuring our new spring collection.',
-    requirements: ['3 posts', 'Story highlight', 'Brand tags']
-  },
-  {
-    id: 2,
-    brand: 'BeautyBrand',
-    campaign: 'Skincare Routine',
-    deadline: '2024-02-20',
-    budget: '$1,200',
-    status: 'Approved',
-    description: 'Share your morning skincare routine using our products.',
-    requirements: ['1 video', 'Product review', 'Discount code']
-  }
-];
-
 const notifications = [
   {
     id: 1,
@@ -114,9 +91,21 @@ const notifications = [
   }
 ];
 
+interface CampaignClaim {
+  id: string;
+  campaign_id: string;
+  status: string;
+  campaign_title: string;
+  campaign_brand_name: string;
+  campaign_deadline: string;
+  campaign_budget_range: string;
+  created_at: string;
+}
+
 export default function CreatorDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [recentApplications, setRecentApplications] = useState<CampaignClaim[]>([]);
 
   console.log('Creator Dashboard - Session:', session);
   console.log('Creator Dashboard - Status:', status);
@@ -135,6 +124,24 @@ export default function CreatorDashboard() {
     router.push('/login');
     return null;
   }
+
+  useEffect(() => {
+    const fetchRecentApplications = async () => {
+      try {
+        const response = await fetch('/api/creator/campaign-claims?limit=2');
+        if (response.ok) {
+          const data = await response.json();
+          setRecentApplications(data);
+        }
+      } catch (error) {
+        console.error('Error fetching recent applications:', error);
+      }
+    };
+
+    if (session?.user?.role === 'CREATOR') {
+      fetchRecentApplications();
+    }
+  }, [session, status, router]);
 
   const [selectedTab, setSelectedTab] = useState('overview');
 
@@ -260,47 +267,65 @@ export default function CreatorDashboard() {
           </div>
         </div>
 
-        {/* Upcoming Campaigns */}
+        {/* Recent Applications */}
         <div className="bg-white shadow rounded-lg p-6 lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium text-gray-900">Upcoming Campaigns</h2>
+            <h2 className="text-lg font-medium text-gray-900">Recent Applications</h2>
             <Link
-              href="/creatorportal/campaigns"
+              href="/creatorportal/applications"
               className="text-sm text-purple-600 hover:text-purple-900 flex items-center"
             >
               View All
               <ArrowRight className="inline-block w-4 h-4 ml-1" />
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {upcomingCampaigns.map((campaign) => (
-              <div key={campaign.id} className="p-4 rounded-lg bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-base font-medium text-gray-900">{campaign.brand}</h3>
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    campaign.status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {campaign.status}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm text-gray-600">{campaign.description}</p>
-                <div className="mt-4 flex items-center justify-between text-sm">
-                  <div className="flex items-center text-gray-500">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    {new Date(campaign.deadline).toLocaleDateString()}
-                  </div>
-                  <div className="font-medium text-purple-600">{campaign.budget}</div>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {campaign.requirements.map((req, index) => (
-                    <span key={index} className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">
-                      {req}
+          
+          {recentApplications.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">You haven't applied to any campaigns yet.</p>
+              <Link
+                href="/campaigns"
+                className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700"
+              >
+                Browse Campaigns
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {recentApplications.map((application) => (
+                <div key={application.id} className="p-4 rounded-lg bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-medium text-gray-900">{application.campaign_title}</h3>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      application.status === 'approved' 
+                        ? 'bg-green-100 text-green-800' 
+                        : application.status === 'rejected'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
                     </span>
-                  ))}
+                  </div>
+                  <p className="mt-1 text-sm text-gray-500">{application.campaign_brand_name}</p>
+                  <div className="mt-4 flex items-center justify-between text-sm">
+                    <div className="flex items-center text-gray-500">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      {new Date(application.campaign_deadline).toLocaleDateString()}
+                    </div>
+                    <div className="font-medium text-purple-600">{application.campaign_budget_range}</div>
+                  </div>
+                  <div className="mt-4">
+                    <Link 
+                      href={`/creatorportal/applications?id=${application.id}`}
+                      className="text-sm text-purple-600 hover:text-purple-800"
+                    >
+                      View Details →
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

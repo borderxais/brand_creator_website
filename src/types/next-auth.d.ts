@@ -6,14 +6,15 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string
-      role: UserRole
+      role: string
       creatorId?: string
       brandId?: string
     } & DefaultSession['user']
   }
 
   interface User extends DefaultUser {
-    role: UserRole
+    id: string
+    role: string
     creatorId?: string
     brandId?: string
   }
