@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { createVerificationToken } from '@/lib/tokens' 
 import { sendVerificationEmail } from '@/lib/email'
+import { randomUUID } from 'crypto';
 
 export async function POST(request: Request) {
   try {
@@ -86,7 +87,10 @@ export async function POST(request: Request) {
           password: hashedPassword,
           name,
           role,
-          creatorHandleName: role === 'CREATOR' ? creatorHandleName : null,
+          // Generate a placeholder handle for brands to satisfy NOT NULL constraint
+          creatorHandleName: role === 'CREATOR' 
+            ? creatorHandleName 
+            : `brand-${randomUUID().slice(0, 8)}`,
           emailVerified: null // Explicitly set to null until verified
         }
       });

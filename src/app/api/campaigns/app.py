@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, HTTPException, Request
+from fastapi import FastAPI, Query, HTTPException, Request, Path
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from pydantic import BaseModel
@@ -6,6 +6,7 @@ import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import logging
+from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -584,6 +585,109 @@ async def get_creator_campaign_claims(
     except Exception as e:
         logger.error(f"Error fetching creator campaign claims: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch campaign claims: {str(e)}")
+
+@app.get("/brand-campaigns/{brand_id}", response_model=List[dict])
+async def get_brand_campaigns(
+    brand_id: str = Path(..., description="The ID of the brand"),
+    status: Optional[str] = Query(None, description="Filter by campaign status (e.g., DRAFT, ACTIVE, COMPLETED, CANCELLED)"),
+    start_date: Optional[str] = Query(None, description="Filter by start date (format: YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="Filter by end date (format: YYYY-MM-DD)"),
+    search: Optional[str] = Query(None, description="Search in campaign title or description")
+):
+    """
+    Get all campaigns for a specific brand with optional filtering.
+    """
+    logger.info(f"Fetching campaigns for brand ID: {brand_id} with filters: status={status}, start_date={start_date}, end_date={end_date}, search={search}")
+    
+    try:
+        if not supabase:
+            # Return mock data for development if no Supabase connection
+            mock_campaigns = [c for c in MOCK_CAMPAIGNS if c['brand_id'] == brand_id]
+            logger.warning(f"No Supabase connection, returning {len(mock_campaigns)} mock campaigns")
+            return mock_campaigns
+
+        # Based on your clarification: users.id = BrandProfile.userId = campaigns.brand_id
+        # So we can directly use the brand_id (user's ID) to query campaigns
+        query = supabase.table('campaigns').select('*').eq('brand_id', brand_id)
+        
+        # Apply filters
+        if status:
+            query = query.eq('status', status.upper())
+        
+        if start_date:
+            try:
+                # Convert to ISO format for database query
+                parsed_date = datetime.strptime(start_date, "%Y-%m-%d").isoformat()
+                query = query.gte('start_date', parsed_date)
+            except ValueError:
+                logger.warning(f"Invalid start_date format: {start_date}")
+        
+        if end_date:
+            try:
+                # Convert to ISO format for database query
+                parsed_date = datetime.strptime(end_date, "%Y-%m-%d").isoformat()
+                query = query.lte('end_date', parsed_date)
+            except ValueError:
+                logger.warning(f"Invalid end_date format: {end_date}")
+                
+        # Execute query
+        response = query.execute()
+        
+        if not response.data:
+            logger.info(f"No campaigns found for brand ID: {brand_id}")
+            return []
+            
+        campaigns = response.data
+        logger.info(f"Found {len(campaigns)} campaigns for brand ID: {brand_id}")
+        
+        # If search parameter is provided, filter results
+        if search and search.strip():
+            search_lower = search.lower()
+            campaigns = [
+                c for c in campaigns 
+                if search_lower in c.get('title', '').lower() or 
+                   search_lower in c.get('description', '').lower()
+            ]
+            logger.info(f"After search filter, found {len(campaigns)} campaigns")
+        
+        # Fetch applications for each campaign
+        for campaign in campaigns:
+            # Get applications for this campaign
+            try:
+                applications_response = supabase.table('applications')\
+                    .select('*, creator:CreatorProfile(*, user:User(name, image))')\
+                    .eq('campaign_id', campaign['id'])\
+                    .execute()
+                
+                campaign['applications'] = applications_response.data or []
+                logger.info(f"Found {len(campaign['applications'])} applications for campaign ID: {campaign['id']}")
+            except Exception as e:
+                logger.error(f"Error fetching applications for campaign ID {campaign['id']}: {str(e)}")
+                campaign['applications'] = []
+        
+        # Get brand profile information
+        try:
+            brand_response = supabase.table('BrandProfile')\
+                .select('*, user:User(name, image)')\
+                .eq('userId', brand_id)\
+                .execute()
+            
+            if brand_response.data and len(brand_response.data) > 0:
+                brand_info = brand_response.data[0]
+                
+                # Add brand info to each campaign
+                for campaign in campaigns:
+                    campaign['brand'] = brand_info
+            else:
+                logger.warning(f"Brand profile not found for user ID: {brand_id}")
+        except Exception as e:
+            logger.error(f"Error fetching brand information for user ID {brand_id}: {str(e)}")
+        
+        return campaigns
+        
+    except Exception as e:
+        logger.error(f"Error fetching campaigns for brand ID {brand_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch brand campaigns: {str(e)}")
 
 # For local development
 if __name__ == "__main__":

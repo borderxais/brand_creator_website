@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Clock, DollarSign, Users, Tag, Filter, Search } from 'lucide-react';
+import { Clock, DollarSign, Tag, Filter, Search, Calendar, X } from 'lucide-react';
 import CreateCampaignModal from '@/components/campaigns/CreateCampaignModal';
-import Image from 'next/image';
 
 interface Platform {
   id: string;
@@ -13,82 +12,58 @@ interface Platform {
   displayName: string;
 }
 
+// Update Campaign interface to match the database schema
 interface Campaign {
   id: string;
+  brand_id: string;
   title: string;
-  description: string;
-  budget: number;
+  brief: string;
   requirements: string | null;
-  startDate: Date;
-  endDate: Date;
-  status: string;
-  categories: string;
-  deliverables: string;
-  platformIds: string[];
-  brand: {
-    companyName: string;
-    user: {
-      name: string;
-      image: string;
-    };
-  };
-  applications: Array<{
-    id: string;
-    status: string;
-    creator: {
-      user: {
-        name: string;
-        image: string;
-      };
-    };
-  }>;
-  createdAt: Date;
-  updatedAt: Date;
+  budget_range: string;
+  commission: string;
+  platform: string;
+  deadline: string | Date;
+  max_creators: number;
+  is_open: boolean;
+  created_at: string | Date;
 }
 
 function CampaignCard({ campaign }: { campaign: Campaign }) {
-  const requirements = campaign.requirements ? JSON.parse(campaign.requirements).list : [];
-
-  let categories = [];
+  // Handle requirements parsing safely
+  let requirements = [];
   try {
-    const parsedCategories = JSON.parse(campaign.categories);
-    categories = Array.isArray(parsedCategories) ? parsedCategories : [parsedCategories];
+    if (campaign.requirements) {
+      const parsed = JSON.parse(campaign.requirements);
+      requirements = Array.isArray(parsed) ? parsed : 
+                    (parsed.list && Array.isArray(parsed.list)) ? parsed.list : 
+                    [String(parsed)];
+    }
   } catch (e) {
-    categories = [campaign.categories];
+    requirements = campaign.requirements ? [campaign.requirements] : [];
   }
 
-  let deliverables = [];
-  try {
-    const parsedDeliverables = JSON.parse(campaign.deliverables);
-    deliverables = Array.isArray(parsedDeliverables) ? parsedDeliverables : [parsedDeliverables];
-  } catch (e) {
-    deliverables = [campaign.deliverables];
-  }
+  // Format dates safely
+  const formatDate = (dateString: string | Date | undefined) => {
+    if (!dateString) return 'Not set';
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (e) {
+      return String(dateString);
+    }
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-4">
+    <div className="bg-white rounded-lg shadow-sm p-6 mb-4 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-4">
-          <div className="relative w-12 h-12">
-            <Image
-              src={campaign.brand.user.image || "/images/placeholder.svg"}
-              alt={campaign.brand.user.name}
-              fill
-              className="rounded-full object-cover"
-            />
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold mb-2">{campaign.title}</h3>
-            <p className="text-gray-600 mb-4">{campaign.description}</p>
-          </div>
+        <div>
+          <h3 className="text-xl font-semibold mb-2">{campaign.title || 'Untitled Campaign'}</h3>
+          <p className="text-gray-600 mb-2">{campaign.brief || 'No description provided'}</p>
+          <p className="text-xs text-gray-500">Created: {formatDate(campaign.created_at)}</p>
         </div>
         <span className={`px-3 py-1 rounded-full text-sm ${
-          campaign.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-          campaign.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
-          campaign.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
-          'bg-red-100 text-red-800'
+          campaign.is_open ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
         }`}>
-          {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1).toLowerCase()}
+          {campaign.is_open ? 'Open' : 'Closed'}
         </span>
       </div>
 
@@ -96,73 +71,60 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
         <div className="flex items-center">
           <Clock className="w-5 h-5 text-gray-400 mr-2" />
           <div>
-            <p className="text-sm text-gray-600">Duration</p>
+            <p className="text-sm text-gray-600">Deadline</p>
             <p className="font-medium">
-              {new Date(campaign.startDate).toLocaleDateString()} - {new Date(campaign.endDate).toLocaleDateString()}
+              {formatDate(campaign.deadline)}
             </p>
           </div>
         </div>
         <div className="flex items-center">
           <DollarSign className="w-5 h-5 text-gray-400 mr-2" />
           <div>
-            <p className="text-sm text-gray-600">Budget</p>
-            <p className="font-medium">${campaign.budget.toLocaleString()}</p>
+            <p className="text-sm text-gray-600">Budget Range</p>
+            <p className="font-medium">{campaign.budget_range || 'Not specified'}</p>
           </div>
         </div>
         <div className="flex items-center">
-          <Users className="w-5 h-5 text-gray-400 mr-2" />
+          <DollarSign className="w-5 h-5 text-gray-400 mr-2" />
           <div>
-            <p className="text-sm text-gray-600">Applications</p>
-            <p className="font-medium">{campaign.applications.length}</p>
+            <p className="text-sm text-gray-600">Commission</p>
+            <p className="font-medium">{campaign.commission || 'None'}</p>
           </div>
         </div>
         <div className="flex items-center">
           <Tag className="w-5 h-5 text-gray-400 mr-2" />
           <div>
-            <p className="text-sm text-gray-600">Categories</p>
-            <p className="font-medium">{categories.join(', ')}</p>
+            <p className="text-sm text-gray-600">Platform</p>
+            <p className="font-medium">{campaign.platform || 'Not specified'}</p>
           </div>
         </div>
       </div>
 
-      {campaign.applications.length > 0 && (
-        <div className="border-t pt-4 mb-4">
-          <h4 className="font-medium mb-2">Applications:</h4>
-          <div className="space-y-2">
-            {campaign.applications.map((application) => (
-              <div key={application.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                <div className="flex items-center gap-2">
-                  <div className="relative w-8 h-8">
-                    <Image
-                      src={application.creator.user.image || "/images/placeholder.svg"}
-                      alt={application.creator.user.name}
-                      fill
-                      className="rounded-full object-cover"
-                    />
-                  </div>
-                  <span className="font-medium">{application.creator.user.name}</span>
-                </div>
-                <span className={`px-2 py-1 rounded text-xs ${
-                  application.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                  application.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                  'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {application.status.charAt(0).toUpperCase() + application.status.slice(1).toLowerCase()}
-                </span>
-              </div>
+      <div className="flex justify-between items-center mb-4 px-2 py-1 bg-gray-50 rounded">
+        <div>
+          <span className="text-sm text-gray-600">Max Creators:</span>
+          <span className="ml-2 font-medium">{campaign.max_creators}</span>
+        </div>
+        <div>
+          <span className="text-sm text-gray-600">Status:</span>
+          <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+            campaign.is_open ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}>
+            {campaign.is_open ? 'ACTIVE' : 'CLOSED'}
+          </span>
+        </div>
+      </div>
+
+      {requirements.length > 0 && (
+        <div className="border-t pt-4">
+          <h4 className="font-medium mb-2">Requirements:</h4>
+          <ul className="list-disc list-inside text-gray-600">
+            {requirements.map((req: string, index: number) => (
+              <li key={index}>{req}</li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
-
-      <div className="border-t pt-4">
-        <h4 className="font-medium mb-2">Requirements:</h4>
-        <ul className="list-disc list-inside text-gray-600">
-          {requirements.map((req: string, index: number) => (
-            <li key={index}>{req}</li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }
@@ -176,6 +138,21 @@ export default function Campaigns() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [platforms, setPlatforms] = useState<Platform[]>([]);
+  
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [startDateFilter, setStartDateFilter] = useState<string>('');
+  const [endDateFilter, setEndDateFilter] = useState<string>('');
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
+  
+  // Campaign status options
+  const statusOptions = [
+    { value: '', label: 'All Statuses' },
+    { value: 'ACTIVE', label: 'Active' },
+    { value: 'DRAFT', label: 'Draft' },
+    { value: 'COMPLETED', label: 'Completed' },
+    { value: 'CANCELLED', label: 'Cancelled' }
+  ];
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -212,15 +189,47 @@ export default function Campaigns() {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch('/api/brand/campaigns');
+      // Build query parameters for filtering
+      const params = new URLSearchParams();
+      
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+      
+      if (statusFilter) {
+        params.append('status', statusFilter);
+      }
+      
+      if (startDateFilter) {
+        params.append('startDate', startDateFilter);
+      }
+      
+      if (endDateFilter) {
+        params.append('endDate', endDateFilter);
+      }
+      
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      
+      // Direct fetch from the Python API via the Next.js API route
+      const response = await fetch(`/api/brand/campaigns${queryString}`);
       
       if (!response.ok) {
+        console.error(`Failed to fetch campaigns: ${response.status}`);
         const data = await response.json();
-        throw new Error(data.error || 'Failed to fetch campaigns');
+        throw new Error(data.error || `Failed to fetch campaigns (status: ${response.status})`);
       }
 
       const data = await response.json();
-      setCampaigns(data);
+      console.log('Received campaigns data:', data);
+      
+      // Handle both array and object with campaigns property
+      const campaignsData = Array.isArray(data) ? data : (data.campaigns || []);
+      setCampaigns(campaignsData);
+      
+      // If there's an error message but status was ok, show it as a warning
+      if (!Array.isArray(data) && data.error) {
+        console.warn('API Warning:', data.error);
+      }
     } catch (error) {
       console.error('Error fetching campaigns:', error);
       setError(error instanceof Error ? error.message : 'Failed to load campaigns');
@@ -251,10 +260,21 @@ export default function Campaigns() {
     }
   };
 
-  const filteredCampaigns = campaigns.filter(campaign =>
-    campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    campaign.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleFilterApply = () => {
+    fetchCampaigns();
+    setIsFilterVisible(false);
+  };
+
+  const clearFilters = () => {
+    setStatusFilter('');
+    setStartDateFilter('');
+    setEndDateFilter('');
+    setSearchQuery('');
+    fetchCampaigns();
+  };
+
+  // Server-side filtering
+  const filteredCampaigns = campaigns;
 
   if (status === 'loading' || isLoading) {
     return (
@@ -304,7 +324,7 @@ export default function Campaigns() {
       </div>
 
       <div className="bg-white rounded-lg p-4 mb-6">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
@@ -312,16 +332,101 @@ export default function Campaigns() {
               placeholder="Search campaigns..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && fetchCampaigns()}
               className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+          
+          <button 
+            onClick={() => setIsFilterVisible(!isFilterVisible)}
+            className="flex items-center px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+          </button>
+          
+          {(statusFilter || startDateFilter || endDateFilter) && (
+            <button 
+              onClick={clearFilters}
+              className="flex items-center px-3 py-2 text-red-600 hover:text-red-800"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Clear filters
+            </button>
+          )}
         </div>
+        
+        {isFilterVisible && (
+          <div className="mt-4 p-4 border rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {statusOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <input
+                    type="date"
+                    value={startDateFilter}
+                    onChange={(e) => setStartDateFilter(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <input
+                    type="date"
+                    value={endDateFilter}
+                    onChange={(e) => setEndDateFilter(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={handleFilterApply}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">
-        {filteredCampaigns.map((campaign) => (
-          <CampaignCard key={campaign.id} campaign={campaign} />
-        ))}
+        {campaigns && campaigns.length > 0 ? (
+          campaigns.map((campaign) => (
+            <div key={campaign.id} onClick={() => router.push(`/brandportal/campaigns/${campaign.id}`)} className="cursor-pointer">
+              <CampaignCard campaign={campaign} />
+            </div>
+          ))
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <p className="text-gray-500 mb-2">No campaigns found</p>
+            <p className="text-sm text-gray-400">
+              {statusFilter || startDateFilter || endDateFilter ? 
+                'Try adjusting your filters or' : 'Get started by'} creating a new campaign
+            </p>
+          </div>
+        )}
       </div>
 
       <CreateCampaignModal
