@@ -31,16 +31,16 @@ export async function GET(request: Request) {
 
     // Extract any query parameters from the request
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
+    const isOpen = searchParams.get('is_open'); // Changed from status to is_open
     const search = searchParams.get('search');
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
+    const startDate = searchParams.get('start_date'); // Using snake_case
+    const endDate = searchParams.get('end_date'); // Using snake_case
 
     // Build the Python API URL with query parameters
     let pythonApiUrl = `${PYTHON_API_URL}/brand-campaigns/${user.brand.id}`;
     const queryParams = new URLSearchParams();
     
-    if (status) queryParams.append('status', status);
+    if (isOpen) queryParams.append('is_open', isOpen); // Changed from status to is_open
     if (search) queryParams.append('search', search);
     if (startDate) queryParams.append('start_date', startDate);
     if (endDate) queryParams.append('end_date', endDate);

@@ -196,16 +196,18 @@ export default function Campaigns() {
         params.append('search', searchQuery);
       }
       
+      // Your database doesn't have these status values; it only has is_open boolean
       if (statusFilter) {
         params.append('status', statusFilter);
       }
       
+      // Your database column names use snake_case but you're sending camelCase
       if (startDateFilter) {
-        params.append('startDate', startDateFilter);
+        params.append('startDate', startDateFilter); // Should be start_date to match Python API
       }
       
       if (endDateFilter) {
-        params.append('endDate', endDateFilter);
+        params.append('endDate', endDateFilter); // Should be end_date to match Python API
       }
       
       const queryString = params.toString() ? `?${params.toString()}` : '';
@@ -366,6 +368,7 @@ export default function Campaigns() {
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
+                  {/* These options don't match your database schema */}
                   {statusOptions.map(option => (
                     <option key={option.value} value={option.value}>{option.label}</option>
                   ))}

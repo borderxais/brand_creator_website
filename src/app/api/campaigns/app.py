@@ -650,26 +650,42 @@ async def get_brand_campaigns(
             ]
             logger.info(f"After search filter, found {len(campaigns)} campaigns")
         
-        # Fetch applications for each campaign
+        # Fetch claims (applications) for each campaign - Updated to use campaignclaims table
         for campaign in campaigns:
-            # Get applications for this campaign
             try:
-                applications_response = supabase.table('applications')\
-                    .select('*, creator:CreatorProfile(*, user:User(name, image))')\
+                # Use campaignclaims table instead of applications
+                claims_response = supabase.table('campaignclaims')\
+                    .select('*')\
                     .eq('campaign_id', campaign['id'])\
                     .execute()
                 
-                campaign['applications'] = applications_response.data or []
-                logger.info(f"Found {len(campaign['applications'])} applications for campaign ID: {campaign['id']}")
+                # Store the claims as applications in the campaign object
+                campaign['applications'] = claims_response.data or []
+                logger.info(f"Found {len(campaign['applications'])} claims/applications for campaign ID: {campaign['id']}")
+                
+                # Optionally, fetch creator details for each claim
+                for claim in campaign['applications']:
+                    try:
+                        if claim.get('creator_id'):
+                            creator_response = supabase.table('CreatorProfile')\
+                                .select('*')\
+                                .eq('id', claim['creator_id'])\
+                                .execute()
+                            
+                            if creator_response.data and len(creator_response.data) > 0:
+                                claim['creator'] = creator_response.data[0]
+                    except Exception as e:
+                        logger.error(f"Error fetching creator details for claim {claim.get('id')}: {str(e)}")
+                
             except Exception as e:
-                logger.error(f"Error fetching applications for campaign ID {campaign['id']}: {str(e)}")
+                logger.error(f"Error fetching claims for campaign ID {campaign['id']}: {str(e)}")
                 campaign['applications'] = []
         
-        # Get brand profile information
+        # Get brand information - using simpler query that doesn't need relationships
         try:
             brand_response = supabase.table('BrandProfile')\
-                .select('*, user:User(name, image)')\
-                .eq('userId', brand_id)\
+                .select('*')\
+                .eq('id', brand_id)\
                 .execute()
             
             if brand_response.data and len(brand_response.data) > 0:
