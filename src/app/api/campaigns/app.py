@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, HTTPException, Request, Path
+from fastapi import FastAPI, Query, HTTPException, Request, Path, Body
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from pydantic import BaseModel
@@ -704,6 +704,161 @@ async def get_brand_campaigns(
     except Exception as e:
         logger.error(f"Error fetching campaigns for brand ID {brand_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch brand campaigns: {str(e)}")
+
+# Add this new endpoint
+
+@app.get("/brand-campaigns/{brand_id}/campaign/{campaign_id}", response_model=dict)
+async def get_brand_campaign(
+    brand_id: str = Path(..., description="The ID of the brand"),
+    campaign_id: str = Path(..., description="The ID of the campaign")
+):
+    """
+    Get a specific campaign by ID with all its applications
+    """
+    logger.info(f"Fetching campaign {campaign_id} for brand ID: {brand_id}")
+    
+    try:
+        if not supabase:
+            # Return mock data for development if no Supabase connection
+            return {"error": "Supabase connection not available"}
+
+        # Verify the campaign belongs to the brand
+        campaign_response = supabase.table('campaigns')\
+            .select('*')\
+            .eq('id', campaign_id)\
+            .eq('brand_id', brand_id)\
+            .execute()
+            
+        if not campaign_response.data or len(campaign_response.data) == 0:
+            logger.warning(f"Campaign {campaign_id} not found for brand {brand_id}")
+            raise HTTPException(status_code=404, detail="Campaign not found")
+            
+        campaign = campaign_response.data[0]
+        
+        # Fetch all claims/applications for this campaign
+        try:
+            claims_response = supabase.table('campaignclaims')\
+                .select('*')\
+                .eq('campaign_id', campaign_id)\
+                .execute()
+                
+            applications = claims_response.data or []
+            campaign['applications'] = applications
+            logger.info(f"Found {len(applications)} applications for campaign {campaign_id}")
+            
+            # Enhanced: Fetch creator details including user information
+            for application in campaign['applications']:
+                try:
+                    if application.get('creator_id'):
+                        # Get creator profile without trying to join with User
+                        creator_response = supabase.table('CreatorProfile')\
+                            .select('*')\
+                            .eq('id', application['creator_id'])\
+                            .execute()
+                        
+                        if creator_response.data and len(creator_response.data) > 0:
+                            creator_data = creator_response.data[0]
+                            application['creator'] = creator_data
+                            
+                            # Separate query to get user data if userId exists
+                            if creator_data.get('userId'):
+                                try:
+                                    user_response = supabase.table('User')\
+                                        .select('id, name, email, image')\
+                                        .eq('id', creator_data['userId'])\
+                                        .execute()
+                                        
+                                    if user_response.data and len(user_response.data) > 0:
+                                        user_data = user_response.data[0]
+                                        application['creator']['username'] = user_data.get('name')
+                                        application['creator']['email'] = user_data.get('email')
+                                        application['creator']['image'] = user_data.get('image')
+                                        application['creator']['user'] = user_data  # Include full user data
+                                except Exception as user_error:
+                                    logger.error(f"Error fetching user data for creator {creator_data['userId']}: {str(user_error)}")
+                                    
+                except Exception as e:
+                    logger.error(f"Error fetching creator details for application {application.get('id')}: {str(e)}")
+                    # Still include the creator_id even if we can't get the details
+                    application['creator'] = {'id': application['creator_id']}
+            
+        except Exception as e:
+            logger.error(f"Error fetching applications for campaign {campaign_id}: {str(e)}")
+            campaign['applications'] = []
+        
+        return campaign
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching campaign {campaign_id} for brand {brand_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch campaign details: {str(e)}")
+
+# Add this new endpoint for updating application status
+
+@app.patch("/campaign-claims/{claim_id}/status")
+async def update_campaign_claim_status(
+    claim_id: str = Path(..., description="The ID of the claim/application"),
+    status_update: dict = Body(..., description="Status update details")
+):
+    """Update the status of a campaign claim (application)."""
+    try:
+        status = status_update.get('status')
+        brand_id = status_update.get('brand_id')
+        
+        if not status or status not in ['pending', 'approved', 'rejected']:
+            raise HTTPException(status_code=400, detail="Invalid status value")
+        
+        logger.info(f"Updating campaign claim {claim_id} status to {status}")
+        
+        # Validate that the claim exists
+        claim_response = supabase.table('campaignclaims')\
+            .select('*')\
+            .eq('id', claim_id)\
+            .execute()
+            
+        if not claim_response.data or len(claim_response.data) == 0:
+            logger.error(f"Claim {claim_id} not found")
+            raise HTTPException(status_code=404, detail="Application not found")
+        
+        # Get the campaign to verify ownership
+        claim = claim_response.data[0]
+        campaign_id = claim.get('campaign_id')
+        
+        campaign_response = supabase.table('campaigns')\
+            .select('brand_id')\
+            .eq('id', campaign_id)\
+            .execute()
+            
+        if not campaign_response.data or len(campaign_response.data) == 0:
+            logger.error(f"Campaign {campaign_id} not found for claim {claim_id}")
+            raise HTTPException(status_code=404, detail="Campaign not found")
+            
+        # Verify the campaign is owned by the brand
+        campaign = campaign_response.data[0]
+        if campaign.get('brand_id') != brand_id:
+            logger.error(f"Brand {brand_id} does not own campaign {campaign_id}")
+            raise HTTPException(status_code=403, detail="You do not have permission to update this application")
+            
+        # Update the claim status
+        update_response = supabase.table('campaignclaims')\
+            .update({'status': status})\
+            .eq('id', claim_id)\
+            .execute()
+            
+        if not update_response.data:
+            logger.error(f"Failed to update claim {claim_id} status")
+            raise HTTPException(status_code=500, detail="Failed to update application status")
+            
+        logger.info(f"Successfully updated claim {claim_id} status to {status}")
+        return {"success": True, "claim_id": claim_id, "status": status}
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error updating campaign claim status: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update application status: {str(e)}")
 
 # For local development
 if __name__ == "__main__":

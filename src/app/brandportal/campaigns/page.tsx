@@ -26,6 +26,7 @@ interface Campaign {
   max_creators: number;
   is_open: boolean;
   created_at: string | Date;
+  applications?: Array<{ id: string; status: string; creator_id: string; }>;  // Add this line
 }
 
 function CampaignCard({ campaign }: { campaign: Campaign }) {
@@ -112,6 +113,22 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
           }`}>
             {campaign.is_open ? 'ACTIVE' : 'CLOSED'}
           </span>
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center mt-4 pt-4 border-t">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">Applications:</span>
+          <span className="font-medium">{campaign.applications?.length || 0}</span>
+        </div>
+        <div className="flex space-x-2">
+          <a
+            href={`/brandportal/campaigns/${campaign.id}/applications`}
+            className="flex items-center px-3 py-1.5 text-white bg-blue-600 rounded-lg hover:bg-blue-700 text-sm"
+            onClick={(e) => e.stopPropagation()} // Prevent parent onClick
+          >
+            View Applications
+          </a>
         </div>
       </div>
 
@@ -417,7 +434,7 @@ export default function Campaigns() {
       <div className="space-y-4">
         {campaigns && campaigns.length > 0 ? (
           campaigns.map((campaign) => (
-            <div key={campaign.id} onClick={() => router.push(`/brandportal/campaigns/${campaign.id}`)} className="cursor-pointer">
+            <div key={campaign.id} className="cursor-default">
               <CampaignCard campaign={campaign} />
             </div>
           ))

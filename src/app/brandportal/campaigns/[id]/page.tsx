@@ -127,8 +127,6 @@ export default async function CampaignDetails({params}: {params: Promise<{ id: s
   const { id } = await params;
   const campaign = await getCampaign(id);
 
-  
-
   return (
     <div className="min-h-screen p-8">
       {/* Header Section */}
@@ -138,6 +136,15 @@ export default async function CampaignDetails({params}: {params: Promise<{ id: s
           <p className="text-lg text-gray-600 mt-2">by {campaign.brand}</p>
         </div>
         <div className="flex items-center space-x-4">
+          {/* Add a View Applications button that links to the applications page */}
+          <a 
+            href={`/brandportal/campaigns/${id}/applications`}
+            className="flex items-center px-4 py-2 text-white rounded-xl bg-blue-600 hover:bg-blue-700"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            View Applications ({campaign.applicants || 0})
+          </a>
+
           <button className="flex items-center px-4 py-2 text-gray-700 bg-white rounded-xl border hover:bg-gray-50">
             <Share2 className="h-4 w-4 mr-2" />
             Share
