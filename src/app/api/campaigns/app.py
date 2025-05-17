@@ -93,6 +93,19 @@ class Campaign(BaseModel):
     created_at: Optional[str] = None
     brand_name: Optional[str] = None
 
+# Model for campaign creation
+class CampaignCreate(BaseModel):
+    brand_id: str
+    title: str
+    brief: Optional[str] = None
+    requirements: Optional[str] = None
+    budget_range: Optional[str] = None
+    commission: Optional[str] = None
+    platform: Optional[str] = None
+    deadline: Optional[str] = None
+    max_creators: Optional[int] = 10
+    is_open: Optional[bool] = True
+
 # Update the model for campaign claims
 class CampaignClaimCreate(BaseModel):
     campaign_id: str
@@ -859,6 +872,59 @@ async def update_campaign_claim_status(
     except Exception as e:
         logger.error(f"Error updating campaign claim status: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to update application status: {str(e)}")
+
+# Add Campaign Creation Endpoint to Python API
+
+@app.post("/brand-campaigns/{brand_id}/add_campaign", response_model=dict)
+async def add_campaign(
+    brand_id: str = Path(..., description="The ID of the brand"),
+    campaign: CampaignCreate = Body(..., description="Campaign details to create")
+):
+    """
+    Create a new campaign for a specific brand
+    """
+    logger.info(f"Creating new campaign for brand ID: {brand_id}")
+    
+    try:
+        if not supabase:
+            # Return mock response for development if no Supabase connection
+            return {
+                "id": "mock-campaign-id",
+                "brand_id": brand_id,
+                "title": campaign.title,
+                "created_at": datetime.now().isoformat(),
+                "status": "success"
+            }
+
+        # Verify the brand_id in the URL matches the brand_id in the request body
+        if campaign.brand_id != brand_id:
+            logger.error(f"Brand ID mismatch: URL {brand_id} vs Body {campaign.brand_id}")
+            raise HTTPException(status_code=400, detail="Brand ID mismatch between URL and request body")
+            
+        # Prepare data for insertion
+        campaign_data = campaign.dict()
+        logger.info(f"Inserting campaign with data: {campaign_data}")
+        
+        # Insert the campaign into the database
+        response = supabase.table('campaigns').insert(campaign_data).execute()
+        
+        if not response.data or len(response.data) == 0:
+            logger.error("Failed to create campaign, no data returned from database")
+            raise HTTPException(status_code=500, detail="Failed to create campaign")
+            
+        created_campaign = response.data[0]
+        logger.info(f"Successfully created campaign with ID {created_campaign['id']}")
+        
+        return {
+            "status": "success", 
+            "campaign": created_campaign
+        }
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Error creating campaign: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create campaign: {str(e)}")
 
 # For local development
 if __name__ == "__main__":

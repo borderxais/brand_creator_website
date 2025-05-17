@@ -106,8 +106,10 @@ export async function POST(request: Request) {
 
     const data = await request.json();
 
-    // Forward the request to the Python API
-    const pythonApiUrl = `${PYTHON_API_URL}/campaigns`;
+    // Forward the request to the Python API - Updated URL to match the correct pattern
+    const pythonApiUrl = `${PYTHON_API_URL}/brand-campaigns/${user.brand.id}/add_campaign`;
+    
+    console.log('Creating campaign via Python API:', pythonApiUrl);
     
     const response = await fetch(pythonApiUrl, {
       method: 'POST',

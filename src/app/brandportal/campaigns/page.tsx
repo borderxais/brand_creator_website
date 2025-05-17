@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Clock, DollarSign, Tag, Filter, Search, Calendar, X } from 'lucide-react';
-import CreateCampaignModal from '@/components/campaigns/CreateCampaignModal';
+import Link from 'next/link';
 
 interface Platform {
   id: string;
@@ -149,7 +149,6 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
 export default function Campaigns() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -257,28 +256,6 @@ export default function Campaigns() {
     }
   };
 
-  const handleCreateCampaign = async (formData: any) => {
-    try {
-      const response = await fetch('/api/brand/campaigns', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create campaign');
-      }
-
-      await fetchCampaigns();
-      setIsCreateModalOpen(false);
-    } catch (error) {
-      console.error('Error creating campaign:', error);
-      alert('Failed to create campaign. Please try again.');
-    }
-  };
-
   const handleFilterApply = () => {
     fetchCampaigns();
     setIsFilterVisible(false);
@@ -334,12 +311,12 @@ export default function Campaigns() {
           <p className="text-gray-600">Manage your campaigns and track their performance</p>
         </div>
 
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
+        <Link
+          href="/brandportal/campaigns/new"
           className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
         >
           + Campaign
-        </button>
+        </Link>
       </div>
 
       <div className="bg-white rounded-lg p-4 mb-6">
@@ -448,13 +425,6 @@ export default function Campaigns() {
           </div>
         )}
       </div>
-
-      <CreateCampaignModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateCampaign}
-        platforms={platforms}
-      />
     </div>
   );
 }

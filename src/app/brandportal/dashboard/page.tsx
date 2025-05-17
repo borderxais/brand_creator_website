@@ -6,7 +6,6 @@ import { MessageSquare } from 'lucide-react';
 import { DollarSign, Users, ShoppingBag, TrendingUp, Plus, Target, Smile } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Link from 'next/link';
-import CreateCampaignModal from '@/components/campaigns/CreateCampaignModal';
 
 interface Platform {
   id: string;
@@ -141,46 +140,6 @@ const topCategories = [
 
 export default function BrandDashboard() {
   const { data: session } = useSession();
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [platforms, setPlatforms] = useState<Platform[]>([]);
-
-  useEffect(() => {
-    fetchPlatforms();
-  }, []);
-
-  const fetchPlatforms = async () => {
-    try {
-      const response = await fetch('/api/platforms');
-      if (!response.ok) {
-        throw new Error('Failed to fetch platforms');
-      }
-      const data = await response.json();
-      setPlatforms(data);
-    } catch (error) {
-      console.error('Error fetching platforms:', error);
-    }
-  };
-
-  const handleCreateCampaign = async (formData: any) => {
-    try {
-      const response = await fetch('/api/campaigns', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create campaign');
-      }
-
-      setIsCreateModalOpen(false);
-      // TODO: Refresh dashboard data
-    } catch (error) {
-      console.error('Error creating campaign:', error);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -195,21 +154,14 @@ export default function BrandDashboard() {
               Here's what's happening with your campaigns today
             </p>
           </div>
-          <button 
-            onClick={() => setIsCreateModalOpen(true)}
+          <Link 
+            href="/brandportal/campaigns/new"
             className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
           >
             <Plus className="h-5 w-5 mr-2" />
             New Campaign
-          </button>
+          </Link>
         </div>
-
-        <CreateCampaignModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onSubmit={handleCreateCampaign}
-          platforms={platforms}
-        />
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
