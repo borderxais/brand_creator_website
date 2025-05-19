@@ -7,6 +7,7 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 import logging
 from datetime import datetime
+import platform
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,16 +32,22 @@ app.add_middleware(
 supabase_url = os.environ.get("SUPABASE_URL")
 supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
 
+# Add more detailed logging for Supabase initialization
 if not supabase_url or not supabase_key:
-    logger.error("Missing Supabase environment variables")
+    logger.error(f"Missing Supabase environment variables. URL present: {bool(supabase_url)}, Key present: {bool(supabase_key)}")
     supabase = None
 else:
-    logger.info(f"Initializing Supabase client with URL: {supabase_url}")
+    logger.info(f"Initializing Supabase client with URL: {supabase_url[:20]}...")
     try:
+        # Print environment info
+        logger.info(f"Environment: GOOGLE_CLOUD_PROJECT={os.environ.get('GOOGLE_CLOUD_PROJECT', 'Not set')}")
+        logger.info(f"Python version: {platform.python_version()}")
+        
+        # Try to create a Supabase client
         supabase = create_client(supabase_url, supabase_key)
         logger.info("Supabase client initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize Supabase client: {e}")
+        logger.error(f"Failed to initialize Supabase client: {str(e)}")
         supabase = None
 
 # Mock data for when real data isn't available
@@ -926,7 +933,96 @@ async def add_campaign(
         logger.error(f"Error creating campaign: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create campaign: {str(e)}")
 
-# For local development
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=5000, reload=True)
+@app.get("/debug/supabase-connection", response_model=dict)
+async def test_supabase_connection():
+    """Test the Supabase connection and return detailed diagnostics."""
+    
+    # Check environment variables
+    env_vars = {
+        "SUPABASE_URL": os.environ.get("SUPABASE_URL", "Not set"),
+        "SUPABASE_SERVICE_KEY": "****" if os.environ.get("SUPABASE_SERVICE_KEY") else "Not set"
+    }
+    
+    # Test if variables are available
+    variables_ok = all([
+        os.environ.get("SUPABASE_URL"),
+        os.environ.get("SUPABASE_SERVICE_KEY")
+    ])
+    
+    # Test connection
+    connection_test = False
+    error_message = None
+    tables_info = {}
+    
+    if variables_ok:
+        try:
+            # Test basic connection
+            test_client = create_client(
+                os.environ.get("SUPABASE_URL", ""),
+                os.environ.get("SUPABASE_SERVICE_KEY", "")
+            )
+            
+            # Try a simple query
+            tables_to_test = ['campaigns', 'campaignclaims', 'BrandProfile', 'CreatorProfile']
+            
+            for table in tables_to_test:
+                try:
+                    table_response = test_client.table(table).select('id').limit(1).execute()
+                    tables_info[table] = {
+                        "accessible": True,
+                        "records": len(table_response.data or [])
+                    }
+                except Exception as table_error:
+                    tables_info[table] = {
+                        "accessible": False,
+                        "error": str(table_error)
+                    }
+            
+            connection_test = True
+            
+        except Exception as e:
+            error_message = str(e)
+            connection_test = False
+    
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "environment": "production" if os.environ.get("GOOGLE_CLOUD_PROJECT") else "development",
+        "environment_variables": {
+            "configured": variables_ok,
+            "details": env_vars
+        },
+        "connection_test": {
+            "success": connection_test,
+            "error": error_message
+        },
+        "tables": tables_info,
+        "python_version": platform.python_version(),
+        "packages": {
+            "supabase": supabase.__version__ if hasattr(supabase, "__version__") else "unknown"
+        }
+    }
+
+# Improve the existing debug endpoint to show even more information
+@app.get("/debug/environment", response_model=dict)
+async def check_environment():
+    """Check all environment variables and their values (with redaction for sensitive values)."""
+    env_vars = {}
+    sensitive_vars = ['key', 'password', 'secret', 'token']
+    
+    # Get all environment variables
+    for key, value in os.environ.items():
+        # Redact sensitive values
+        if any(s in key.lower() for s in sensitive_vars):
+            value = f"{value[:4]}...{value[-4:]}" if len(value) > 8 else "****"
+        env_vars[key] = value
+    
+    return {
+        "environment_variables": env_vars,
+        "environment": os.environ.get("GOOGLE_CLOUD_PROJECT", "development"),
+        "python_version": platform.python_version(),
+        "packages": {
+            "supabase": getattr(supabase, "__version__", "unknown"),
+            "fastapi": "latest"
+        }
+    }
+
