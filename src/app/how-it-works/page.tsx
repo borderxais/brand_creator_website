@@ -3,6 +3,7 @@
 import { ArrowRight, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import Image from 'next/image';
 
 export default function HowItWorks() {
   const [activeTab, setActiveTab] = useState('creator');
@@ -147,6 +148,30 @@ export default function HowItWorks() {
               <p className="text-gray-600">{step.description}</p>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Full-width Image Section */}
+      <div className="w-full max-w-5xl mx-auto my-20 px-4 sm:px-6 lg:px-0">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            {activeTab === 'creator' ? 'The Creator Journey' : 'The Brand Experience'}
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            {activeTab === 'creator'
+              ? 'A visual guide to your path as a creator on BorderX'
+              : 'How your brand will thrive with BorderX creators'}
+          </p>
+        </div>
+        <div className="relative w-full rounded-xl overflow-hidden shadow-xl">
+          <Image
+            src="/images/howitworks.jpg"
+            alt={activeTab === 'creator' ? 'Creator journey infographic' : 'Brand journey infographic'}
+            width={1200}
+            height={2500}
+            className="w-full object-contain"
+            priority={true}
+          />
         </div>
       </div>
 

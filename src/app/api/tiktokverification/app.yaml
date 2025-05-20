@@ -1,0 +1,27 @@
+service: brand-creator-website-python-api
+runtime: python311
+entrypoint: uvicorn main:app --host=0.0.0.0 --port=${PORT}
+
+instance_class: F2
+
+# Environment variables with safer YAML syntax
+env_variables:
+  SUPABASE_URL: "https://ldlxyyctxylgmstfqlzh.supabase.co"
+  SUPABASE_SERVICE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkbHh5eWN0eHlsZ21zdGZxbHpoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MTA0NDEwMSwiZXhwIjoyMDU2NjIwMTAxfQ.7m2VEaoRI4tur6BxBseL-jczHULlLgVt0xV0RYJb5BM"
+  DATABASE_URL: "postgresql://postgres.ldlxyyctxylgmstfqlzh:299976387y!@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true&prepared_statements=false"
+  DIRECT_URL: "postgresql://postgres.ldlxyyctxylgmstfqlzh:299976387y!@aws-0-us-west-1.pooler.supabase.com:5432/postgres"
+
+# Automatic scaling configuration
+automatic_scaling:
+  min_instances: 0
+  max_instances: 3
+  min_idle_instances: 0
+  target_cpu_utilization: 0.65
+  target_throughput_utilization: 0.65
+  max_concurrent_requests: 50
+
+# Request handlers
+handlers:
+- url: /.*
+  script: auto
+  secure: always
