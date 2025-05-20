@@ -164,14 +164,29 @@ export default function HowItWorks() {
           </p>
         </div>
         <div className="relative w-full rounded-xl overflow-hidden shadow-xl">
-          <Image
-            src="/images/howitworks.jpg"
-            alt={activeTab === 'creator' ? 'Creator journey infographic' : 'Brand journey infographic'}
-            width={1200}
-            height={2500}
-            className="w-full object-contain"
-            priority={true}
-          />
+          {/* Add error boundaries and fallback handling */}
+          <div className="min-h-[400px] bg-gray-50 flex items-center justify-center">
+            <Image
+              src="/images/howitworks.jpg"
+              alt={activeTab === 'creator' ? 'Creator journey infographic' : 'Brand journey infographic'}
+              width={1200}
+              height={2500}
+              className="w-full object-contain"
+              priority={true}
+              unoptimized={true} // Try this if image optimization is failing in production
+              onError={(e) => {
+                console.error('Image failed to load:', e);
+                // Make the error visible in UI for debugging
+                if (e.currentTarget) {
+                  e.currentTarget.style.display = 'none';
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    parent.innerHTML += '<div class="p-4 text-red-500">Image failed to load. Please check console for details.</div>';
+                  }
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
 
