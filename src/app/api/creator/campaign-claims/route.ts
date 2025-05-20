@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     
     // Forward to the FastAPI backend - we'll pass the userId and let the FastAPI backend
     // handle looking up the actual creator_id from CreatorProfile
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.CAMPAIGNS_API_URL || 'http://localhost:5000';
     console.log(`Forwarding request to: ${apiUrl}/creator/${userId}/campaign-claims?limit=${limit}`);
     
     const response = await fetch(`${apiUrl}/creator/${userId}/campaign-claims?limit=${limit}`);

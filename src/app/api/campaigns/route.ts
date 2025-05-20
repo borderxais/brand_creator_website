@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     
     // Get API URL from environment variable or use default
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiBaseUrl = process.env.CAMPAIGNS_API_URL || 'http://localhost:5000';
     
     // Determine if we're calling the main API or a utility endpoint
     const path = searchParams.get('path') || '/';

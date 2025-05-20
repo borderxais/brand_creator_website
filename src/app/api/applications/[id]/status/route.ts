@@ -4,7 +4,7 @@ import { authConfig } from '@/app/api/auth/[...nextauth]/auth.config';
 import { prisma } from '@/lib/prisma';
 
 // Define the Python API URL
-const PYTHON_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const PYTHON_API_URL = process.env.CAMPAIGNS_API_URL || 'http://localhost:5000';
 
 export async function PATCH(request: Request) {
   try {

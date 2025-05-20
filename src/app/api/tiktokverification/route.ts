@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }));
     
     // API URL from environment or fallback to default
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/verification`;
+    const apiUrl = `${process.env.TTVERIFICATION_API_URL || 'http://localhost:8000'}/api/verification`;
     console.log("Forwarding request to:", apiUrl);
     
     // Set a longer timeout for large files
