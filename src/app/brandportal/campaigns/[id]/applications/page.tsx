@@ -35,9 +35,11 @@ interface Campaign {
   brief: string;
   requirements: string | null;
   budget_range: string;
+  budget_unit: string; // Added budget_unit field
   commission: string;
   platform: string;
   deadline: string | Date;
+  sample_video_url: string | null; // Added sample_video_url field
   applications: Application[];
 }
 
@@ -179,12 +181,37 @@ export default function CampaignApplications() {
           </div>
           <div>
             <h3 className="text-sm font-medium text-gray-500">Budget Range</h3>
-            <p className="mt-1">{campaign.budget_range || 'Not specified'}</p>
+            <p className="mt-1">
+              {campaign.budget_range || 'Not specified'}
+              {campaign.budget_unit && (
+                <span className="text-xs text-gray-500 ml-1">
+                  ({campaign.budget_unit === 'total' ? 'Total Budget' : 
+                    campaign.budget_unit === 'per_person' ? 'Per Creator' : 
+                    campaign.budget_unit === 'per_video' ? 'Per Video' : 
+                    campaign.budget_unit})
+                </span>
+              )}
+            </p>
           </div>
           <div>
             <h3 className="text-sm font-medium text-gray-500">Platform</h3>
             <p className="mt-1 capitalize">{campaign.platform || 'Not specified'}</p>
           </div>
+          
+          {/* Sample Video URL (new) */}
+          {campaign.sample_video_url && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Sample Video</h3>
+              <a 
+                href={campaign.sample_video_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 text-blue-600 hover:text-blue-800 inline-flex items-center"
+              >
+                <LinkIcon className="w-4 h-4 mr-1" /> View sample video
+              </a>
+            </div>
+          )}
         </div>
       </div>
       

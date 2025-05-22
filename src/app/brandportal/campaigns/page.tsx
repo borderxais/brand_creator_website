@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Clock, DollarSign, Tag, Filter, Search, Calendar, X } from 'lucide-react';
+import { Clock, DollarSign, Tag, Filter, Search, Calendar, X, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 
 interface Platform {
@@ -20,13 +20,15 @@ interface Campaign {
   brief: string;
   requirements: string | null;
   budget_range: string;
+  budget_unit: string; // Added budget_unit field
   commission: string;
   platform: string;
   deadline: string | Date;
   max_creators: number;
   is_open: boolean;
   created_at: string | Date;
-  applications?: Array<{ id: string; status: string; creator_id: string; }>;  // Add this line
+  sample_video_url: string | null; // Added sample_video_url field
+  applications?: Array<{ id: string; status: string; creator_id: string; }>;
 }
 
 function CampaignCard({ campaign }: { campaign: Campaign }) {
@@ -82,7 +84,17 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
           <DollarSign className="w-5 h-5 text-gray-400 mr-2" />
           <div>
             <p className="text-sm text-gray-600">Budget Range</p>
-            <p className="font-medium">{campaign.budget_range || 'Not specified'}</p>
+            <p className="font-medium">
+              {campaign.budget_range || 'Not specified'} 
+              {campaign.budget_unit && (
+                <span className="text-xs text-gray-500 ml-1">
+                  ({campaign.budget_unit === 'total' ? 'Total' : 
+                    campaign.budget_unit === 'per_person' ? 'Per Person' : 
+                    campaign.budget_unit === 'per_video' ? 'Per Video' : 
+                    campaign.budget_unit})
+                </span>
+              )}
+            </p>
           </div>
         </div>
         <div className="flex items-center">
@@ -100,6 +112,21 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
           </div>
         </div>
       </div>
+
+      {/* Sample Video URL section (new) */}
+      {campaign.sample_video_url && (
+        <div className="mb-4 py-2 px-2 bg-gray-50 rounded">
+          <p className="text-sm text-gray-600 mb-1">Sample Video:</p>
+          <a 
+            href={campaign.sample_video_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center"
+          >
+            <LinkIcon className="w-4 h-4 mr-1" /> View sample video
+          </a>
+        </div>
+      )}
 
       <div className="flex justify-between items-center mb-4 px-2 py-1 bg-gray-50 rounded">
         <div>

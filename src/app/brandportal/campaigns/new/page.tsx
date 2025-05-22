@@ -25,11 +25,13 @@ export default function NewCampaign() {
     brief: '',
     requirements: '',
     budget_range: '',
+    budgetUnit: 'total',
     commission: '',
     platform: '',
     deadline: '',
     max_creators: 10,
-    is_open: true
+    is_open: true,
+    sample_video_url: '', // Add sample video URL field
   });
 
   useEffect(() => {
@@ -79,6 +81,13 @@ export default function NewCampaign() {
     // Validate required fields
     if (!formData.title.trim()) {
       setFormError('Campaign title is required');
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate sample video URL if provided
+    if (formData.sample_video_url && !formData.sample_video_url.startsWith('https://')) {
+      setFormError('Sample video URL must start with https://');
       setIsLoading(false);
       return;
     }
@@ -189,19 +198,31 @@ export default function NewCampaign() {
               </p>
             </div>
             
-            {/* Budget Range */}
-            <div>
+            {/* Budget Range and Unit (modified) */}
+            <div className="col-span-2 md:col-span-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Budget Range
               </label>
-              <input
-                type="text"
-                name="budget_range"
-                value={formData.budget_range}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., $1,000-$2,000"
-              />
+              <div className="flex">
+                <input
+                  type="text"
+                  name="budget_range"
+                  value={formData.budget_range}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., 1,000-2,000"
+                />
+                <select
+                  name="budgetUnit"
+                  value={formData.budgetUnit}
+                  onChange={handleInputChange}
+                  className="w-28 px-2 py-2 border border-l-0 border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="total">Total</option>
+                  <option value="per_person">Per Person</option>
+                  <option value="per_video">Per Video</option>
+                </select>
+              </div>
             </div>
             
             {/* Commission */}
@@ -286,6 +307,26 @@ export default function NewCampaign() {
                   Open for Applications
                 </label>
               </div>
+            </div>
+            
+            {/* Sample Video URL */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sample Video URL
+              </label>
+              <input
+                type="url"
+                name="sample_video_url"
+                value={formData.sample_video_url}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="https://example.com/video"
+                pattern="https://.*"
+                title="URL must start with https://"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Provide a secure URL (https://) to a sample video showcasing desired content style
+              </p>
             </div>
           </div>
           

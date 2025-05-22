@@ -9,12 +9,12 @@ interface FormData {
   email: string;
   password: string;
   confirmPassword: string;
-  niche: string;
+  niches: string[]; // Changed from niche: string to niches: string[]
   platforms: string[];
   audienceSize: string;
   bio: string;
   creatorHandleName: string;
-  termsAccepted: boolean; // New field for terms acceptance
+  termsAccepted: boolean;
 }
 
 export default function JoinAsCreator() {
@@ -26,12 +26,12 @@ export default function JoinAsCreator() {
     email: '',
     password: '',
     confirmPassword: '',
-    niche: '',
+    niches: [], // Changed from niche: '' to niches: []
     platforms: [],
     audienceSize: '',
     bio: '',
     creatorHandleName: '',
-    termsAccepted: false, // Initialize as false
+    termsAccepted: false,
   });
 
   const platforms = [
@@ -73,6 +73,16 @@ export default function JoinAsCreator() {
       platforms: prev.platforms.includes(platform)
         ? prev.platforms.filter(p => p !== platform)
         : [...prev.platforms, platform]
+    }));
+  };
+
+  // Add niche toggle handler similar to platform toggle
+  const handleNicheToggle = (niche: string) => {
+    setFormData(prev => ({
+      ...prev,
+      niches: prev.niches.includes(niche)
+        ? prev.niches.filter(n => n !== niche)
+        : [...prev.niches, niche]
     }));
   };
 
@@ -235,22 +245,28 @@ export default function JoinAsCreator() {
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-black">Creator Profile</h2>
                 <div>
-                  <label className="block text-sm font-medium text-black">Content Niche</label>
-                  <select
-                    name="niche"
-                    value={formData.niche}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-black"
-                    required
-                  >
-                    <option value="">Select your primary niche</option>
+                  <label className="block text-sm font-medium text-black mb-2">Content Niches (Select all that apply)</label>
+                  <div className="grid grid-cols-2 gap-4">
                     {niches.map((niche) => (
-                      <option key={niche} value={niche}>
-                        {niche}
-                      </option>
+                      <button
+                        key={niche}
+                        type="button"
+                        onClick={() => handleNicheToggle(niche)}
+                        className={`p-3 border rounded-lg flex items-center justify-between ${
+                          formData.niches.includes(niche)
+                            ? 'border-purple-500 bg-purple-50'
+                            : 'border-gray-300'
+                        }`}
+                      >
+                        <span className="text-black">{niche}</span>
+                        {formData.niches.includes(niche) && (
+                          <CheckCircle className="w-5 h-5 text-purple-500" />
+                        )}
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-black">Audience Size</label>
                   <select

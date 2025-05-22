@@ -10,6 +10,7 @@ const mockCampaign = {
   brand: "StyleCo",
   brandLogo: "/brand-logo.png", // Add actual logo path
   budget: "$1,000-$2,000",
+  budget_unit: "total", // Add budget unit
   platform: "Instagram",
   requirements: [
     "Fashion & Lifestyle creators with 10K+ followers",
@@ -29,7 +30,8 @@ const mockCampaign = {
   timeline: "Campaign duration: 2 weeks",
   status: "Active",
   category: "Fashion",
-  brandInfo: "StyleCo is a contemporary fashion brand known for its modern, sustainable approach to style. Our pieces are designed for the fashion-conscious individual who values both aesthetics and ethics."
+  brandInfo: "StyleCo is a contemporary fashion brand known for its modern, sustainable approach to style. Our pieces are designed for the fashion-conscious individual who values both aesthetics and ethics.",
+  sample_video_url: "https://www.example.com/sample-video" // Add sample video URL
 };
 
 export default function CampaignDetail() {
@@ -94,13 +96,45 @@ export default function CampaignDetail() {
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-900">Budget Range</h3>
-                  <p className="text-gray-600">{mockCampaign.budget}</p>
+                  <p className="text-gray-600">
+                    {mockCampaign.budget} 
+                    <span className="text-xs text-gray-500 ml-1">
+                      ({mockCampaign.budget_unit === 'total' ? 'Total Budget' : 
+                        mockCampaign.budget_unit === 'per_person' ? 'Per Creator' : 
+                        mockCampaign.budget_unit === 'per_video' ? 'Per Video' : 
+                        mockCampaign.budget_unit})
+                    </span>
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-900">Deadline</h3>
                   <p className="text-gray-600">{mockCampaign.deadline}</p>
                 </div>
               </div>
+              
+              {/* Add Sample Video Section if available */}
+              {mockCampaign.sample_video_url && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-medium text-gray-900 mb-2">Sample Video</h3>
+                  <div className="flex items-center">
+                    <svg className="h-5 w-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <a 
+                      href={mockCampaign.sample_video_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-purple-600 hover:text-purple-800 font-medium"
+                    >
+                      View sample video for reference
+                    </a>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Watch this sample to understand the preferred content style for this campaign
+                  </p>
+                </div>
+              )}
+
             </div>
 
             {/* Requirements */}

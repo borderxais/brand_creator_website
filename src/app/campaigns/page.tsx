@@ -13,12 +13,14 @@ interface Campaign {
   brief: string;
   requirements: string;
   budget_range: string;
+  budget_unit: string; // Add budget_unit field
   commission: string;
   platform: string;
   deadline: string;
   max_creators: number;
   is_open: boolean;
   created_at: string;
+  sample_video_url: string | null; // Add sample_video_url field
 }
 
 export default function Campaigns() {
@@ -295,7 +297,16 @@ export default function Campaigns() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
                       {campaign.budget_range}
+                      {campaign.budget_unit && (
+                        <span className="ml-1 text-xs text-gray-500">
+                          ({campaign.budget_unit === 'total' ? 'Total' : 
+                            campaign.budget_unit === 'per_person' ? 'Per Creator' : 
+                            campaign.budget_unit === 'per_video' ? 'Per Video' : 
+                            campaign.budget_unit})
+                        </span>
+                      )}
                     </div>
+                    
                     <div className="flex items-center text-sm text-gray-500">
                       <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -320,6 +331,23 @@ export default function Campaigns() {
                       </svg>
                       Max creators: {campaign.max_creators}
                     </div>
+                    
+                    {/* Add Sample Video URL display */}
+                    {campaign.sample_video_url && (
+                      <div className="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                        <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <a 
+                          href={campaign.sample_video_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="hover:underline"
+                        >
+                          View Sample Video
+                        </a>
+                      </div>
+                    )}
                   </div>
                   <p className="text-sm text-gray-600 mb-4">{campaign.brief}</p>
                   

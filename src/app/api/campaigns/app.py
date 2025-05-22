@@ -59,13 +59,15 @@ MOCK_CAMPAIGNS = [
         "brief": "Looking for fashion influencers to showcase our new summer collection through creative posts and stories.",
         "requirements": "Fashion & Lifestyle creators with 10K+ followers",
         "budget_range": "$1,000-$2,000",
+        "budget_unit": "total",  # Add budget_unit
         "commission": "15% per sale",
         "platform": "instagram",
         "deadline": "2024-06-30",
         "max_creators": 5,
         "is_open": True,
         "created_at": "2024-01-01T00:00:00Z",
-        "brand_name": "StyleCo"
+        "brand_name": "StyleCo",
+        "sample_video_url": "https://example.com/sample/video1.mp4"  # Add sample_video_url
     },
     {
         "id": "2",
@@ -74,13 +76,15 @@ MOCK_CAMPAIGNS = [
         "brief": "30-day fitness challenge promotion featuring our supplements and workout gear.",
         "requirements": "Fitness & Wellness creators with 20K+ followers",
         "budget_range": "$500-$1,000",
+        "budget_unit": "per_person",  # Add budget_unit with a different value
         "commission": "20% per sale",
         "platform": "tiktok",
         "deadline": "2024-07-15",
         "max_creators": 10,
         "is_open": True,
         "created_at": "2024-01-15T00:00:00Z",
-        "brand_name": "FitLife"
+        "brand_name": "FitLife",
+        "sample_video_url": "https://example.com/sample/video2.mp4"  # Add sample_video_url
     }
 ]
 
@@ -92,6 +96,7 @@ class Campaign(BaseModel):
     brief: Optional[str] = None
     requirements: Optional[str] = None
     budget_range: Optional[str] = None
+    budget_unit: Optional[str] = "total"  # Add budget_unit field with a default
     commission: Optional[str] = None
     platform: Optional[str] = None
     deadline: Optional[str] = None
@@ -99,6 +104,7 @@ class Campaign(BaseModel):
     is_open: bool = True
     created_at: Optional[str] = None
     brand_name: Optional[str] = None
+    sample_video_url: Optional[str] = None  # Add sample_video_url field
 
 # Model for campaign creation
 class CampaignCreate(BaseModel):
@@ -107,11 +113,13 @@ class CampaignCreate(BaseModel):
     brief: Optional[str] = None
     requirements: Optional[str] = None
     budget_range: Optional[str] = None
+    budget_unit: Optional[str] = "total"
     commission: Optional[str] = None
     platform: Optional[str] = None
     deadline: Optional[str] = None
     max_creators: Optional[int] = 10
     is_open: Optional[bool] = True
+    sample_video_url: Optional[str] = None  # Add the sample_video field
 
 # Update the model for campaign claims
 class CampaignClaimCreate(BaseModel):
@@ -149,12 +157,14 @@ CREATE TABLE IF NOT EXISTS public.campaigns (
   brief          text,
   requirements   text,
   budget_range   text,
+  budget_unit    text          default 'total',
   commission     text,
   platform       text,
   deadline       date,
   max_creators   integer       default 10,
   is_open        boolean       default true,
-  created_at     timestamptz   default now()
+  created_at     timestamptz   default now(),
+  sample_video_url text
 );
 
 -- Grant permissions to service role
@@ -899,6 +909,7 @@ async def add_campaign(
                 "id": "mock-campaign-id",
                 "brand_id": brand_id,
                 "title": campaign.title,
+                "sample_video_url": campaign.sample_video_url,  # Include sample_video in mock response
                 "created_at": datetime.now().isoformat(),
                 "status": "success"
             }
@@ -907,6 +918,11 @@ async def add_campaign(
         if campaign.brand_id != brand_id:
             logger.error(f"Brand ID mismatch: URL {brand_id} vs Body {campaign.brand_id}")
             raise HTTPException(status_code=400, detail="Brand ID mismatch between URL and request body")
+            
+        # Validate sample_video_url if provided
+        if campaign.sample_video_url and not campaign.sample_video_url.startswith('https://'):
+            logger.error(f"Invalid sample video URL: {campaign.sample_video_url}")
+            raise HTTPException(status_code=400, detail="Sample video URL must start with https://")
             
         # Prepare data for insertion
         campaign_data = campaign.dict()

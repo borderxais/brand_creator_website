@@ -12,11 +12,11 @@ import '@/styles/portals.css';
 const navigationItems = [
   { name: 'Dashboard', href: '/creatorportal/dashboard', icon: LayoutDashboard },
   { name: 'Income', href: '/creatorportal/income', icon: DollarSign },
-  { name: 'Applications', href: '/creatorportal/applications', icon: CheckCircle },
-  { name: 'Posts', href: '/creatorportal/posts', icon: Image },
+  { name: 'Campaign Applications', href: '/creatorportal/applications', icon: CheckCircle },
+  //{ name: 'Posts', href: '/creatorportal/posts', icon: Image },
   { name: 'TikTok Verify', href: '/creatorportal/tiktok-verify', icon: CheckCircle },
-  { name: 'Social Media', href: '/creatorportal/social', icon: Share2 },
-  { name: 'Earnings', href: '/creatorportal/earnings', icon: DollarSign },
+  //{ name: 'Social Media', href: '/creatorportal/social', icon: Share2 },
+  //{ name: 'Earnings', href: '/creatorportal/earnings', icon: DollarSign },
 ];
 
 // System items that are always in the dropdown
