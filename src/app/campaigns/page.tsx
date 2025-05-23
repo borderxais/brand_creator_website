@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 // Campaign type definition based on Supabase schema
 interface Campaign {
@@ -362,7 +363,13 @@ export default function Campaigns() {
                     </div>
                   )}
                   
-                  <div className="mt-4">
+                  <div className="mt-4 flex space-x-2">
+                    <Link
+                      href={`/campaigns/${campaign.id}`}
+                      className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    >
+                      View Details
+                    </Link>
                     {status === 'authenticated' ? (
                       canApply ? (
                         <button
@@ -379,21 +386,15 @@ export default function Campaigns() {
                       ) : (
                         <div className="text-sm text-amber-600 mb-2">
                           Only creator accounts can apply to campaigns.
-                          <a
-                            href="/creatorportal/dashboard"
-                            className="block mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700"
-                          >
-                            Go to Creator Dashboard
-                          </a>
                         </div>
                       )
                     ) : (
-                      <a
+                      <Link
                         href="/login"
                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
                       >
                         Log in to Apply
-                      </a>
+                      </Link>
                     )}
                   </div>
                 </div>

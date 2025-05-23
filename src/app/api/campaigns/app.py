@@ -507,59 +507,10 @@ async def get_creator_campaign_claims(
         actual_creator_id = creator_profile.data[0]['id']
         logger.info(f"Found actual creator ID: {actual_creator_id} for userId: {creator_id}")
         
-        # Rest of the function remains the same, but use actual_creator_id
+        # Skip RPC and use manual query directly since we're having UUID format issues
         try:
-            # Try the RPC function first
-            response = supabase.rpc(
-                'get_creator_claims',
-                {'creator_id_param': actual_creator_id, 'limit_param': limit}
-            ).execute()
-            
-            if not response.data:
-                logger.info(f"No campaign claims found for creator {creator_id}")
-                return []
-                
-            result = response.data
-            
-            # Enrich with brand information
-            for item in result:
-                # Get the campaign to find the brand_id
-                campaign_response = supabase.table('campaigns')\
-                    .select('brand_id')\
-                    .eq('id', item.get('campaign_id'))\
-                    .execute()
-                    
-                brand_id = None
-                if campaign_response.data and len(campaign_response.data) > 0:
-                    brand_id = campaign_response.data[0].get('brand_id')
-                
-                # Add brand name if available
-                if brand_id:
-                    try:
-                        brand_response = supabase.table('BrandProfile')\
-                            .select('companyName')\
-                            .eq('id', brand_id)\
-                            .execute()
-                            
-                        if brand_response.data and len(brand_response.data) > 0:
-                            item['campaign_brand_name'] = brand_response.data[0].get('companyName', 'Unknown Brand')
-                        else:
-                            item['campaign_brand_name'] = f"Brand {brand_id}"
-                    except Exception as e:
-                        logger.error(f"Error fetching brand details: {str(e)}")
-                        item['campaign_brand_name'] = f"Brand {brand_id}"
-                else:
-                    item['campaign_brand_name'] = 'Unknown Brand'
-            
-            logger.info(f"Retrieved {len(result)} campaign claims for creator {creator_id}")
-            return result
-            
-        except Exception as db_error:
-            # If RPC fails (function doesn't exist), fall back to the old method
-            logger.warning(f"Error using RPC function: {str(db_error)}")
-            logger.warning("Falling back to manual query method")
-            
-            # Fallback to existing implementation
+            logger.info(f"Using direct query for creator claims with ID: {actual_creator_id}")
+            # Use direct query instead of RPC to avoid UUID format issues
             claims_response = supabase.table('campaignclaims')\
                 .select('*')\
                 .eq('creator_id', actual_creator_id)\
@@ -583,7 +534,8 @@ async def get_creator_campaign_claims(
                 if campaign_response.data and len(campaign_response.data) > 0:
                     campaign_data = campaign_response.data[0]
                 
-                result.append({
+                # Create result item with all relevant fields including budget_unit and sample_video_url
+                result_item = {
                     "id": claim.get('id'),
                     "campaign_id": claim.get('campaign_id'),
                     "creator_id": claim.get('creator_id'),
@@ -592,25 +544,34 @@ async def get_creator_campaign_claims(
                     "sample_video_url": claim.get('sample_video_url'),
                     "created_at": claim.get('created_at'),
                     "campaign_title": campaign_data.get('title', 'Unknown Campaign'),
-                    "campaign_brand_name": "Unknown Brand",  # We'll look up the brand name
+                    "campaign_brand_name": "Unknown Brand",  # Will be updated below
                     "campaign_deadline": campaign_data.get('deadline'),
-                    "campaign_budget_range": campaign_data.get('budget_range')
-                })
+                    "campaign_budget_range": campaign_data.get('budget_range'),
+                    "campaign_budget_unit": campaign_data.get('budget_unit', 'total'),  # Include budget_unit
+                    "campaign_brief": campaign_data.get('brief'),
+                    "campaign_sample_video_url": campaign_data.get('sample_video_url')  # Include campaign's sample video
+                }
+                
+                result.append(result_item)
                 
                 # Try to get the brand name if brand_id exists - updated field to companyName
-                for result_item in result:
-                    campaign_data = campaign_response.data[0] if campaign_response.data else {}
-                    if campaign_data.get('brand_id'):
-                        try:
-                            brand_response = supabase.table('BrandProfile').select('companyName').eq('id', campaign_data['brand_id']).execute()
-                            if brand_response.data and len(brand_response.data) > 0:
-                                result_item['campaign_brand_name'] = brand_response.data[0].get('companyName', 'Unknown Brand')
-                        except Exception as brand_error:
-                            logger.error(f"Error fetching brand name: {str(brand_error)}")
+                if campaign_data.get('brand_id'):
+                    try:
+                        brand_response = supabase.table('BrandProfile').select('companyName').eq('id', campaign_data['brand_id']).execute()
+                        if brand_response.data and len(brand_response.data) > 0:
+                            result_item['campaign_brand_name'] = brand_response.data[0].get('companyName', 'Unknown Brand')
+                        else:
                             result_item['campaign_brand_name'] = f"Brand {campaign_data['brand_id']}"
+                    except Exception as brand_error:
+                        logger.error(f"Error fetching brand name: {str(brand_error)}")
+                        result_item['campaign_brand_name'] = f"Brand {campaign_data['brand_id']}"
             
             logger.info(f"Retrieved {len(result)} campaign claims for creator {creator_id}")
             return result
+            
+        except Exception as db_error:
+            logger.error(f"Error fetching claims manually: {str(db_error)}")
+            return []
     
     except Exception as e:
         logger.error(f"Error fetching creator campaign claims: {str(e)}")
@@ -1041,4 +1002,65 @@ async def check_environment():
             "fastapi": "latest"
         }
     }
+
+# Add this new endpoint for getting a single campaign by ID
+@app.get("/campaigns/{campaign_id}", response_model=dict)
+async def get_campaign(campaign_id: str):
+    """Get a specific campaign by ID without needing to know the brand ID"""
+    try:
+        logger.info(f"Fetching campaign with ID: {campaign_id}")
+        
+        if not supabase:
+            # Return mock data for development if no Supabase connection
+            for campaign in MOCK_CAMPAIGNS:
+                if campaign["id"] == campaign_id:
+                    return campaign
+            logger.warning(f"Campaign not found with ID: {campaign_id}")
+            raise HTTPException(status_code=404, detail="Campaign not found")
+
+        # Fetch the campaign from the database
+        campaign_response = supabase.table('campaigns')\
+            .select('*')\
+            .eq('id', campaign_id)\
+            .execute()
+            
+        if not campaign_response.data or len(campaign_response.data) == 0:
+            logger.warning(f"Campaign not found with ID: {campaign_id}")
+            raise HTTPException(status_code=404, detail="Campaign not found")
+            
+        campaign = campaign_response.data[0]
+        logger.info(f"Retrieved campaign: {campaign.get('title', 'Untitled')} with ID: {campaign_id}")
+        
+        # Add brand_name if available
+        if campaign.get('brand_id'):
+            try:
+                brand_response = supabase.table('BrandProfile').select('companyName').eq('id', campaign['brand_id']).execute()
+                if brand_response.data and len(brand_response.data) > 0:
+                    campaign['brand_name'] = brand_response.data[0].get('companyName', 'Unknown Brand')
+                else:
+                    campaign['brand_name'] = f"Brand {campaign['brand_id']}"
+            except Exception as brand_error:
+                logger.error(f"Error fetching brand name: {str(brand_error)}")
+                campaign['brand_name'] = f"Brand {campaign['brand_id']}"
+        
+        # Fetch applications for this campaign if any
+        try:
+            applications_response = supabase.table('campaignclaims')\
+                .select('*')\
+                .eq('campaign_id', campaign_id)\
+                .execute()
+            
+            campaign['applications'] = applications_response.data or []
+            logger.info(f"Found {len(campaign['applications'])} applications for campaign {campaign_id}")
+        except Exception as app_error:
+            logger.error(f"Error fetching applications: {str(app_error)}")
+            campaign['applications'] = []
+        
+        return campaign
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching campaign {campaign_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch campaign: {str(e)}")
 

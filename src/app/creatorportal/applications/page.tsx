@@ -18,7 +18,9 @@ interface CampaignClaim {
   campaign_brand_name: string;
   campaign_deadline: string;
   campaign_budget_range: string;
+  campaign_budget_unit?: string;
   campaign_brief?: string;
+  campaign_sample_video_url?: string; // Add this missing property
 }
 
 export default function Applications() {
@@ -175,7 +177,17 @@ export default function Applications() {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <p className="text-xs text-gray-500">Budget Range</p>
-                  <p className="text-sm text-gray-900">{selectedApplication.campaign_budget_range}</p>
+                  <p className="text-sm text-gray-900">
+                    {selectedApplication.campaign_budget_range}
+                    {selectedApplication.campaign_budget_unit && (
+                      <span className="text-xs text-gray-500 ml-1">
+                        ({selectedApplication.campaign_budget_unit === 'total' ? 'Total Budget' : 
+                          selectedApplication.campaign_budget_unit === 'per_person' ? 'Per Creator' : 
+                          selectedApplication.campaign_budget_unit === 'per_video' ? 'Per Video' : 
+                          selectedApplication.campaign_budget_unit})
+                      </span>
+                    )}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Deadline</p>
@@ -184,6 +196,21 @@ export default function Applications() {
                   </p>
                 </div>
               </div>
+              
+              {selectedApplication.campaign_sample_video_url && (
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500">Campaign Sample Video</p>
+                  <a
+                    href={selectedApplication.campaign_sample_video_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center"
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    View Campaign Sample Video
+                  </a>
+                </div>
+              )}
               
               {selectedApplication.campaign_brief && (
                 <div className="mb-4">
@@ -286,6 +313,14 @@ export default function Applications() {
                     <span className="text-gray-600">Campaign budget:</span>
                     <span className="font-medium text-gray-900">
                       {application.campaign_budget_range}
+                      {application.campaign_budget_unit && (
+                        <span className="text-xs text-gray-500 ml-1">
+                          ({application.campaign_budget_unit === 'total' ? 'Total Budget' : 
+                            application.campaign_budget_unit === 'per_person' ? 'Per Creator' : 
+                            application.campaign_budget_unit === 'per_video' ? 'Per Video' : 
+                            application.campaign_budget_unit})
+                        </span>
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -295,6 +330,20 @@ export default function Applications() {
                     </span>
                   </div>
                 </div>
+
+                {application.campaign_sample_video_url && (
+                  <div className="flex justify-between text-sm mt-2">
+                    <span className="text-gray-600">Campaign Sample:</span>
+                    <a 
+                      href={application.campaign_sample_video_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      View Sample
+                    </a>
+                  </div>
+                )}
 
                 <div className="border-t border-gray-200 pt-4 mt-4">
                   <h3 className="text-sm font-medium text-gray-900 mb-2">Your Submission</h3>
