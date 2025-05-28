@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Clock, DollarSign, Tag, Filter, Search, Calendar, X, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Platform {
   id: string;
@@ -20,14 +21,31 @@ interface Campaign {
   brief: string;
   requirements: string | null;
   budget_range: string;
-  budget_unit: string; // Added budget_unit field
+  budget_unit: string;
   commission: string;
   platform: string;
   deadline: string | Date;
   max_creators: number;
   is_open: boolean;
   created_at: string | Date;
-  sample_video_url: string | null; // Added sample_video_url field
+  sample_video_url: string | null;
+  // Add new fields
+  industry_category: string | null;
+  primary_promotion_objectives: string | null;
+  ad_placement: string | null;
+  campaign_execution_mode: string | null;
+  creator_profile_preferences_gender: string | null;
+  creator_profile_preference_ethnicity: string | null;
+  creator_profile_preference_content_niche: string | null;
+  preferred_creator_location: string | null;
+  language_requirement_for_creators: string | null;
+  creator_tier_requirement: string | null;
+  send_to_creator: string | null;
+  approved_by_brand: string | null;
+  kpi_reference_target: string | null;
+  prohibited_content_warnings: string | null;
+  posting_requirements: string | null;
+  product_photo_url: string | null;
   applications?: Array<{ id: string; status: string; creator_id: string; }>;
 }
 
@@ -35,7 +53,9 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
   // Handle requirements parsing safely
   let requirements = [];
   try {
-    if (campaign.requirements) {
+    if (campaign.posting_requirements) {
+      requirements = [campaign.posting_requirements];
+    } else if (campaign.requirements) {
       const parsed = JSON.parse(campaign.requirements);
       requirements = Array.isArray(parsed) ? parsed : 
                     (parsed.list && Array.isArray(parsed.list)) ? parsed.list : 
@@ -55,6 +75,20 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
     }
   };
 
+  // Parse array fields from JSON strings
+  const parseArrayField = (field: string | null): string[] => {
+    if (!field) return [];
+    try {
+      return JSON.parse(field);
+    } catch (e) {
+      return field.split(',').map(item => item.trim());
+    }
+  };
+
+  // Parse objectives for display
+  const objectives = parseArrayField(campaign.primary_promotion_objectives);
+  const contentNiches = parseArrayField(campaign.creator_profile_preference_content_niche);
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-4 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
@@ -70,7 +104,8 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        {/* Original fields */}
         <div className="flex items-center">
           <Clock className="w-5 h-5 text-gray-400 mr-2" />
           <div>
@@ -98,13 +133,6 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
           </div>
         </div>
         <div className="flex items-center">
-          <DollarSign className="w-5 h-5 text-gray-400 mr-2" />
-          <div>
-            <p className="text-sm text-gray-600">Commission</p>
-            <p className="font-medium">{campaign.commission || 'None'}</p>
-          </div>
-        </div>
-        <div className="flex items-center">
           <Tag className="w-5 h-5 text-gray-400 mr-2" />
           <div>
             <p className="text-sm text-gray-600">Platform</p>
@@ -113,7 +141,44 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
         </div>
       </div>
 
-      {/* Sample Video URL section (new) */}
+      {/* Additional Fields Section */}
+      <div className="border-t border-gray-100 pt-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Industry Category */}
+          {campaign.industry_category && (
+            <div>
+              <span className="text-sm font-medium text-gray-600">Industry:</span>
+              <span className="ml-2 text-sm">{campaign.industry_category}</span>
+            </div>
+          )}
+
+          {/* Campaign Execution Mode */}
+          {campaign.campaign_execution_mode && (
+            <div>
+              <span className="text-sm font-medium text-gray-600">Execution:</span>
+              <span className="ml-2 text-sm capitalize">{campaign.campaign_execution_mode}</span>
+            </div>
+          )}
+
+          {/* Objectives - only show if we have them */}
+          {objectives.length > 0 && (
+            <div className="col-span-2">
+              <span className="text-sm font-medium text-gray-600">Objectives:</span>
+              <span className="ml-2 text-sm">{objectives.join(', ')}</span>
+            </div>
+          )}
+
+          {/* Content Niches - only show if we have them */}
+          {contentNiches.length > 0 && (
+            <div className="col-span-2">
+              <span className="text-sm font-medium text-gray-600">Content Niches:</span>
+              <span className="ml-2 text-sm">{contentNiches.join(', ')}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Sample Video URL section */}
       {campaign.sample_video_url && (
         <div className="mb-4 py-2 px-2 bg-gray-50 rounded">
           <p className="text-sm text-gray-600 mb-1">Sample Video:</p>
@@ -124,6 +189,29 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
             className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center"
           >
             <LinkIcon className="w-4 h-4 mr-1" /> View sample video
+          </a>
+        </div>
+      )}
+
+      {/* Product Photo section */}
+      {campaign.product_photo_url && (
+        <div className="mb-4 py-2 px-2 bg-gray-50 rounded">
+          <p className="text-sm text-gray-600 mb-1">Product Photo:</p>
+          <a 
+            href={campaign.product_photo_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center"
+          >
+            {/* Fix the Image component by adding required src and alt props */}
+            <Image 
+              src="/icons/image.svg" 
+              alt="Product image icon" 
+              width={16} 
+              height={16}
+              className="w-4 h-4 mr-1" 
+            />
+            View product photo
           </a>
         </div>
       )}
@@ -159,9 +247,10 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
         </div>
       </div>
 
+      {/* Posting Requirements */}
       {requirements.length > 0 && (
-        <div className="border-t pt-4">
-          <h4 className="font-medium mb-2">Requirements:</h4>
+        <div className="border-t pt-4 mt-4">
+          <h4 className="font-medium mb-2">Posting Requirements:</h4>
           <ul className="list-disc list-inside text-gray-600">
             {requirements.map((req: string, index: number) => (
               <li key={index}>{req}</li>

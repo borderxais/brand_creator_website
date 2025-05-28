@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 import logging
 from datetime import datetime
 import platform
+import json
+from typing import Dict, Any
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -88,7 +90,7 @@ MOCK_CAMPAIGNS = [
     }
 ]
 
-# Define data models
+# Update the data models
 class Campaign(BaseModel):
     id: str
     brand_id: Optional[str] = None
@@ -96,7 +98,7 @@ class Campaign(BaseModel):
     brief: Optional[str] = None
     requirements: Optional[str] = None
     budget_range: Optional[str] = None
-    budget_unit: Optional[str] = "total"  # Add budget_unit field with a default
+    budget_unit: Optional[str] = "total"
     commission: Optional[str] = None
     platform: Optional[str] = None
     deadline: Optional[str] = None
@@ -104,9 +106,26 @@ class Campaign(BaseModel):
     is_open: bool = True
     created_at: Optional[str] = None
     brand_name: Optional[str] = None
-    sample_video_url: Optional[str] = None  # Add sample_video_url field
+    sample_video_url: Optional[str] = None
+    # Add new fields
+    industry_category: Optional[str] = None
+    primary_promotion_objectives: Optional[List[str] | str] = None
+    ad_placement: Optional[str] = "disable"
+    campaign_execution_mode: Optional[str] = "direct"
+    creator_profile_preferences_gender: Optional[List[str] | str] = None
+    creator_profile_preference_ethnicity: Optional[List[str] | str] = None
+    creator_profile_preference_content_niche: Optional[List[str] | str] = None
+    preferred_creator_location: Optional[List[str] | str] = None
+    language_requirement_for_creators: Optional[str] = "english"
+    creator_tier_requirement: Optional[List[str] | str] = None
+    send_to_creator: Optional[str] = "yes"
+    approved_by_brand: Optional[str] = "yes"
+    kpi_reference_target: Optional[str] = None
+    prohibited_content_warnings: Optional[str] = None
+    posting_requirements: Optional[str] = None  # Add this new field
+    product_photo_url: Optional[str] = None
 
-# Model for campaign creation
+# Model for campaign creation - update with all new fields
 class CampaignCreate(BaseModel):
     brand_id: str
     title: str
@@ -119,7 +138,24 @@ class CampaignCreate(BaseModel):
     deadline: Optional[str] = None
     max_creators: Optional[int] = 10
     is_open: Optional[bool] = True
-    sample_video_url: Optional[str] = None  # Add the sample_video field
+    sample_video_url: Optional[str] = None
+    # Add new fields
+    industry_category: Optional[str] = None
+    primary_promotion_objectives: Optional[List[str] | str] = None
+    ad_placement: Optional[str] = "disable"
+    campaign_execution_mode: Optional[str] = "direct"
+    creator_profile_preferences_gender: Optional[List[str] | str] = None
+    creator_profile_preference_ethnicity: Optional[List[str] | str] = None
+    creator_profile_preference_content_niche: Optional[List[str] | str] = None
+    preferred_creator_location: Optional[List[str] | str] = None
+    language_requirement_for_creators: Optional[str] = "english"
+    creator_tier_requirement: Optional[List[str] | str] = None
+    send_to_creator: Optional[str] = "yes"
+    approved_by_brand: Optional[str] = "yes"
+    kpi_reference_target: Optional[str] = None
+    prohibited_content_warnings: Optional[str] = None
+    posting_requirements: Optional[str] = None  # Add this new field
+    product_photo_url: Optional[str] = None
 
 # Update the model for campaign claims
 class CampaignClaimCreate(BaseModel):
@@ -148,7 +184,7 @@ async def check_table_exists(supabase_client: Client, table_name: str) -> bool:
         logger.error(f"Error checking if table '{table_name}' exists: {str(e)}")
         return False
 
-# Add SQL to create the table - this can be used in Supabase SQL Editor
+# Update the SQL for table creation to include new columns
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS public.campaigns (
   id             uuid primary key default gen_random_uuid(),
@@ -164,7 +200,24 @@ CREATE TABLE IF NOT EXISTS public.campaigns (
   max_creators   integer       default 10,
   is_open        boolean       default true,
   created_at     timestamptz   default now(),
-  sample_video_url text
+  sample_video_url text,
+  -- New fields
+  industry_category text,
+  primary_promotion_objectives text,
+  ad_placement text default 'disable',
+  campaign_execution_mode text default 'direct',
+  creator_profile_preferences_gender text,
+  creator_profile_preference_ethnicity text,
+  creator_profile_preference_content_niche text,
+  preferred_creator_location text,
+  language_requirement_for_creators text default 'english',
+  creator_tier_requirement text,
+  send_to_creator text default 'yes',
+  approved_by_brand text default 'yes',
+  kpi_reference_target text,
+  prohibited_content_warnings text,
+  posting_requirements text,  -- Add this new field
+  product_photo_url text
 );
 
 -- Grant permissions to service role
@@ -861,16 +914,16 @@ async def add_campaign(
     """
     Create a new campaign for a specific brand
     """
-    logger.info(f"Creating new campaign for brand ID: {brand_id}")
-    
     try:
+        logger.info(f"Creating new campaign for brand ID: {brand_id}")
+        
         if not supabase:
             # Return mock response for development if no Supabase connection
             return {
                 "id": "mock-campaign-id",
                 "brand_id": brand_id,
                 "title": campaign.title,
-                "sample_video_url": campaign.sample_video_url,  # Include sample_video in mock response
+                "sample_video_url": campaign.sample_video_url,
                 "created_at": datetime.now().isoformat(),
                 "status": "success"
             }
@@ -885,9 +938,34 @@ async def add_campaign(
             logger.error(f"Invalid sample video URL: {campaign.sample_video_url}")
             raise HTTPException(status_code=400, detail="Sample video URL must start with https://")
             
-        # Prepare data for insertion
-        campaign_data = campaign.dict()
-        logger.info(f"Inserting campaign with data: {campaign_data}")
+        # Convert campaign to dict for database insertion
+        campaign_data = campaign.dict(exclude_unset=True)
+        
+        # Process array fields - convert them to JSON strings if they're not already
+        array_fields = [
+            'primary_promotion_objectives',
+            'creator_profile_preferences_gender',
+            'creator_profile_preference_ethnicity',
+            'creator_profile_preference_content_niche',
+            'preferred_creator_location',
+            'creator_tier_requirement'
+        ]
+        
+        for field in array_fields:
+            if field in campaign_data and campaign_data[field] is not None:
+                # If it's already a string (likely JSON), leave it alone
+                if isinstance(campaign_data[field], str):
+                    # Try to parse it to make sure it's valid JSON
+                    try:
+                        json.loads(campaign_data[field])
+                    except json.JSONDecodeError:
+                        # If it's not valid JSON, wrap it in a list and convert
+                        campaign_data[field] = json.dumps([campaign_data[field]])
+                else:
+                    # If it's a list or other object, convert to JSON string
+                    campaign_data[field] = json.dumps(campaign_data[field])
+        
+        logger.info(f"Processed campaign data: {campaign_data}")
         
         # Insert the campaign into the database
         response = supabase.table('campaigns').insert(campaign_data).execute()

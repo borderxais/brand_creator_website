@@ -19,7 +19,7 @@ export default function NewCampaign() {
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   
-  // Form state
+  // Form state with new fields
   const [formData, setFormData] = useState({
     title: '',
     brief: '',
@@ -31,8 +31,83 @@ export default function NewCampaign() {
     deadline: '',
     max_creators: 10,
     is_open: true,
-    sample_video_url: '', // Add sample video URL field
+    sample_video_url: '',
+    // New fields
+    industry_category: '',
+    primary_promotion_objectives: [] as string[],
+    ad_placement: 'disable',
+    campaign_execution_mode: 'direct',
+    creator_profile_preferences_gender: [] as string[],
+    creator_profile_preference_ethnicity: [] as string[],
+    creator_profile_preference_content_niche: [] as string[],
+    preferred_creator_location: [] as string[],
+    language_requirement_for_creators: 'english',
+    creator_tier_requirement: [] as string[],
+    send_to_creator: 'yes',
+    approved_by_brand: 'yes',
+    kpi_reference_target: '',
+    prohibited_content_warnings: '',
+    posting_requirements: '', // Add this new field
+    product_photo: null as File | null,
   });
+
+  // Constants for the dropdown and multi-select options
+  const industryCategories = [
+    'Fast-Moving Consumer Goods (FMCG)',
+    'Apparel & Accessories',
+    'Retail',
+    'Gaming',
+    'Food & Beverage',
+    'Utility Software',
+    'Lifestyle Services',
+    'Culture, Sports & Entertainment',
+    'Media & Content',
+    '3C & Electronics',
+    'Other'
+  ];
+
+  const promotionObjectives = [
+    'Brand Awareness',
+    'E-commerce Sales',
+    'App Downloads / Registrations',
+    'Drive Traffic to Official Website',
+    'Grow TikTok Followers',
+    'Other'
+  ];
+
+  const contentNiches = [
+    'Beauty',
+    'Food',
+    'Comedy / Skits',
+    'Lifestyle',
+    'Fashion',
+    'Parenting / Family',
+    'Reviews',
+    'Travel',
+    'Automotive',
+    'Sports / Fitness',
+    'Pets',
+    'Other'
+  ];
+
+  const locations = [
+    'United States (priority)',
+    'Any English-speaking country (e.g., US, UK, Canada)',
+    'Spanish-speaking countries (e.g., Mexico, Colombia, Spain)',
+    'Other countries',
+    'No geographic preference'
+  ];
+
+  const creatorTiers = [
+    'L1 Estimated 1 – 10 orders/month, or new creators',
+    'L2 Estimated 10 – 50 orders/month, some experience',
+    'L3 Estimated 50 – 200 orders/month, avg. 10 k – 30 k views/video',
+    'L4 Estimated 200 – 500 orders/month, steady "seeding" ability',
+    'L5 Estimated 500 – 1 000 orders/month, proven sales capability',
+    'L6 Estimated 1 000 – 5 000 orders/month, team-based production',
+    'L7 Estimated 5 000 – 10 000+ orders/month, high content quality',
+    'L8 10 000+ orders/month, outstanding past performance & compliance'
+  ];
 
   useEffect(() => {
     // Redirect if not authenticated or not a brand
@@ -58,7 +133,7 @@ export default function NewCampaign() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -68,9 +143,26 @@ export default function NewCampaign() {
     setFormData(prev => ({ ...prev, [name]: checked }));
   };
 
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData(prev => ({ ...prev, product_photo: e.target.files![0] }));
+    }
+  };
+
+  // Handle multi-select options
+  const handleMultiSelectToggle = (field: string, value: string) => {
+    setFormData(prev => {
+      const currentValues = prev[field as keyof typeof prev] as string[];
+      if (Array.isArray(currentValues)) {
+        return {
+          ...prev,
+          [field]: currentValues.includes(value)
+            ? currentValues.filter(v => v !== value)
+            : [...currentValues, value]
+        };
+      }
+      return prev;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,12 +185,35 @@ export default function NewCampaign() {
     }
 
     try {
+      // Create a FormData object to send files and form data
+      const formDataToSend = new FormData();
+      
+      // Add all form fields to the FormData with proper type conversion
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === 'product_photo' && value instanceof File) {
+          // Only append the file if it exists and is a File object
+          formDataToSend.append('product_photo', value);
+        } else if (Array.isArray(value)) {
+          // Convert arrays to JSON strings
+          formDataToSend.append(key, JSON.stringify(value));
+        } else if (typeof value === 'boolean') {
+          // Convert booleans to strings
+          formDataToSend.append(key, value ? 'true' : 'false');
+        } else if (typeof value === 'number') {
+          // Convert numbers to strings
+          formDataToSend.append(key, value.toString());
+        } else if (value === null || value === undefined) {
+          // Skip null or undefined values
+          return;
+        } else {
+          // Convert other values to strings
+          formDataToSend.append(key, String(value));
+        }
+      });
+
       const response = await fetch('/api/brand/campaigns', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        body: formDataToSend, // Use FormData instead of JSON
       });
 
       if (!response.ok) {
@@ -129,7 +244,7 @@ export default function NewCampaign() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="flex items-center mb-6">
           <Link 
             href="/brandportal/campaigns"
@@ -148,7 +263,9 @@ export default function NewCampaign() {
         )}
         
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Basic Information Section */}
+          <h2 className="text-xl font-semibold mb-4 pb-2 border-b">Basic Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Campaign Title */}
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -163,6 +280,45 @@ export default function NewCampaign() {
                 placeholder="e.g., Summer Fashion Collection Launch"
                 required
               />
+            </div>
+            
+            {/* Industry Category */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Industry Category <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="industry_category"
+                value={formData.industry_category}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Select an industry</option>
+                {industryCategories.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Platform */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Platform
+              </label>
+              <select
+                name="platform"
+                value={formData.platform}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select a platform</option>
+                {platforms.map((platform) => (
+                  <option key={platform.id} value={platform.name}>
+                    {platform.displayName}
+                  </option>
+                ))}
+              </select>
             </div>
             
             {/* Brief */}
@@ -180,25 +336,159 @@ export default function NewCampaign() {
               />
             </div>
             
-            {/* Requirements */}
+            {/* Sample Video URL */}
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Creator Requirements
+                Sample Video URL
               </label>
-              <textarea
-                name="requirements"
-                value={formData.requirements}
+              <input
+                type="url"
+                name="sample_video_url"
+                value={formData.sample_video_url}
                 onChange={handleInputChange}
-                rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., Minimum 10k followers, Fashion/Lifestyle niche, High engagement rate"
+                placeholder="https://example.com/video"
+                pattern="https://.*"
+                title="URL must start with https://"
               />
               <p className="text-xs text-gray-500 mt-1">
-                You can use comma-separated values or enter requirements as a list
+                Provide a secure URL (https://) to a sample video showcasing desired content style
               </p>
             </div>
             
-            {/* Budget Range and Unit (modified) */}
+            {/* Product Photo Upload */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Product Photo
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Upload a photo of the product being promoted
+              </p>
+            </div>
+          </div>
+          
+          {/* Campaign Objectives Section */}
+          <h2 className="text-xl font-semibold mb-4 pb-2 border-b">Campaign Objectives & Settings</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Primary Promotion Objectives (Multiple Choice) */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Primary Promotion Objectives (select all that apply)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {promotionObjectives.map(objective => (
+                  <div key={objective} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`objective-${objective}`}
+                      checked={formData.primary_promotion_objectives.includes(objective)}
+                      onChange={() => handleMultiSelectToggle('primary_promotion_objectives', objective)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor={`objective-${objective}`} className="ml-2 text-sm text-gray-700">
+                      {objective}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Posting Requirements - Add this new field */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Posting Requirements
+              </label>
+              <textarea
+                name="posting_requirements"
+                value={formData.posting_requirements}
+                onChange={handleInputChange}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., required topics, hashtags, links, @brand account mentions, etc."
+              />
+            </div>
+            
+            {/* Ad Placement */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ad Placement
+              </label>
+              <div className="mt-1">
+                <div className="flex items-center mb-2">
+                  <input
+                    type="radio"
+                    id="ad-disable"
+                    name="ad_placement"
+                    value="disable"
+                    checked={formData.ad_placement === 'disable'}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="ad-disable" className="ml-2 text-sm text-gray-700">
+                    Disable (videos won't go through ad-review)
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="ad-enable"
+                    name="ad_placement"
+                    value="enable"
+                    checked={formData.ad_placement === 'enable'}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="ad-enable" className="ml-2 text-sm text-gray-700">
+                    Enable
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            {/* Campaign Execution Mode */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Campaign Execution Mode
+              </label>
+              <div className="mt-1">
+                <div className="flex items-center mb-2">
+                  <input
+                    type="radio"
+                    id="mode-direct"
+                    name="campaign_execution_mode"
+                    value="direct"
+                    checked={formData.campaign_execution_mode === 'direct'}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="mode-direct" className="ml-2 text-sm text-gray-700">
+                    Direct Collaboration (one-to-one assignments)
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="mode-open"
+                    name="campaign_execution_mode"
+                    value="open"
+                    checked={formData.campaign_execution_mode === 'open'}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="mode-open" className="ml-2 text-sm text-gray-700">
+                    Open Submission (commission pool, performance-based)
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            {/* Budget Range and Unit */}
             <div className="col-span-2 md:col-span-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Budget Range
@@ -240,26 +530,6 @@ export default function NewCampaign() {
               />
             </div>
             
-            {/* Platform */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Platform
-              </label>
-              <select
-                name="platform"
-                value={formData.platform}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select a platform</option>
-                {platforms.map((platform) => (
-                  <option key={platform.id} value={platform.name}>
-                    {platform.displayName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
             {/* Deadline */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -286,9 +556,300 @@ export default function NewCampaign() {
                 type="number"
                 name="max_creators"
                 value={formData.max_creators}
-                onChange={handleNumberChange}
+                onChange={handleInputChange}
                 min="1"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          
+          {/* Creator Preferences Section */}
+          <h2 className="text-xl font-semibold mb-4 pb-2 border-b">Creator Preferences</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Creator Gender Preferences */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Gender Preferences
+              </label>
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="gender-none"
+                    checked={formData.creator_profile_preferences_gender.includes('No preference')}
+                    onChange={() => handleMultiSelectToggle('creator_profile_preferences_gender', 'No preference')}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="gender-none" className="ml-2 text-sm text-gray-700">
+                    No preference
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="gender-female"
+                    checked={formData.creator_profile_preferences_gender.includes('Female')}
+                    onChange={() => handleMultiSelectToggle('creator_profile_preferences_gender', 'Female')}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="gender-female" className="ml-2 text-sm text-gray-700">
+                    Female
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="gender-male"
+                    checked={formData.creator_profile_preferences_gender.includes('Male')}
+                    onChange={() => handleMultiSelectToggle('creator_profile_preferences_gender', 'Male')}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="gender-male" className="ml-2 text-sm text-gray-700">
+                    Male
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            {/* Creator Ethnicity Preferences */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ethnicity Preferences
+              </label>
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="ethnicity-none"
+                    checked={formData.creator_profile_preference_ethnicity.includes('No preference')}
+                    onChange={() => handleMultiSelectToggle('creator_profile_preference_ethnicity', 'No preference')}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="ethnicity-none" className="ml-2 text-sm text-gray-700">
+                    No preference
+                  </label>
+                </div>
+                {['Caucasian', 'Black / African American', 'Asian-American', 'Latinx / Hispanic', 'Mixed / Other'].map(ethnicity => (
+                  <div key={ethnicity} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`ethnicity-${ethnicity}`}
+                      checked={formData.creator_profile_preference_ethnicity.includes(ethnicity)}
+                      onChange={() => handleMultiSelectToggle('creator_profile_preference_ethnicity', ethnicity)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor={`ethnicity-${ethnicity}`} className="ml-2 text-sm text-gray-700">
+                      {ethnicity}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Creator Content Niche Preferences */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Content Niche Preferences
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="niche-none"
+                    checked={formData.creator_profile_preference_content_niche.includes('No preference')}
+                    onChange={() => handleMultiSelectToggle('creator_profile_preference_content_niche', 'No preference')}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="niche-none" className="ml-2 text-sm text-gray-700">
+                    No preference
+                  </label>
+                </div>
+                {contentNiches.map(niche => (
+                  <div key={niche} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`niche-${niche}`}
+                      checked={formData.creator_profile_preference_content_niche.includes(niche)}
+                      onChange={() => handleMultiSelectToggle('creator_profile_preference_content_niche', niche)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor={`niche-${niche}`} className="ml-2 text-sm text-gray-700">
+                      {niche}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Creator Location Preferences */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Preferred Creator Location
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {locations.map(location => (
+                  <div key={location} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`location-${location}`}
+                      checked={formData.preferred_creator_location.includes(location)}
+                      onChange={() => handleMultiSelectToggle('preferred_creator_location', location)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor={`location-${location}`} className="ml-2 text-sm text-gray-700">
+                      {location}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Language Requirement */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Language Requirement for Creators
+              </label>
+              <select
+                name="language_requirement_for_creators"
+                value={formData.language_requirement_for_creators}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="english">English</option>
+                <option value="spanish">Spanish</option>
+                <option value="bilingual">Bilingual Chinese & English</option>
+                <option value="none">No restriction</option>
+              </select>
+            </div>
+            
+            {/* Creator Tier Requirements */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Creator Tier Requirements
+              </label>
+              <div className="grid grid-cols-1 gap-2">
+                {creatorTiers.map(tier => (
+                  <div key={tier} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`tier-${tier.substring(0, 2)}`}
+                      checked={formData.creator_tier_requirement.includes(tier)}
+                      onChange={() => handleMultiSelectToggle('creator_tier_requirement', tier)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor={`tier-${tier.substring(0, 2)}`} className="ml-2 text-sm text-gray-700">
+                      {tier}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          {/* Additional Requirements Section */}
+          <h2 className="text-xl font-semibold mb-4 pb-2 border-b">Additional Requirements</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Send to Creator */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Will Products Be Sent to Creators?
+              </label>
+              <div className="mt-1">
+                <div className="flex items-center mb-2">
+                  <input
+                    type="radio"
+                    id="send-yes"
+                    name="send_to_creator"
+                    value="yes"
+                    checked={formData.send_to_creator === 'yes'}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="send-yes" className="ml-2 text-sm text-gray-700">
+                    Yes
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="send-no"
+                    name="send_to_creator"
+                    value="no"
+                    checked={formData.send_to_creator === 'no'}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="send-no" className="ml-2 text-sm text-gray-700">
+                    No
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            {/* Approval by Brand */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Must Content Be Approved by Brand Before Publishing?
+              </label>
+              <div className="mt-1">
+                <div className="flex items-center mb-2">
+                  <input
+                    type="radio"
+                    id="approve-yes"
+                    name="approved_by_brand"
+                    value="yes"
+                    checked={formData.approved_by_brand === 'yes'}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="approve-yes" className="ml-2 text-sm text-gray-700">
+                    Yes, first draft must be approved before posting
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="approve-no"
+                    name="approved_by_brand"
+                    value="no"
+                    checked={formData.approved_by_brand === 'no'}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="approve-no" className="ml-2 text-sm text-gray-700">
+                    No, creators may publish directly
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            {/* KPI Reference Targets */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                KPI Reference Targets (optional)
+              </label>
+              <textarea
+                name="kpi_reference_target"
+                value={formData.kpi_reference_target}
+                onChange={handleInputChange}
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Example: Each video must reach at least 50k views with a like-rate above 6%"
+              />
+            </div>
+            
+            {/* Prohibited Content Warnings */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Prohibited Content or Risk Warnings (optional)
+              </label>
+              <textarea
+                name="prohibited_content_warnings"
+                value={formData.prohibited_content_warnings}
+                onChange={handleInputChange}
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Example: Avoid certain words, visuals, or tonal pitfalls, etc."
               />
             </div>
             
@@ -307,26 +868,6 @@ export default function NewCampaign() {
                   Open for Applications
                 </label>
               </div>
-            </div>
-            
-            {/* Sample Video URL */}
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Sample Video URL
-              </label>
-              <input
-                type="url"
-                name="sample_video_url"
-                value={formData.sample_video_url}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="https://example.com/video"
-                pattern="https://.*"
-                title="URL must start with https://"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Provide a secure URL (https://) to a sample video showcasing desired content style
-              </p>
             </div>
           </div>
           

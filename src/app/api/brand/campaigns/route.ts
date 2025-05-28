@@ -104,31 +104,108 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized - Brand access only' }, { status: 403 });
     }
 
-    const data = await request.json();
-
-    // Forward the request to the Python API - Updated URL to match the correct pattern
-    const pythonApiUrl = `${PYTHON_API_URL}/brand-campaigns/${user.brand.id}/add_campaign`;
+    // Check if this is a multipart/form-data request
+    const contentType = request.headers.get('content-type') || '';
     
-    console.log('Creating campaign via Python API:', pythonApiUrl);
-    
-    const response = await fetch(pythonApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...data,
+    if (contentType.includes('multipart/form-data')) {
+      // Handle FormData submission with file upload
+      const formData = await request.formData();
+      const productPhoto = formData.get('product_photo') as File | null;
+      
+      // Process the form data to create campaign object
+      const campaignData: Record<string, any> = {
         brand_id: user.brand.id
-      }),
-    });
+      };
+      
+      // Convert form data to a proper object
+      for (const [key, value] of formData.entries()) {
+        // Skip the file field, we'll handle it separately
+        if (key === 'product_photo') continue;
+        
+        if (typeof value === 'string') {
+          // Try to parse JSON strings for array fields
+          if (value.startsWith('[') && value.endsWith(']')) {
+            try {
+              campaignData[key] = JSON.parse(value);
+            } catch (e) {
+              campaignData[key] = value;
+            }
+          } else {
+            campaignData[key] = value;
+          }
+        } else {
+          campaignData[key] = value;
+        }
+      }
+      
+      // Handle file upload if there is a product photo
+      if (productPhoto) {
+        try {
+          // Create a unique filename
+          const fileName = `${user.brand.id}_${Date.now()}_${productPhoto.name}`;
+          
+          // Upload to storage service (in this example we're mocking it)
+          // In a real implementation, you would upload to S3, Supabase Storage, etc.
+          // For now, we'll just simulate it by setting a mock URL
+          const photoUrl = `https://storage.example.com/product-photos/${fileName}`;
+          
+          // Add the photo URL to the campaign data
+          campaignData.product_photo_url = photoUrl;
+        } catch (uploadError) {
+          console.error('Error uploading product photo:', uploadError);
+          return NextResponse.json({ error: 'Failed to upload product photo' }, { status: 500 });
+        }
+      }
+      
+      // Forward the request to the Python API
+      const pythonApiUrl = `${PYTHON_API_URL}/brand-campaigns/${user.brand.id}/add_campaign`;
+      
+      console.log('Creating campaign via Python API:', pythonApiUrl);
+      console.log('Campaign data:', campaignData);
+      
+      const response = await fetch(pythonApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(campaignData),
+      });
 
-    if (!response.ok) {
-      console.error(`Python API returned status ${response.status} for POST`);
-      return NextResponse.json({ error: 'Failed to create campaign' }, { status: response.status });
+      if (!response.ok) {
+        console.error(`Python API returned status ${response.status} for POST`);
+        return NextResponse.json({ error: 'Failed to create campaign' }, { status: response.status });
+      }
+
+      const campaign = await response.json();
+      return NextResponse.json(campaign);
+    } else {
+      // Handle JSON submission (original implementation)
+      const data = await request.json();
+
+      // Forward the request to the Python API
+      const pythonApiUrl = `${PYTHON_API_URL}/brand-campaigns/${user.brand.id}/add_campaign`;
+      
+      console.log('Creating campaign via Python API:', pythonApiUrl);
+      
+      const response = await fetch(pythonApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          brand_id: user.brand.id
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(`Python API returned status ${response.status} for POST`);
+        return NextResponse.json({ error: 'Failed to create campaign' }, { status: response.status });
+      }
+
+      const campaign = await response.json();
+      return NextResponse.json(campaign);
     }
-
-    const campaign = await response.json();
-    return NextResponse.json(campaign);
   } catch (error) {
     console.error('Error creating campaign:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

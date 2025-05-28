@@ -35,11 +35,28 @@ interface Campaign {
   brief: string;
   requirements: string | null;
   budget_range: string;
-  budget_unit: string; // Added budget_unit field
+  budget_unit: string;
   commission: string;
   platform: string;
   deadline: string | Date;
-  sample_video_url: string | null; // Added sample_video_url field
+  sample_video_url: string | null;
+  // Add new fields
+  industry_category: string | null;
+  primary_promotion_objectives: string | null;
+  ad_placement: string | null;
+  campaign_execution_mode: string | null;
+  creator_profile_preferences_gender: string | null;
+  creator_profile_preference_ethnicity: string | null;
+  creator_profile_preference_content_niche: string | null;
+  preferred_creator_location: string | null;
+  language_requirement_for_creators: string | null;
+  creator_tier_requirement: string | null;
+  send_to_creator: string | null;
+  approved_by_brand: string | null;
+  kpi_reference_target: string | null;
+  prohibited_content_warnings: string | null;
+  posting_requirements: string | null;
+  product_photo_url: string | null;
   applications: Application[];
 }
 
@@ -171,14 +188,27 @@ export default function CampaignApplications() {
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Campaign Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Basic Campaign Info */}
           <div>
             <h3 className="text-sm font-medium text-gray-500">Brief</h3>
             <p className="mt-1">{campaign.brief || 'No brief provided'}</p>
           </div>
+          
+          {/* Industry Category */}
+          {campaign.industry_category && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Industry</h3>
+              <p className="mt-1">{campaign.industry_category}</p>
+            </div>
+          )}
+          
+          {/* Platform */}
           <div>
-            <h3 className="text-sm font-medium text-gray-500">Requirements</h3>
-            <p className="mt-1">{campaign.requirements || 'No specific requirements'}</p>
+            <h3 className="text-sm font-medium text-gray-500">Platform</h3>
+            <p className="mt-1 capitalize">{campaign.platform || 'Not specified'}</p>
           </div>
+          
+          {/* Budget Range */}
           <div>
             <h3 className="text-sm font-medium text-gray-500">Budget Range</h3>
             <p className="mt-1">
@@ -193,12 +223,8 @@ export default function CampaignApplications() {
               )}
             </p>
           </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Platform</h3>
-            <p className="mt-1 capitalize">{campaign.platform || 'Not specified'}</p>
-          </div>
           
-          {/* Sample Video URL (new) */}
+          {/* Sample Video URL */}
           {campaign.sample_video_url && (
             <div>
               <h3 className="text-sm font-medium text-gray-500">Sample Video</h3>
@@ -212,9 +238,196 @@ export default function CampaignApplications() {
               </a>
             </div>
           )}
+          
+
+        </div>
+        
+        {/* Campaign Objectives */}
+        <div className="mt-6">
+          <h3 className="text-sm font-medium text-gray-500 mb-2">Campaign Objectives</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Campaign Execution Mode */}
+            {campaign.campaign_execution_mode && (
+              <div>
+                <span className="text-sm font-semibold">Execution Mode:</span>
+                <span className="ml-2 text-sm capitalize">{campaign.campaign_execution_mode}</span>
+              </div>
+            )}
+            
+            {/* Ad Placement */}
+            {campaign.ad_placement && (
+              <div>
+                <span className="text-sm font-semibold">Ad Placement:</span>
+                <span className="ml-2 text-sm capitalize">{campaign.ad_placement}</span>
+              </div>
+            )}
+            
+            {/* Primary Promotion Objectives */}
+            {campaign.primary_promotion_objectives && (
+              <div className="col-span-2">
+                <span className="text-sm font-semibold">Objectives:</span>
+                <span className="ml-2 text-sm">
+                  {(() => {
+                    try {
+                      const objectives = JSON.parse(campaign.primary_promotion_objectives);
+                      return Array.isArray(objectives) ? objectives.join(', ') : campaign.primary_promotion_objectives;
+                    } catch (e) {
+                      return campaign.primary_promotion_objectives;
+                    }
+                  })()}
+                </span>
+              </div>
+            )}
+            
+            {/* KPI Reference Targets */}
+            {campaign.kpi_reference_target && (
+              <div className="col-span-2">
+                <span className="text-sm font-semibold">KPI Targets:</span>
+                <span className="ml-2 text-sm">{campaign.kpi_reference_target}</span>
+              </div>
+            )}
+            
+            {/* Prohibited Content Warnings */}
+            {campaign.prohibited_content_warnings && (
+              <div className="col-span-2">
+                <span className="text-sm font-semibold">Content Warnings:</span>
+                <span className="ml-2 text-sm">{campaign.prohibited_content_warnings}</span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Creator Preferences */}
+        <div className="mt-6">
+          <h3 className="text-sm font-medium text-gray-500 mb-2">Creator Preferences</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Creator Gender Preferences */}
+            {campaign.creator_profile_preferences_gender && (
+              <div>
+                <span className="text-sm font-semibold">Gender:</span>
+                <span className="ml-2 text-sm">
+                  {(() => {
+                    try {
+                      const genders = JSON.parse(campaign.creator_profile_preferences_gender);
+                      return Array.isArray(genders) ? genders.join(', ') : campaign.creator_profile_preferences_gender;
+                    } catch (e) {
+                      return campaign.creator_profile_preferences_gender;
+                    }
+                  })()}
+                </span>
+              </div>
+            )}
+            
+            {/* Creator Ethnicity Preferences */}
+            {campaign.creator_profile_preference_ethnicity && (
+              <div>
+                <span className="text-sm font-semibold">Ethnicity:</span>
+                <span className="ml-2 text-sm">
+                  {(() => {
+                    try {
+                      const ethnicities = JSON.parse(campaign.creator_profile_preference_ethnicity);
+                      return Array.isArray(ethnicities) ? ethnicities.join(', ') : campaign.creator_profile_preference_ethnicity;
+                    } catch (e) {
+                      return campaign.creator_profile_preference_ethnicity;
+                    }
+                  })()}
+                </span>
+              </div>
+            )}
+            
+            {/* Creator Content Niche Preferences */}
+            {campaign.creator_profile_preference_content_niche && (
+              <div className="col-span-2">
+                <span className="text-sm font-semibold">Content Niches:</span>
+                <span className="ml-2 text-sm">
+                  {(() => {
+                    try {
+                      const niches = JSON.parse(campaign.creator_profile_preference_content_niche);
+                      return Array.isArray(niches) ? niches.join(', ') : campaign.creator_profile_preference_content_niche;
+                    } catch (e) {
+                      return campaign.creator_profile_preference_content_niche;
+                    }
+                  })()}
+                </span>
+              </div>
+            )}
+            
+            {/* Preferred Creator Location */}
+            {campaign.preferred_creator_location && (
+              <div className="col-span-2">
+                <span className="text-sm font-semibold">Preferred Locations:</span>
+                <span className="ml-2 text-sm">
+                  {(() => {
+                    try {
+                      const locations = JSON.parse(campaign.preferred_creator_location);
+                      return Array.isArray(locations) ? locations.join(', ') : campaign.preferred_creator_location;
+                    } catch (e) {
+                      return campaign.preferred_creator_location;
+                    }
+                  })()}
+                </span>
+              </div>
+            )}
+            
+            {/* Language Requirements */}
+            {campaign.language_requirement_for_creators && (
+              <div>
+                <span className="text-sm font-semibold">Language:</span>
+                <span className="ml-2 text-sm capitalize">{campaign.language_requirement_for_creators}</span>
+              </div>
+            )}
+            
+            {/* Creator Tier Requirements */}
+            {campaign.creator_tier_requirement && (
+              <div className="col-span-2">
+                <span className="text-sm font-semibold">Creator Tiers:</span>
+                <span className="ml-2 text-sm">
+                  {(() => {
+                    try {
+                      const tiers = JSON.parse(campaign.creator_tier_requirement);
+                      return Array.isArray(tiers) ? tiers.join(', ') : campaign.creator_tier_requirement;
+                    } catch (e) {
+                      return campaign.creator_tier_requirement;
+                    }
+                  })()}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Additional Requirements */}
+        <div className="mt-6">
+          <h3 className="text-sm font-medium text-gray-500 mb-2">Additional Requirements</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Send to Creator */}
+            {campaign.send_to_creator && (
+              <div>
+                <span className="text-sm font-semibold">Send to Creator:</span>
+                <span className="ml-2 text-sm">{campaign.send_to_creator === 'yes' ? 'Yes' : 'No'}</span>
+              </div>
+            )}
+            
+            {/* Approved by Brand */}
+            {campaign.approved_by_brand && (
+              <div>
+                <span className="text-sm font-semibold">Approval Required:</span>
+                <span className="ml-2 text-sm">{campaign.approved_by_brand === 'yes' ? 'Yes' : 'No'}</span>
+              </div>
+            )}
+            
+            {/* Posting Requirements (previously requirements) */}
+            {(campaign.posting_requirements || campaign.requirements) && (
+              <div className="col-span-2">
+                <span className="text-sm font-semibold">Posting Requirements:</span>
+                <p className="mt-1 text-sm">{campaign.posting_requirements || campaign.requirements}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       
+      {/* Applications Section - Keep existing code */}
       <div className="bg-white rounded-lg shadow-sm p-6">
         <h2 className="text-xl font-semibold mb-4">Applications</h2>
         
