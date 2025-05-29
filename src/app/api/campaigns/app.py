@@ -1161,8 +1161,12 @@ async def upload_file(
         file_extension = file.filename.split('.')[-1] if '.' in file.filename else ''
         unique_filename = f"{uuid.uuid4()}.{file_extension}" if file_extension else str(uuid.uuid4())
         
-        # Create storage path
-        storage_path = f"campaigns/{brand_id}/{campaign_id}/{unique_filename}"
+        # Fix: Remove "campaigns" from the path since bucket is already named "campaigns"
+        # This prevents double "campaigns" in the URL
+        storage_path = f"{brand_id}/{campaign_id}/{unique_filename}"
+        
+        logger.info(f"Storage path: {storage_path}")
+        logger.info(f"Expected public URL: https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/public/campaigns/{storage_path}")
         
         try:
             # Upload to Supabase storage with correct file options format and correct bucket name
@@ -1182,6 +1186,8 @@ async def upload_file(
             # Get public URL with correct bucket name
             public_url_response = supabase.storage.from_("campaigns").get_public_url(storage_path)
             public_url = public_url_response if isinstance(public_url_response, str) else public_url_response.get('publicUrl', '')
+            
+            logger.info(f"Generated public URL: {public_url}")
             
             return {
                 "success": True,
@@ -1214,6 +1220,8 @@ async def upload_file(
                 # Get public URL with correct bucket name
                 public_url_response = supabase.storage.from_("campaigns").get_public_url(storage_path)
                 public_url = public_url_response if isinstance(public_url_response, str) else public_url_response.get('publicUrl', '')
+                
+                logger.info(f"Alternative method - Generated public URL: {public_url}")
                 
                 return {
                     "success": True,

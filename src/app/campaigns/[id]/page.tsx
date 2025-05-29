@@ -35,6 +35,7 @@ interface Campaign {
   is_open: boolean;
   created_at: string;
   sample_video_url: string | null;
+  product_photo: string | null; // Add product_photo field
 }
 
 export default function CampaignDetail() {
@@ -282,6 +283,63 @@ export default function CampaignDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
+            {/* Product Photo Section */}
+            {campaign.product_photo && (
+              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h2 className="text-xl font-bold mb-4">Product</h2>
+                
+                <div className="w-full max-w-lg mx-auto relative">
+                  <Image
+                    src={campaign.product_photo}
+                    alt={`Product for ${campaign.title}`}
+                    width={500}
+                    height={400}
+                    className="w-full h-auto rounded-lg shadow-sm opacity-0 transition-opacity duration-300"
+                    onLoad={(e) => {
+                      console.log(`Campaign detail image loaded: ${campaign.product_photo}`);
+                      e.currentTarget.classList.remove('opacity-0');
+                      e.currentTarget.classList.add('opacity-100');
+                      // Hide loading indicator
+                      const loader = e.currentTarget.parentElement?.querySelector('.loading-indicator') as HTMLElement;
+                      if (loader) loader.style.display = 'none';
+                    }}
+                    onError={(e) => {
+                      console.error(`Campaign detail image failed to load: ${campaign.product_photo}`);
+                      
+                      // Show fallback instead of hiding
+                      const fallback = e.currentTarget.parentElement?.querySelector('.image-fallback') as HTMLElement;
+                      if (fallback) {
+                        fallback.style.display = 'flex';
+                        e.currentTarget.style.display = 'none';
+                      }
+                    }}
+                    unoptimized={true} // Disable Next.js optimization for external URLs
+                  />
+                  
+                  {/* Loading indicator */}
+                  <div className="loading-indicator absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+                    <div className="text-center">
+                      <svg className="w-8 h-8 text-gray-400 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <p className="text-xs text-gray-500 mt-2">Loading image...</p>
+                    </div>
+                  </div>
+                  
+                  {/* Fallback for when image fails to load */}
+                  <div className="image-fallback hidden w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+                    <div className="text-center text-gray-500">
+                      <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm">Product image unavailable</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Overview */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
               <h2 className="text-xl font-bold mb-4">Campaign Overview</h2>
