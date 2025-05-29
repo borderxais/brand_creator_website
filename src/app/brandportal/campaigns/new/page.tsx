@@ -199,7 +199,8 @@ export default function NewCampaign() {
         photoFormData.append('brand_id', session?.user?.id || 'unknown');
         photoFormData.append('campaign_id', tempCampaignId);
         
-        const uploadResponse = await fetch('/api/upload', {
+        // Updated to use the consolidated upload endpoint
+        const uploadResponse = await fetch('/api/campaigns/upload', {
           method: 'POST',
           body: photoFormData
         });
@@ -237,7 +238,7 @@ export default function NewCampaign() {
       
       // Add the uploaded photo URL with the correct field name to match database column
       if (productPhotoUrl) {
-        campaignFormData.append('product_photo', productPhotoUrl);  // Use product_photo to match database column
+        campaignFormData.append('product_photo', productPhotoUrl);
       }
 
       const response = await fetch('/api/brand/campaigns', {

@@ -1,15 +1,16 @@
-from fastapi import FastAPI, Query, HTTPException, Request, Path, Body
+from fastapi import FastAPI, Query, HTTPException, Request, Path, Body, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from pydantic import BaseModel
-import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
-import logging
 from datetime import datetime
-import platform
-import json
 from typing import Dict, Any
+import os
+import logging
+import json
+import platform
+import uuid
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -41,11 +42,6 @@ if not supabase_url or not supabase_key:
 else:
     logger.info(f"Initializing Supabase client with URL: {supabase_url[:20]}...")
     try:
-        # Print environment info
-        logger.info(f"Environment: GOOGLE_CLOUD_PROJECT={os.environ.get('GOOGLE_CLOUD_PROJECT', 'Not set')}")
-        logger.info(f"Python version: {platform.python_version()}")
-        
-        # Try to create a Supabase client
         supabase = create_client(supabase_url, supabase_key)
         logger.info("Supabase client initialized successfully")
     except Exception as e:
@@ -1134,4 +1130,106 @@ async def get_campaign(campaign_id: str):
     except Exception as e:
         logger.error(f"Error fetching campaign {campaign_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch campaign: {str(e)}")
+
+# Add upload endpoint to the campaigns API
+@app.post("/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    brand_id: str = Form(...),
+    campaign_id: str = Form(...)
+):
+    """
+    Upload a file (product photo) for a campaign
+    """
+    try:
+        logger.info(f"Uploading file for brand {brand_id}, campaign {campaign_id}")
+        
+        if not supabase:
+            logger.warning("Supabase not configured, cannot upload file")
+            raise HTTPException(500, "Storage not configured")
+        
+        # Validate file
+        if not file.filename:
+            raise HTTPException(400, "No file provided")
+        
+        # Check file size (5MB limit)
+        file_content = await file.read()
+        if len(file_content) > 5 * 1024 * 1024:
+            raise HTTPException(400, "File size exceeds 5MB limit")
+        
+        # Generate unique filename
+        file_extension = file.filename.split('.')[-1] if '.' in file.filename else ''
+        unique_filename = f"{uuid.uuid4()}.{file_extension}" if file_extension else str(uuid.uuid4())
+        
+        # Create storage path
+        storage_path = f"campaigns/{brand_id}/{campaign_id}/{unique_filename}"
+        
+        try:
+            # Upload to Supabase storage with correct file options format and correct bucket name
+            file_options = {
+                "content-type": file.content_type or "application/octet-stream",
+                "upsert": "true"  # Convert boolean to string
+            }
+            
+            response = supabase.storage.from_("campaigns").upload(
+                storage_path,
+                file_content,
+                file_options
+            )
+            
+            logger.info(f"File uploaded successfully: {response}")
+            
+            # Get public URL with correct bucket name
+            public_url_response = supabase.storage.from_("campaigns").get_public_url(storage_path)
+            public_url = public_url_response if isinstance(public_url_response, str) else public_url_response.get('publicUrl', '')
+            
+            return {
+                "success": True,
+                "url": public_url,
+                "path": storage_path,
+                "filename": unique_filename
+            }
+            
+        except Exception as storage_error:
+            logger.error(f"Storage error: {str(storage_error)}")
+            
+            # Try alternative upload method without upsert
+            try:
+                logger.info("Trying alternative upload method without upsert option")
+                
+                # First try to remove the file if it exists
+                try:
+                    supabase.storage.from_("campaigns").remove([storage_path])
+                except:
+                    pass  # Ignore removal errors
+                
+                # Upload without file options to correct bucket
+                response = supabase.storage.from_("campaigns").upload(
+                    storage_path,
+                    file_content
+                )
+                
+                logger.info(f"Alternative upload successful: {response}")
+                
+                # Get public URL with correct bucket name
+                public_url_response = supabase.storage.from_("campaigns").get_public_url(storage_path)
+                public_url = public_url_response if isinstance(public_url_response, str) else public_url_response.get('publicUrl', '')
+                
+                return {
+                    "success": True,
+                    "url": public_url,
+                    "path": storage_path,
+                    "filename": unique_filename
+                }
+                
+            except Exception as alt_error:
+                logger.error(f"Alternative upload also failed: {str(alt_error)}")
+                raise HTTPException(500, f"Storage error: {str(alt_error)}")
+            
+    except HTTPException as he:
+        logger.error(f"HTTP error uploading file: {he.detail}")
+        raise he
+    except Exception as e:
+        logger.error(f"Unexpected error uploading file: {str(e)}")
+        raise HTTPException(500, f"Upload failed: {str(e)}")
 
