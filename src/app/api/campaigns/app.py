@@ -123,9 +123,9 @@ class Campaign(BaseModel):
     kpi_reference_target: Optional[str] = None
     prohibited_content_warnings: Optional[str] = None
     posting_requirements: Optional[str] = None  # Add this new field
-    product_photo_url: Optional[str] = None
+    product_photo: Optional[str] = None  # This should match your database column name
 
-# Model for campaign creation - update with all new fields
+# Model for campaign creation - update with correct field name
 class CampaignCreate(BaseModel):
     brand_id: str
     title: str
@@ -155,7 +155,7 @@ class CampaignCreate(BaseModel):
     kpi_reference_target: Optional[str] = None
     prohibited_content_warnings: Optional[str] = None
     posting_requirements: Optional[str] = None  # Add this new field
-    product_photo_url: Optional[str] = None
+    product_photo: Optional[str] = None  # This should match your database column name
 
 # Update the model for campaign claims
 class CampaignClaimCreate(BaseModel):
@@ -184,7 +184,7 @@ async def check_table_exists(supabase_client: Client, table_name: str) -> bool:
         logger.error(f"Error checking if table '{table_name}' exists: {str(e)}")
         return False
 
-# Update the SQL for table creation to include new columns
+# Update the SQL for table creation to match your actual column name
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS public.campaigns (
   id             uuid primary key default gen_random_uuid(),
@@ -216,8 +216,8 @@ CREATE TABLE IF NOT EXISTS public.campaigns (
   approved_by_brand text default 'yes',
   kpi_reference_target text,
   prohibited_content_warnings text,
-  posting_requirements text,  -- Add this new field
-  product_photo_url text
+  posting_requirements text,
+  product_photo text  -- This matches your database column name
 );
 
 -- Grant permissions to service role
@@ -915,33 +915,19 @@ async def add_campaign(
     Create a new campaign for a specific brand
     """
     try:
-        logger.info(f"Creating new campaign for brand ID: {brand_id}")
+        logger.info(f"Creating campaign for brand {brand_id}: {campaign.title}")
+        logger.info(f"Campaign data received: {campaign.dict()}")
         
         if not supabase:
-            # Return mock response for development if no Supabase connection
-            return {
-                "id": "mock-campaign-id",
-                "brand_id": brand_id,
-                "title": campaign.title,
-                "sample_video_url": campaign.sample_video_url,
-                "created_at": datetime.now().isoformat(),
-                "status": "success"
-            }
-
-        # Verify the brand_id in the URL matches the brand_id in the request body
-        if campaign.brand_id != brand_id:
-            logger.error(f"Brand ID mismatch: URL {brand_id} vs Body {campaign.brand_id}")
-            raise HTTPException(status_code=400, detail="Brand ID mismatch between URL and request body")
-            
-        # Validate sample_video_url if provided
-        if campaign.sample_video_url and not campaign.sample_video_url.startswith('https://'):
-            logger.error(f"Invalid sample video URL: {campaign.sample_video_url}")
-            raise HTTPException(status_code=400, detail="Sample video URL must start with https://")
-            
-        # Convert campaign to dict for database insertion
-        campaign_data = campaign.dict(exclude_unset=True)
+            logger.warning("Supabase not configured, cannot create campaign")
+            raise HTTPException(500, "Database not configured")
         
-        # Process array fields - convert them to JSON strings if they're not already
+        # Convert the campaign data to a dictionary for database insertion
+        campaign_data = campaign.dict()
+        campaign_data['brand_id'] = brand_id
+        campaign_data['created_at'] = datetime.now().isoformat()
+        
+        # Handle array fields - convert lists to JSON strings for storage
         array_fields = [
             'primary_promotion_objectives',
             'creator_profile_preferences_gender',
@@ -952,41 +938,48 @@ async def add_campaign(
         ]
         
         for field in array_fields:
-            if field in campaign_data and campaign_data[field] is not None:
-                # If it's already a string (likely JSON), leave it alone
-                if isinstance(campaign_data[field], str):
-                    # Try to parse it to make sure it's valid JSON
-                    try:
-                        json.loads(campaign_data[field])
-                    except json.JSONDecodeError:
-                        # If it's not valid JSON, wrap it in a list and convert
-                        campaign_data[field] = json.dumps([campaign_data[field]])
-                else:
-                    # If it's a list or other object, convert to JSON string
-                    campaign_data[field] = json.dumps(campaign_data[field])
+            if field in campaign_data and isinstance(campaign_data[field], list):
+                campaign_data[field] = json.dumps(campaign_data[field])
         
-        logger.info(f"Processed campaign data: {campaign_data}")
+        # Remove None values to avoid database issues
+        campaign_data = {k: v for k, v in campaign_data.items() if v is not None and v != ''}
         
-        # Insert the campaign into the database
-        response = supabase.table('campaigns').insert(campaign_data).execute()
+        logger.info(f"Processed campaign data for database: {campaign_data}")
+        logger.info(f"Product photo value: {campaign_data.get('product_photo', 'NOT SET')}")
         
-        if not response.data or len(response.data) == 0:
-            logger.error("Failed to create campaign, no data returned from database")
-            raise HTTPException(status_code=500, detail="Failed to create campaign")
+        try:
+            # Insert the campaign into the database
+            response = supabase.table("campaigns").insert(campaign_data).execute()
+            logger.info(f"Campaign created successfully: {response}")
             
-        created_campaign = response.data[0]
-        logger.info(f"Successfully created campaign with ID {created_campaign['id']}")
-        
-        return {
-            "status": "success", 
-            "campaign": created_campaign
-        }
-        
+            if response.data:
+                campaign_id = response.data[0]['id']
+                
+                # Verify the product_photo was saved
+                verification_response = supabase.table("campaigns").select("product_photo").eq("id", campaign_id).execute()
+                if verification_response.data:
+                    saved_photo_url = verification_response.data[0].get('product_photo')
+                    logger.info(f"Verification - product_photo saved as: {saved_photo_url}")
+                
+                return {
+                    "success": True,
+                    "campaign_id": campaign_id,
+                    "message": "Campaign created successfully",
+                    "product_photo_saved": saved_photo_url if verification_response.data else None
+                }
+            else:
+                raise HTTPException(500, "Failed to create campaign - no data returned")
+                
+        except Exception as db_error:
+            logger.error(f"Database error creating campaign: {str(db_error)}")
+            raise HTTPException(500, f"Database error: {str(db_error)}")
+            
     except HTTPException as he:
+        logger.error(f"HTTP error creating campaign: {he.detail}")
         raise he
     except Exception as e:
-        logger.error(f"Error creating campaign: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to create campaign: {str(e)}")
+        logger.error(f"Unexpected error creating campaign: {str(e)}")
+        raise HTTPException(500, f"An unexpected error occurred: {str(e)}")
 
 @app.get("/debug/supabase-connection", response_model=dict)
 async def test_supabase_connection():

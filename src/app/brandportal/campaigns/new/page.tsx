@@ -177,43 +177,72 @@ export default function NewCampaign() {
       return;
     }
 
-    // Validate sample video URL if provided
-    if (formData.sample_video_url && !formData.sample_video_url.startsWith('https://')) {
-      setFormError('Sample video URL must start with https://');
+    // Validate file size if photo is provided
+    if (formData.product_photo && formData.product_photo.size > 5 * 1024 * 1024) {
+      setFormError('Product photo must be less than 5MB');
       setIsLoading(false);
       return;
     }
 
     try {
-      // Create a FormData object to send files and form data
-      const formDataToSend = new FormData();
+      let productPhotoUrl = null;
       
-      // Add all form fields to the FormData with proper type conversion
+      // Step 1: Upload product photo if provided
+      if (formData.product_photo) {
+        console.log('Uploading product photo...');
+        
+        // Generate a temporary campaign ID for the upload
+        const tempCampaignId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        const photoFormData = new FormData();
+        photoFormData.append('file', formData.product_photo);
+        photoFormData.append('brand_id', session?.user?.id || 'unknown');
+        photoFormData.append('campaign_id', tempCampaignId);
+        
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: photoFormData
+        });
+        
+        if (!uploadResponse.ok) {
+          const uploadError = await uploadResponse.json();
+          throw new Error(uploadError.error || 'Failed to upload product photo');
+        }
+        
+        const uploadData = await uploadResponse.json();
+        productPhotoUrl = uploadData.url;
+        console.log('Product photo uploaded successfully:', productPhotoUrl);
+      }
+      
+      // Step 2: Create campaign with photo URL
+      const campaignFormData = new FormData();
+      
+      // Add all form fields except the file
       Object.entries(formData).forEach(([key, value]) => {
-        if (key === 'product_photo' && value instanceof File) {
-          // Only append the file if it exists and is a File object
-          formDataToSend.append('product_photo', value);
+        if (key === 'product_photo') {
+          // Skip the file, we already uploaded it
+          return;
         } else if (Array.isArray(value)) {
-          // Convert arrays to JSON strings
-          formDataToSend.append(key, JSON.stringify(value));
+          campaignFormData.append(key, JSON.stringify(value));
         } else if (typeof value === 'boolean') {
-          // Convert booleans to strings
-          formDataToSend.append(key, value ? 'true' : 'false');
+          campaignFormData.append(key, value ? 'true' : 'false');
         } else if (typeof value === 'number') {
-          // Convert numbers to strings
-          formDataToSend.append(key, value.toString());
+          campaignFormData.append(key, value.toString());
         } else if (value === null || value === undefined) {
-          // Skip null or undefined values
           return;
         } else {
-          // Convert other values to strings
-          formDataToSend.append(key, String(value));
+          campaignFormData.append(key, String(value));
         }
       });
+      
+      // Add the uploaded photo URL with the correct field name to match database column
+      if (productPhotoUrl) {
+        campaignFormData.append('product_photo', productPhotoUrl);  // Use product_photo to match database column
+      }
 
       const response = await fetch('/api/brand/campaigns', {
         method: 'POST',
-        body: formDataToSend, // Use FormData instead of JSON
+        body: campaignFormData,
       });
 
       if (!response.ok) {
@@ -221,7 +250,7 @@ export default function NewCampaign() {
         throw new Error(errorData.error || 'Failed to create campaign');
       }
 
-      // Campaign created successfully, redirect to campaigns list
+      // Campaign created successfully
       router.push('/brandportal/campaigns');
       router.refresh();
     } catch (error) {

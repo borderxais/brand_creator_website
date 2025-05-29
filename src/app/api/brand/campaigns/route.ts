@@ -112,31 +112,33 @@ export async function POST(request: Request) {
       const formData = await request.formData();
       const productPhoto = formData.get('product_photo') as File | null;
       
-      // Process the form data to create campaign object
-      const campaignData: Record<string, any> = {
-        brand_id: user.brand.id
+      // Extract and prepare campaign data
+      const campaignData: any = {
+        brand_id: session.user.id,
+        title: formData.get('title') as string,
+        brief: formData.get('brief') as string,
+        requirements: formData.get('requirements') as string,
+        budget_range: formData.get('budget_range') as string,
+        budget_unit: formData.get('budgetUnit') as string,
+        commission: formData.get('commission') as string,
+        platform: formData.get('platform') as string,
+        deadline: formData.get('deadline') as string,
+        max_creators: parseInt(formData.get('max_creators') as string) || 10,
+        is_open: formData.get('is_open') === 'true',
+        sample_video_url: formData.get('sample_video_url') as string,
+        // New fields
+        industry_category: formData.get('industry_category') as string,
+        ad_placement: formData.get('ad_placement') as string,
+        campaign_execution_mode: formData.get('campaign_execution_mode') as string,
+        language_requirement_for_creators: formData.get('language_requirement_for_creators') as string,
+        send_to_creator: formData.get('send_to_creator') as string,
+        approved_by_brand: formData.get('approved_by_brand') as string,
+        kpi_reference_target: formData.get('kpi_reference_target') as string,
+        prohibited_content_warnings: formData.get('prohibited_content_warnings') as string,
+        posting_requirements: formData.get('posting_requirements') as string,
+        // Map both possible field names to the database column name
+        product_photo: formData.get('product_photo') as string || formData.get('product_photo_url') as string,
       };
-      
-      // Convert form data to a proper object
-      for (const [key, value] of formData.entries()) {
-        // Skip the file field, we'll handle it separately
-        if (key === 'product_photo') continue;
-        
-        if (typeof value === 'string') {
-          // Try to parse JSON strings for array fields
-          if (value.startsWith('[') && value.endsWith(']')) {
-            try {
-              campaignData[key] = JSON.parse(value);
-            } catch (e) {
-              campaignData[key] = value;
-            }
-          } else {
-            campaignData[key] = value;
-          }
-        } else {
-          campaignData[key] = value;
-        }
-      }
       
       // Handle file upload if there is a product photo
       if (productPhoto) {
