@@ -574,8 +574,19 @@ async def get_creator_campaign_claims(
             # Process and format the results with campaign details
             result = []
             for claim in claims_response.data:
+                # Query campaigns table with all the new fields
                 campaign_response = supabase.table('campaigns')\
-                    .select('*')\
+                    .select('''
+                        *,
+                        id, title, brief, deadline, budget_range, budget_unit, 
+                        sample_video_url, industry_category, primary_promotion_objectives,
+                        ad_placement, campaign_execution_mode, creator_profile_preferences_gender,
+                        creator_profile_preference_ethnicity, creator_profile_preference_content_niche,
+                        preferred_creator_location, language_requirement_for_creators,
+                        creator_tier_requirement, send_to_creator, approved_by_brand,
+                        kpi_reference_target, prohibited_content_warnings, posting_requirements,
+                        product_photo
+                    ''')\
                     .eq('id', claim.get('campaign_id'))\
                     .execute()
                 
@@ -583,7 +594,7 @@ async def get_creator_campaign_claims(
                 if campaign_response.data and len(campaign_response.data) > 0:
                     campaign_data = campaign_response.data[0]
                 
-                # Create result item with all relevant fields including budget_unit and sample_video_url
+                # Create result item with all relevant fields including the new ones
                 result_item = {
                     "id": claim.get('id'),
                     "campaign_id": claim.get('campaign_id'),
@@ -592,13 +603,31 @@ async def get_creator_campaign_claims(
                     "sample_text": claim.get('sample_text'),
                     "sample_video_url": claim.get('sample_video_url'),
                     "created_at": claim.get('created_at'),
+                    # Basic campaign fields
                     "campaign_title": campaign_data.get('title', 'Unknown Campaign'),
                     "campaign_brand_name": "Unknown Brand",  # Will be updated below
                     "campaign_deadline": campaign_data.get('deadline'),
                     "campaign_budget_range": campaign_data.get('budget_range'),
-                    "campaign_budget_unit": campaign_data.get('budget_unit', 'total'),  # Include budget_unit
+                    "campaign_budget_unit": campaign_data.get('budget_unit', 'total'),
                     "campaign_brief": campaign_data.get('brief'),
-                    "campaign_sample_video_url": campaign_data.get('sample_video_url')  # Include campaign's sample video
+                    "campaign_sample_video_url": campaign_data.get('sample_video_url'),
+                    # New campaign fields
+                    "industry_category": campaign_data.get('industry_category'),
+                    "primary_promotion_objectives": campaign_data.get('primary_promotion_objectives'),
+                    "ad_placement": campaign_data.get('ad_placement'),
+                    "campaign_execution_mode": campaign_data.get('campaign_execution_mode'),
+                    "creator_profile_preferences_gender": campaign_data.get('creator_profile_preferences_gender'),
+                    "creator_profile_preference_ethnicity": campaign_data.get('creator_profile_preference_ethnicity'),
+                    "creator_profile_preference_content_niche": campaign_data.get('creator_profile_preference_content_niche'),
+                    "preferred_creator_location": campaign_data.get('preferred_creator_location'),
+                    "language_requirement_for_creators": campaign_data.get('language_requirement_for_creators'),
+                    "creator_tier_requirement": campaign_data.get('creator_tier_requirement'),
+                    "send_to_creator": campaign_data.get('send_to_creator'),
+                    "approved_by_brand": campaign_data.get('approved_by_brand'),
+                    "kpi_reference_target": campaign_data.get('kpi_reference_target'),
+                    "prohibited_content_warnings": campaign_data.get('prohibited_content_warnings'),
+                    "posting_requirements": campaign_data.get('posting_requirements'),
+                    "product_photo": campaign_data.get('product_photo')
                 }
                 
                 result.append(result_item)

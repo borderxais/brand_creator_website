@@ -35,7 +35,23 @@ interface Campaign {
   is_open: boolean;
   created_at: string;
   sample_video_url: string | null;
-  product_photo: string | null; // Add product_photo field
+  product_photo: string | null;
+  // Add new fields
+  industry_category?: string;
+  primary_promotion_objectives?: string[] | string;
+  ad_placement?: string;
+  campaign_execution_mode?: string;
+  creator_profile_preferences_gender?: string[] | string;
+  creator_profile_preference_ethnicity?: string[] | string;
+  creator_profile_preference_content_niche?: string[] | string;
+  preferred_creator_location?: string[] | string;
+  language_requirement_for_creators?: string;
+  creator_tier_requirement?: string[] | string;
+  send_to_creator?: string;
+  approved_by_brand?: string;
+  kpi_reference_target?: string;
+  prohibited_content_warnings?: string;
+  posting_requirements?: string;
 }
 
 export default function CampaignDetail() {
@@ -224,6 +240,25 @@ export default function CampaignDetail() {
 
   // Check if user can apply
   const canApply = status === 'authenticated' && session?.user?.role === 'CREATOR';
+
+  // Helper function to format array fields
+  const formatArrayField = (field: string[] | string | undefined): string[] => {
+    if (!field) return [];
+    if (typeof field === 'string') {
+      try {
+        const parsed = JSON.parse(field);
+        return Array.isArray(parsed) ? parsed : [field];
+      } catch {
+        return [field];
+      }
+    }
+    return Array.isArray(field) ? field : [];
+  };
+
+  // Helper function to format text fields
+  const formatTextField = (field: string | undefined): string => {
+    return field || 'Not specified';
+  };
 
   // Loading state
   if (isLoading) {
@@ -437,6 +472,196 @@ export default function CampaignDetail() {
                   <li className="text-gray-600">No specific requirements listed.</li>
                 )}
               </ul>
+            </div>
+
+            {/* Campaign Details Section */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <h2 className="text-xl font-bold mb-4">Campaign Details</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Industry Category */}
+                {campaign.industry_category && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-2">Industry Category</h3>
+                    <p className="text-gray-600">{formatTextField(campaign.industry_category)}</p>
+                  </div>
+                )}
+
+                {/* Campaign Execution Mode */}
+                {campaign.campaign_execution_mode && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-2">Execution Mode</h3>
+                    <p className="text-gray-600 capitalize">{formatTextField(campaign.campaign_execution_mode)}</p>
+                  </div>
+                )}
+
+                {/* Language Requirements */}
+                {campaign.language_requirement_for_creators && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-2">Language Requirement</h3>
+                    <p className="text-gray-600 capitalize">{formatTextField(campaign.language_requirement_for_creators)}</p>
+                  </div>
+                )}
+
+                {/* Ad Placement */}
+                {campaign.ad_placement && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-2">Ad Placement</h3>
+                    <p className="text-gray-600 capitalize">{formatTextField(campaign.ad_placement)}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Promotion Objectives */}
+              {campaign.primary_promotion_objectives && (
+                <div className="mt-6">
+                  <h3 className="font-medium text-gray-900 mb-2">Primary Promotion Objectives</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {formatArrayField(campaign.primary_promotion_objectives).map((objective, index) => (
+                      <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                        {objective}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* KPI Reference Target */}
+              {campaign.kpi_reference_target && (
+                <div className="mt-6">
+                  <h3 className="font-medium text-gray-900 mb-2">KPI Reference Target</h3>
+                  <p className="text-gray-600">{formatTextField(campaign.kpi_reference_target)}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Creator Preferences Section */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <h2 className="text-xl font-bold mb-4">Creator Preferences</h2>
+              
+              {/* Creator Tier Requirements */}
+              {campaign.creator_tier_requirement && (
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-900 mb-2">Creator Tier Requirements</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {formatArrayField(campaign.creator_tier_requirement).map((tier, index) => (
+                      <span key={index} className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+                        {tier}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Gender Preferences */}
+              {campaign.creator_profile_preferences_gender && (
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-900 mb-2">Gender Preferences</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {formatArrayField(campaign.creator_profile_preferences_gender).map((gender, index) => (
+                      <span key={index} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                        {gender}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Ethnicity Preferences */}
+              {campaign.creator_profile_preference_ethnicity && (
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-900 mb-2">Ethnicity Preferences</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {formatArrayField(campaign.creator_profile_preference_ethnicity).map((ethnicity, index) => (
+                      <span key={index} className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+                        {ethnicity}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Content Niche Preferences */}
+              {campaign.creator_profile_preference_content_niche && (
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-900 mb-2">Content Niche Preferences</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {formatArrayField(campaign.creator_profile_preference_content_niche).map((niche, index) => (
+                      <span key={index} className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                        {niche}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Location Preferences */}
+              {campaign.preferred_creator_location && (
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-900 mb-2">Preferred Creator Locations</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {formatArrayField(campaign.preferred_creator_location).map((location, index) => (
+                      <span key={index} className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
+                        {location}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Content Guidelines Section */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <h2 className="text-xl font-bold mb-4">Content Guidelines</h2>
+              
+              {/* Posting Requirements */}
+              {campaign.posting_requirements && (
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-900 mb-2">Posting Requirements</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="text-gray-700 whitespace-pre-wrap">{formatTextField(campaign.posting_requirements)}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Prohibited Content Warnings */}
+              {campaign.prohibited_content_warnings && (
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-900 mb-2">Prohibited Content Warnings</h3>
+                  <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded">
+                    <p className="text-red-700 whitespace-pre-wrap">{formatTextField(campaign.prohibited_content_warnings)}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Campaign Settings */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {campaign.send_to_creator && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-2">Send to Creator</h3>
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      campaign.send_to_creator === 'yes' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {campaign.send_to_creator === 'yes' ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                )}
+
+                {campaign.approved_by_brand && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-2">Approved by Brand</h3>
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      campaign.approved_by_brand === 'yes' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {campaign.approved_by_brand === 'yes' ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

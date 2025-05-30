@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, XCircle, Clock, Eye, ArrowRight, Calendar, DollarSign } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface CampaignClaim {
   id: string;
@@ -20,7 +21,24 @@ interface CampaignClaim {
   campaign_budget_range: string;
   campaign_budget_unit?: string;
   campaign_brief?: string;
-  campaign_sample_video_url?: string; // Add this missing property
+  campaign_sample_video_url?: string;
+  // Add new fields
+  industry_category?: string;
+  primary_promotion_objectives?: string[] | string;
+  ad_placement?: string;
+  campaign_execution_mode?: string;
+  creator_profile_preferences_gender?: string[] | string;
+  creator_profile_preference_ethnicity?: string[] | string;
+  creator_profile_preference_content_niche?: string[] | string;
+  preferred_creator_location?: string[] | string;
+  language_requirement_for_creators?: string;
+  creator_tier_requirement?: string[] | string;
+  send_to_creator?: string;
+  approved_by_brand?: string;
+  kpi_reference_target?: string;
+  prohibited_content_warnings?: string;
+  posting_requirements?: string;
+  product_photo?: string;
 }
 
 export default function Applications() {
@@ -129,6 +147,25 @@ export default function Applications() {
     }
   };
 
+  // Helper function to format array fields
+  const formatArrayField = (field: string[] | string | undefined): string[] => {
+    if (!field) return [];
+    if (typeof field === 'string') {
+      try {
+        const parsed = JSON.parse(field);
+        return Array.isArray(parsed) ? parsed : [field];
+      } catch {
+        return [field];
+      }
+    }
+    return Array.isArray(field) ? field : [];
+  };
+
+  // Helper function to format text fields
+  const formatTextField = (field: string | undefined): string => {
+    return field || 'Not specified';
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -156,7 +193,7 @@ export default function Applications() {
       {/* Application Details Modal */}
       {showDetails && selectedApplication && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
               <h2 className="text-xl font-bold text-gray-900">{selectedApplication.campaign_title}</h2>
               <button 
@@ -171,6 +208,60 @@ export default function Applications() {
               <p className="text-sm text-gray-600">by {selectedApplication.campaign_brand_name}</p>
               {renderStatusBadge(selectedApplication.status)}
             </div>
+            
+            {/* Product Photo Section */}
+            {selectedApplication.product_photo && (
+              <div className="border-t border-gray-200 pt-4 mb-4">
+                <h3 className="text-sm font-medium text-gray-900 mb-2">Product</h3>
+                <div className="w-full max-w-sm mx-auto relative">
+                  <Image
+                    src={selectedApplication.product_photo}
+                    alt={`Product for ${selectedApplication.campaign_title}`}
+                    width={300}
+                    height={200}
+                    className="w-full h-auto rounded-lg shadow-sm opacity-0 transition-opacity duration-300"
+                    onLoad={(e) => {
+                      e.currentTarget.classList.remove('opacity-0');
+                      e.currentTarget.classList.add('opacity-100');
+                      // Hide loading indicator
+                      const loader = e.currentTarget.parentElement?.querySelector('.loading-indicator') as HTMLElement;
+                      if (loader) loader.style.display = 'none';
+                    }}
+                    onError={(e) => {
+                      console.error(`Application product image failed to load: ${selectedApplication.product_photo}`);
+                      // Show fallback
+                      const fallback = e.currentTarget.parentElement?.querySelector('.image-fallback') as HTMLElement;
+                      if (fallback) {
+                        fallback.style.display = 'flex';
+                        e.currentTarget.style.display = 'none';
+                      }
+                    }}
+                    unoptimized={true}
+                  />
+                  
+                  {/* Loading indicator */}
+                  <div className="loading-indicator absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+                    <div className="text-center">
+                      <svg className="w-6 h-6 text-gray-400 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <p className="text-xs text-gray-500 mt-2">Loading image...</p>
+                    </div>
+                  </div>
+                  
+                  {/* Fallback for when image fails to load */}
+                  <div className="image-fallback hidden w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+                    <div className="text-center text-gray-500">
+                      <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm">Product image unavailable</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             
             <div className="border-t border-gray-200 pt-4 mb-4">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Campaign Details</h3>
@@ -195,7 +286,134 @@ export default function Applications() {
                     {new Date(selectedApplication.campaign_deadline).toLocaleDateString()}
                   </p>
                 </div>
+                
+                {/* Industry Category */}
+                {selectedApplication.industry_category && (
+                  <div>
+                    <p className="text-xs text-gray-500">Industry Category</p>
+                    <p className="text-sm text-gray-900">{formatTextField(selectedApplication.industry_category)}</p>
+                  </div>
+                )}
+
+                {/* Language Requirements */}
+                {selectedApplication.language_requirement_for_creators && (
+                  <div>
+                    <p className="text-xs text-gray-500">Language Requirement</p>
+                    <p className="text-sm text-gray-900 capitalize">{formatTextField(selectedApplication.language_requirement_for_creators)}</p>
+                  </div>
+                )}
               </div>
+
+              {/* Promotion Objectives */}
+              {selectedApplication.primary_promotion_objectives && (
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500 mb-2">Primary Promotion Objectives</p>
+                  <div className="flex flex-wrap gap-1">
+                    {formatArrayField(selectedApplication.primary_promotion_objectives).map((objective, index) => (
+                      <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                        {objective}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Creator Preferences */}
+              {(selectedApplication.creator_tier_requirement || 
+                selectedApplication.creator_profile_preferences_gender ||
+                selectedApplication.creator_profile_preference_ethnicity ||
+                selectedApplication.creator_profile_preference_content_niche ||
+                selectedApplication.preferred_creator_location) && (
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500 mb-2">Creator Preferences</p>
+                  <div className="space-y-2">
+                    {selectedApplication.creator_tier_requirement && (
+                      <div>
+                        <span className="text-xs font-medium text-gray-700">Tier: </span>
+                        <div className="inline-flex flex-wrap gap-1">
+                          {formatArrayField(selectedApplication.creator_tier_requirement).map((tier, index) => (
+                            <span key={index} className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
+                              {tier}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {selectedApplication.creator_profile_preferences_gender && (
+                      <div>
+                        <span className="text-xs font-medium text-gray-700">Gender: </span>
+                        <div className="inline-flex flex-wrap gap-1">
+                          {formatArrayField(selectedApplication.creator_profile_preferences_gender).map((gender, index) => (
+                            <span key={index} className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                              {gender}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {selectedApplication.creator_profile_preference_content_niche && (
+                      <div>
+                        <span className="text-xs font-medium text-gray-700">Content Niche: </span>
+                        <div className="inline-flex flex-wrap gap-1">
+                          {formatArrayField(selectedApplication.creator_profile_preference_content_niche).map((niche, index) => (
+                            <span key={index} className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs">
+                              {niche}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {selectedApplication.preferred_creator_location && (
+                      <div>
+                        <span className="text-xs font-medium text-gray-700">Location: </span>
+                        <div className="inline-flex flex-wrap gap-1">
+                          {formatArrayField(selectedApplication.preferred_creator_location).map((location, index) => (
+                            <span key={index} className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">
+                              {location}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* KPI Reference Target */}
+              {selectedApplication.kpi_reference_target && (
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500">KPI Reference Target</p>
+                  <p className="text-sm text-gray-900">{formatTextField(selectedApplication.kpi_reference_target)}</p>
+                </div>
+              )}
+
+              {/* Content Guidelines */}
+              {(selectedApplication.posting_requirements || selectedApplication.prohibited_content_warnings) && (
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500 mb-2">Content Guidelines</p>
+                  
+                  {selectedApplication.posting_requirements && (
+                    <div className="mb-3">
+                      <p className="text-xs font-medium text-gray-700 mb-1">Posting Requirements:</p>
+                      <div className="bg-gray-50 p-3 rounded text-sm text-gray-900">
+                        {formatTextField(selectedApplication.posting_requirements)}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedApplication.prohibited_content_warnings && (
+                    <div>
+                      <p className="text-xs font-medium text-gray-700 mb-1">Prohibited Content:</p>
+                      <div className="bg-red-50 border-l-4 border-red-400 p-3 rounded text-sm text-red-700">
+                        {formatTextField(selectedApplication.prohibited_content_warnings)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               
               {selectedApplication.campaign_sample_video_url && (
                 <div className="mb-4">
