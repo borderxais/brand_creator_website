@@ -25,7 +25,12 @@ app = FastAPI(title="Campaign API")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For production, specify your frontend URL
+    allow_origins=[
+        "https://borderx.net",
+        "https://www.borderx.net", 
+        "http://localhost:3000",  # For local development
+        "http://127.0.0.1:3000"   # Alternative localhost
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -1269,4 +1274,60 @@ async def upload_file(
     except Exception as e:
         logger.error(f"Unexpected error uploading file: {str(e)}")
         raise HTTPException(500, f"Upload failed: {str(e)}")
+
+# Add import for contact app - fix the import path conflict
+try:
+    # Save the current module reference to avoid conflicts
+    current_app = app
+    
+    # Try to import the contact app using absolute path
+    import sys
+    import importlib.util
+    
+    # Get the contact app file path
+    contact_app_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'contact', 'app.py')
+    logger.info(f"Looking for contact app at: {contact_app_path}")
+    
+    if os.path.exists(contact_app_path):
+        # Load the module from the file path
+        spec = importlib.util.spec_from_file_location("contact_app_module", contact_app_path)
+        contact_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(contact_module)
+        
+        # Get the contact app instance
+        contact_app = contact_module.contact_app
+        logger.info("Successfully imported contact app from file path")
+    else:
+        raise ImportError(f"Contact app file not found at {contact_app_path}")
+    
+except ImportError as e:
+    logger.warning(f"Could not import contact app: {e}")
+    
+    # Create a minimal contact app as fallback
+    from fastapi import FastAPI
+    contact_app = FastAPI(title="Contact API Fallback")
+    
+    @contact_app.get("/health")
+    async def contact_fallback_health():
+        return {"status": "fallback", "message": "Contact app not available"}
+    
+    @contact_app.post("/submit")
+    async def contact_fallback_submit():
+        return {"success": False, "message": "Contact API not available"}
+
+# Mount the contact API under /contact
+app.mount("/contact", contact_app)
+
+# Add a redirect endpoint for easier access
+@app.get("/contact/")
+async def contact_redirect():
+    """Redirect to contact API documentation."""
+    return {
+        "message": "Contact API mounted at /contact/",
+        "endpoints": {
+            "submit": "/contact/submit",
+            "health": "/contact/health", 
+            "schema": "/contact/schema"
+        }
+    }
 
