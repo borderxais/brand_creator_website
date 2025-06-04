@@ -1281,7 +1281,6 @@ try:
     current_app = app
     
     # Try to import the contact app using absolute path
-    import sys
     import importlib.util
     
     # Get the contact app file path
