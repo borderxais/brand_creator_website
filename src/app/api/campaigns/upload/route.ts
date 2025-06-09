@@ -19,12 +19,30 @@ export async function POST(request: NextRequest) {
       return `${key}: ${String(value)}`;
     }));
     
+    // Validate required fields for upload
+    const file = formData.get('file') as File;
+    const brandId = formData.get('brand_id') as string;
+    const campaignId = formData.get('campaign_id') as string;
+    
+    if (!file || !brandId || !campaignId) {
+      return NextResponse.json(
+        { error: 'Missing required fields: file, brand_id, or campaign_id' },
+        { status: 400 }
+      );
+    }
+    
     // Forward to the consolidated campaigns API
     const apiUrl = `${process.env.CAMPAIGNS_API_URL || 'http://localhost:5000'}/upload`;
     
+    // Create new FormData for the Python API with proper field mapping
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+    uploadFormData.append('brand_id', brandId);
+    uploadFormData.append('campaign_id', campaignId);
+    
     const response = await fetch(apiUrl, {
       method: 'POST',
-      body: formData,
+      body: uploadFormData,
     });
 
     if (!response.ok) {
@@ -37,6 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await response.json();
+    console.log('Upload successful:', result);
     return NextResponse.json(result);
 
   } catch (error) {

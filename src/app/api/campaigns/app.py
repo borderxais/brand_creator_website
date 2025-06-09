@@ -123,10 +123,19 @@ class Campaign(BaseModel):
     approved_by_brand: Optional[str] = "yes"
     kpi_reference_target: Optional[str] = None
     prohibited_content_warnings: Optional[str] = None
-    posting_requirements: Optional[str] = None  # Add this new field
-    product_photo: Optional[str] = None  # This should match your database column name
+    posting_requirements: Optional[str] = None
+    product_photo: Optional[str] = None
+    # New frontend fields
+    script_required: Optional[str] = "no"
+    product_name: Optional[str] = None
+    product_highlight: Optional[str] = None
+    product_price: Optional[str] = None
+    product_sold_number: Optional[str] = None
+    paid_promotion_type: Optional[str] = "commission_based"
+    video_buyout_budget_range: Optional[str] = None
+    base_fee_budget_range: Optional[str] = None
 
-# Model for campaign creation - update with correct field name
+# Model for campaign creation - update with new fields
 class CampaignCreate(BaseModel):
     brand_id: str
     title: str
@@ -155,8 +164,17 @@ class CampaignCreate(BaseModel):
     approved_by_brand: Optional[str] = "yes"
     kpi_reference_target: Optional[str] = None
     prohibited_content_warnings: Optional[str] = None
-    posting_requirements: Optional[str] = None  # Add this new field
-    product_photo: Optional[str] = None  # This should match your database column name
+    posting_requirements: Optional[str] = None
+    product_photo: Optional[str] = None
+    # New frontend fields
+    script_required: Optional[str] = "no"
+    product_name: Optional[str] = None
+    product_highlight: Optional[str] = None
+    product_price: Optional[str] = None
+    product_sold_number: Optional[str] = None
+    paid_promotion_type: Optional[str] = "commission_based"
+    video_buyout_budget_range: Optional[str] = None
+    base_fee_budget_range: Optional[str] = None
 
 # Update the model for campaign claims
 class CampaignClaimCreate(BaseModel):
@@ -185,7 +203,7 @@ async def check_table_exists(supabase_client: Client, table_name: str) -> bool:
         logger.error(f"Error checking if table '{table_name}' exists: {str(e)}")
         return False
 
-# Update the SQL for table creation to match your actual column name
+# Update the SQL for table creation to include new fields
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS public.campaigns (
   id             uuid primary key default gen_random_uuid(),
@@ -202,7 +220,7 @@ CREATE TABLE IF NOT EXISTS public.campaigns (
   is_open        boolean       default true,
   created_at     timestamptz   default now(),
   sample_video_url text,
-  -- New fields
+  -- Existing new fields
   industry_category text,
   primary_promotion_objectives text,
   ad_placement text default 'disable',
@@ -218,7 +236,16 @@ CREATE TABLE IF NOT EXISTS public.campaigns (
   kpi_reference_target text,
   prohibited_content_warnings text,
   posting_requirements text,
-  product_photo text  -- This matches your database column name
+  product_photo text,
+  -- New frontend fields
+  script_required text default 'no',
+  product_name text,
+  product_highlight text,
+  product_price text,
+  product_sold_number text,
+  paid_promotion_type text default 'commission_based',
+  video_buyout_budget_range text,
+  base_fee_budget_range text
 );
 
 -- Grant permissions to service role
@@ -561,10 +588,9 @@ async def get_creator_campaign_claims(
         actual_creator_id = creator_profile.data[0]['id']
         logger.info(f"Found actual creator ID: {actual_creator_id} for userId: {creator_id}")
         
-        # Skip RPC and use manual query directly since we're having UUID format issues
+        # Use direct query instead of RPC to avoid UUID format issues
         try:
             logger.info(f"Using direct query for creator claims with ID: {actual_creator_id}")
-            # Use direct query instead of RPC to avoid UUID format issues
             claims_response = supabase.table('campaignclaims')\
                 .select('*')\
                 .eq('creator_id', actual_creator_id)\
@@ -576,10 +602,10 @@ async def get_creator_campaign_claims(
                 logger.info(f"No campaign claims found for creator {creator_id}")
                 return []
             
-            # Process and format the results with campaign details
+            # Process and format the results with campaign details including new fields
             result = []
             for claim in claims_response.data:
-                # Query campaigns table with all the new fields
+                # Query campaigns table with all fields including new ones
                 campaign_response = supabase.table('campaigns')\
                     .select('''
                         *,
@@ -590,7 +616,9 @@ async def get_creator_campaign_claims(
                         preferred_creator_location, language_requirement_for_creators,
                         creator_tier_requirement, send_to_creator, approved_by_brand,
                         kpi_reference_target, prohibited_content_warnings, posting_requirements,
-                        product_photo
+                        product_photo, script_required, product_name, product_highlight,
+                        product_price, product_sold_number, paid_promotion_type,
+                        video_buyout_budget_range, base_fee_budget_range
                     ''')\
                     .eq('id', claim.get('campaign_id'))\
                     .execute()
@@ -616,7 +644,7 @@ async def get_creator_campaign_claims(
                     "campaign_budget_unit": campaign_data.get('budget_unit', 'total'),
                     "campaign_brief": campaign_data.get('brief'),
                     "campaign_sample_video_url": campaign_data.get('sample_video_url'),
-                    # New campaign fields
+                    # Existing campaign fields
                     "industry_category": campaign_data.get('industry_category'),
                     "primary_promotion_objectives": campaign_data.get('primary_promotion_objectives'),
                     "ad_placement": campaign_data.get('ad_placement'),
@@ -632,12 +660,21 @@ async def get_creator_campaign_claims(
                     "kpi_reference_target": campaign_data.get('kpi_reference_target'),
                     "prohibited_content_warnings": campaign_data.get('prohibited_content_warnings'),
                     "posting_requirements": campaign_data.get('posting_requirements'),
-                    "product_photo": campaign_data.get('product_photo')
+                    "product_photo": campaign_data.get('product_photo'),
+                    # New frontend fields
+                    "script_required": campaign_data.get('script_required'),
+                    "product_name": campaign_data.get('product_name'),
+                    "product_highlight": campaign_data.get('product_highlight'),
+                    "product_price": campaign_data.get('product_price'),
+                    "product_sold_number": campaign_data.get('product_sold_number'),
+                    "paid_promotion_type": campaign_data.get('paid_promotion_type'),
+                    "video_buyout_budget_range": campaign_data.get('video_buyout_budget_range'),
+                    "base_fee_budget_range": campaign_data.get('base_fee_budget_range')
                 }
                 
                 result.append(result_item)
                 
-                # Try to get the brand name if brand_id exists - updated field to companyName
+                # Try to get the brand name if brand_id exists
                 if campaign_data.get('brand_id'):
                     try:
                         brand_response = supabase.table('BrandProfile').select('companyName').eq('id', campaign_data['brand_id']).execute()
@@ -975,7 +1012,7 @@ async def add_campaign(
         campaign_data = {k: v for k, v in campaign_data.items() if v is not None and v != ''}
         
         logger.info(f"Processed campaign data for database: {campaign_data}")
-        logger.info(f"Product photo value: {campaign_data.get('product_photo', 'NOT SET')}")
+        logger.info(f"New fields - script_required: {campaign_data.get('script_required')}, product_name: {campaign_data.get('product_name')}, paid_promotion_type: {campaign_data.get('paid_promotion_type')}")
         
         try:
             # Insert the campaign into the database
@@ -985,17 +1022,20 @@ async def add_campaign(
             if response.data:
                 campaign_id = response.data[0]['id']
                 
-                # Verify the product_photo was saved
-                verification_response = supabase.table("campaigns").select("product_photo").eq("id", campaign_id).execute()
+                # Verify the new fields were saved
+                verification_response = supabase.table("campaigns").select(
+                    "script_required, product_name, product_highlight, product_price, product_sold_number, paid_promotion_type, video_buyout_budget_range, base_fee_budget_range"
+                ).eq("id", campaign_id).execute()
+                
                 if verification_response.data:
-                    saved_photo_url = verification_response.data[0].get('product_photo')
-                    logger.info(f"Verification - product_photo saved as: {saved_photo_url}")
+                    saved_data = verification_response.data[0]
+                    logger.info(f"Verification - new fields saved: {saved_data}")
                 
                 return {
                     "success": True,
                     "campaign_id": campaign_id,
                     "message": "Campaign created successfully",
-                    "product_photo_saved": saved_photo_url if verification_response.data else None
+                    "saved_fields": saved_data if verification_response.data else None
                 }
             else:
                 raise HTTPException(500, "Failed to create campaign - no data returned")

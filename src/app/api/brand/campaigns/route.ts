@@ -110,9 +110,8 @@ export async function POST(request: Request) {
     if (contentType.includes('multipart/form-data')) {
       // Handle FormData submission with file upload
       const formData = await request.formData();
-      const productPhoto = formData.get('product_photo') as File | null;
       
-      // Extract and prepare campaign data
+      // Extract and prepare campaign data with all new fields
       const campaignData: any = {
         brand_id: session.user.id,
         title: formData.get('title') as string,
@@ -126,7 +125,7 @@ export async function POST(request: Request) {
         max_creators: parseInt(formData.get('max_creators') as string) || 10,
         is_open: formData.get('is_open') === 'true',
         sample_video_url: formData.get('sample_video_url') as string,
-        // New fields
+        // Existing new fields
         industry_category: formData.get('industry_category') as string,
         ad_placement: formData.get('ad_placement') as string,
         campaign_execution_mode: formData.get('campaign_execution_mode') as string,
@@ -136,34 +135,55 @@ export async function POST(request: Request) {
         kpi_reference_target: formData.get('kpi_reference_target') as string,
         prohibited_content_warnings: formData.get('prohibited_content_warnings') as string,
         posting_requirements: formData.get('posting_requirements') as string,
-        // Map both possible field names to the database column name
-        product_photo: formData.get('product_photo') as string || formData.get('product_photo_url') as string,
+        product_photo: formData.get('product_photo') as string,
+        // New frontend fields
+        script_required: formData.get('script_required') as string,
+        product_name: formData.get('product_name') as string,
+        product_highlight: formData.get('product_highlight') as string,
+        product_price: formData.get('product_price') as string,
+        product_sold_number: formData.get('product_sold_number') as string,
+        paid_promotion_type: formData.get('paid_promotion_type') as string,
+        video_buyout_budget_range: formData.get('video_buyout_budget_range') as string,
+        base_fee_budget_range: formData.get('base_fee_budget_range') as string,
       };
       
-      // Handle file upload if there is a product photo
-      if (productPhoto) {
-        try {
-          // Create a unique filename
-          const fileName = `${user.brand.id}_${Date.now()}_${productPhoto.name}`;
-          
-          // Upload to storage service (in this example we're mocking it)
-          // In a real implementation, you would upload to S3, Supabase Storage, etc.
-          // For now, we'll just simulate it by setting a mock URL
-          const photoUrl = `https://storage.example.com/product-photos/${fileName}`;
-          
-          // Add the photo URL to the campaign data
-          campaignData.product_photo_url = photoUrl;
-        } catch (uploadError) {
-          console.error('Error uploading product photo:', uploadError);
-          return NextResponse.json({ error: 'Failed to upload product photo' }, { status: 500 });
+      // Handle array fields that come as JSON strings
+      const arrayFields = [
+        'primary_promotion_objectives',
+        'creator_profile_preferences_gender',
+        'creator_profile_preference_ethnicity',
+        'creator_profile_preference_content_niche',
+        'preferred_creator_location',
+        'creator_tier_requirement'
+      ];
+      
+      arrayFields.forEach(field => {
+        const value = formData.get(field) as string;
+        if (value) {
+          try {
+            campaignData[field] = JSON.parse(value);
+          } catch (e) {
+            // If it's not valid JSON, treat as string
+            campaignData[field] = value;
+          }
         }
-      }
+      });
+      
+      console.log('Campaign data with new fields:', {
+        script_required: campaignData.script_required,
+        product_name: campaignData.product_name,
+        product_highlight: campaignData.product_highlight,
+        product_price: campaignData.product_price,
+        product_sold_number: campaignData.product_sold_number,
+        paid_promotion_type: campaignData.paid_promotion_type,
+        video_buyout_budget_range: campaignData.video_buyout_budget_range,
+        base_fee_budget_range: campaignData.base_fee_budget_range
+      });
       
       // Forward the request to the Python API
       const pythonApiUrl = `${PYTHON_API_URL}/brand-campaigns/${user.brand.id}/add_campaign`;
       
       console.log('Creating campaign via Python API:', pythonApiUrl);
-      console.log('Campaign data:', campaignData);
       
       const response = await fetch(pythonApiUrl, {
         method: 'POST',
@@ -175,34 +195,55 @@ export async function POST(request: Request) {
 
       if (!response.ok) {
         console.error(`Python API returned status ${response.status} for POST`);
-        return NextResponse.json({ error: 'Failed to create campaign' }, { status: response.status });
+        const errorData = await response.json().catch(() => ({}));
+        return NextResponse.json({ 
+          error: 'Failed to create campaign', 
+          details: errorData 
+        }, { status: response.status });
       }
 
       const campaign = await response.json();
+      console.log('Campaign created successfully:', campaign);
       return NextResponse.json(campaign);
     } else {
-      // Handle JSON submission (original implementation)
+      // Handle JSON submission (original implementation) - also update with new fields
       const data = await request.json();
+      
+      // Ensure all new fields are included
+      const campaignData = {
+        ...data,
+        brand_id: user.brand.id,
+        // Ensure new fields have defaults if not provided
+        script_required: data.script_required || 'no',
+        product_name: data.product_name || '',
+        product_highlight: data.product_highlight || '',
+        product_price: data.product_price || '',
+        product_sold_number: data.product_sold_number || '',
+        paid_promotion_type: data.paid_promotion_type || 'commission_based',
+        video_buyout_budget_range: data.video_buyout_budget_range || '',
+        base_fee_budget_range: data.base_fee_budget_range || '',
+      };
 
       // Forward the request to the Python API
       const pythonApiUrl = `${PYTHON_API_URL}/brand-campaigns/${user.brand.id}/add_campaign`;
       
-      console.log('Creating campaign via Python API:', pythonApiUrl);
+      console.log('Creating campaign via Python API (JSON):', pythonApiUrl);
       
       const response = await fetch(pythonApiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...data,
-          brand_id: user.brand.id
-        }),
+        body: JSON.stringify(campaignData),
       });
 
       if (!response.ok) {
         console.error(`Python API returned status ${response.status} for POST`);
-        return NextResponse.json({ error: 'Failed to create campaign' }, { status: response.status });
+        const errorData = await response.json().catch(() => ({}));
+        return NextResponse.json({ 
+          error: 'Failed to create campaign',
+          details: errorData 
+        }, { status: response.status });
       }
 
       const campaign = await response.json();

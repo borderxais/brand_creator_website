@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     // Check if creator has already applied to this campaign
     const apiUrl = process.env.CAMPAIGNS_API_URL || 'http://localhost:5000';
     
-    // Just pass the user ID directly without the check since we'll handle it in the create endpoint
+    // Create new campaign claim with user ID
     console.log("Creating new campaign claim with user ID:", userId);
     
     const createResponse = await fetch(`${apiUrl}/campaign-claims`, {

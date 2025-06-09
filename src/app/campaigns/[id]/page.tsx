@@ -52,6 +52,15 @@ interface Campaign {
   kpi_reference_target?: string;
   prohibited_content_warnings?: string;
   posting_requirements?: string;
+  // New frontend fields
+  script_required?: string;
+  product_name?: string;
+  product_highlight?: string;
+  product_price?: string;
+  product_sold_number?: string;
+  paid_promotion_type?: string;
+  video_buyout_budget_range?: string;
+  base_fee_budget_range?: string;
 }
 
 export default function CampaignDetail() {
@@ -474,11 +483,185 @@ export default function CampaignDetail() {
               </ul>
             </div>
 
-            {/* Campaign Details Section */}
+            {/* Product Information Section - Enhanced */}
+            {(campaign.product_photo || campaign.product_name || campaign.product_highlight || campaign.product_price || campaign.product_sold_number) && (
+              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h2 className="text-xl font-bold mb-4">Product Information</h2>
+                
+                {/* Product Photo */}
+                {campaign.product_photo && (
+                  <div className="w-full max-w-lg mx-auto relative mb-6">
+                    <Image
+                      src={campaign.product_photo}
+                      alt={`Product for ${campaign.title}`}
+                      width={500}
+                      height={400}
+                      className="w-full h-auto rounded-lg shadow-sm opacity-0 transition-opacity duration-300"
+                      onLoad={(e) => {
+                        console.log(`Campaign detail image loaded: ${campaign.product_photo}`);
+                        e.currentTarget.classList.remove('opacity-0');
+                        e.currentTarget.classList.add('opacity-100');
+                        // Hide loading indicator
+                        const loader = e.currentTarget.parentElement?.querySelector('.loading-indicator') as HTMLElement;
+                        if (loader) loader.style.display = 'none';
+                      }}
+                      onError={(e) => {
+                        console.error(`Campaign detail image failed to load: ${campaign.product_photo}`);
+                        
+                        // Show fallback instead of hiding
+                        const fallback = e.currentTarget.parentElement?.querySelector('.image-fallback') as HTMLElement;
+                        if (fallback) {
+                          fallback.style.display = 'flex';
+                          e.currentTarget.style.display = 'none';
+                        }
+                      }}
+                      unoptimized={true} // Disable Next.js optimization for external URLs
+                    />
+                    
+                    {/* Loading indicator */}
+                    <div className="loading-indicator absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+                      <div className="text-center">
+                        <svg className="w-8 h-8 text-gray-400 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p className="text-xs text-gray-500 mt-2">Loading image...</p>
+                      </div>
+                    </div>
+                    
+                    {/* Fallback for when image fails to load */}
+                    <div className="image-fallback hidden w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+                      <div className="text-center text-gray-500">
+                        <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p className="text-sm">Product image unavailable</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Product Details Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {campaign.product_name && (
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">Product Name</h3>
+                      <p className="text-gray-600">{formatTextField(campaign.product_name)}</p>
+                    </div>
+                  )}
+
+                  {campaign.product_highlight && (
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">Product Highlight</h3>
+                      <p className="text-gray-600">{formatTextField(campaign.product_highlight)}</p>
+                    </div>
+                  )}
+
+                  {campaign.product_price && (
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">Product Price</h3>
+                      <p className="text-gray-600 font-semibold">{formatTextField(campaign.product_price)}</p>
+                    </div>
+                  )}
+
+                  {campaign.product_sold_number && (
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">Units Sold</h3>
+                      <p className="text-gray-600">{formatTextField(campaign.product_sold_number)}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Enhanced Compensation Structure Section */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <h2 className="text-xl font-bold mb-4">Compensation Structure</h2>
+              
+              {/* Paid Promotion Type */}
+              {campaign.paid_promotion_type && (
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-900 mb-2">Paid Promotion Type</h3>
+                  <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium capitalize">
+                    {campaign.paid_promotion_type.replace('_', ' ')}
+                  </span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Budget Range */}
+                <div className="flex items-center">
+                  <DollarSign className="h-5 w-5 text-purple-500 mr-3" />
+                  <div>
+                    <h3 className="font-medium text-gray-900">Budget Range</h3>
+                    <p className="text-gray-600">
+                      {campaign.budget_range}
+                      {campaign.budget_unit && (
+                        <span className="text-gray-500 text-sm ml-1">
+                          ({campaign.budget_unit === 'total' ? 'Total Budget' : 
+                            campaign.budget_unit === 'per_person' ? 'Per Creator' : 
+                            campaign.budget_unit === 'per_video' ? 'Per Video' : 
+                            campaign.budget_unit})
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Commission */}
+                {campaign.commission && (
+                  <div className="flex items-center">
+                    <Award className="h-5 w-5 text-purple-500 mr-3" />
+                    <div>
+                      <h3 className="font-medium text-gray-900">Commission</h3>
+                      <p className="text-gray-600">{campaign.commission}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Video Buyout Budget Range */}
+                {campaign.video_buyout_budget_range && (
+                  <div className="flex items-center">
+                    <Video className="h-5 w-5 text-purple-500 mr-3" />
+                    <div>
+                      <h3 className="font-medium text-gray-900">Video Buyout Budget</h3>
+                      <p className="text-gray-600">{formatTextField(campaign.video_buyout_budget_range)}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Base Fee Budget Range */}
+                {campaign.base_fee_budget_range && (
+                  <div className="flex items-center">
+                    <DollarSign className="h-5 w-5 text-purple-500 mr-3" />
+                    <div>
+                      <h3 className="font-medium text-gray-900">Base Fee Budget</h3>
+                      <p className="text-gray-600">{formatTextField(campaign.base_fee_budget_range)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Enhanced Campaign Details Section */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
               <h2 className="text-xl font-bold mb-4">Campaign Details</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Script Required */}
+                {campaign.script_required && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-2">Script Required</h3>
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      campaign.script_required === 'yes' 
+                        ? 'bg-orange-100 text-orange-800' 
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {campaign.script_required === 'yes' ? 'Yes - Script approval required' : 'No - Direct content creation allowed'}
+                    </span>
+                  </div>
+                )}
+
                 {/* Industry Category */}
                 {campaign.industry_category && (
                   <div>
@@ -610,7 +793,7 @@ export default function CampaignDetail() {
               )}
             </div>
 
-            {/* Content Guidelines Section */}
+            {/* Enhanced Content Guidelines Section */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
               <h2 className="text-xl font-bold mb-4">Content Guidelines</h2>
               
@@ -635,10 +818,10 @@ export default function CampaignDetail() {
               )}
 
               {/* Campaign Settings */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {campaign.send_to_creator && (
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-2">Send to Creator</h3>
+                    <h3 className="font-medium text-gray-900 mb-2">Send Products to Creator</h3>
                     <span className={`px-3 py-1 rounded-full text-sm ${
                       campaign.send_to_creator === 'yes' 
                         ? 'bg-green-100 text-green-800' 
@@ -651,13 +834,26 @@ export default function CampaignDetail() {
 
                 {campaign.approved_by_brand && (
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-2">Approved by Brand</h3>
+                    <h3 className="font-medium text-gray-900 mb-2">Brand Approval Required</h3>
                     <span className={`px-3 py-1 rounded-full text-sm ${
                       campaign.approved_by_brand === 'yes' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-orange-100 text-orange-800' 
+                        : 'bg-green-100 text-green-800'
                     }`}>
                       {campaign.approved_by_brand === 'yes' ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                )}
+
+                {campaign.script_required && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-2">Script Submission</h3>
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      campaign.script_required === 'yes' 
+                        ? 'bg-orange-100 text-orange-800' 
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {campaign.script_required === 'yes' ? 'Required' : 'Optional'}
                     </span>
                   </div>
                 )}
@@ -665,7 +861,7 @@ export default function CampaignDetail() {
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Enhanced Sidebar */}
           <div className="lg:col-span-1">
             {/* Application Status Card */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -692,24 +888,54 @@ export default function CampaignDetail() {
               
               <div className="mb-6">
                 <h3 className="font-medium text-gray-900 mb-2">Compensation</h3>
-                <div className="flex items-center text-gray-600 mb-2">
-                  <DollarSign className="h-5 w-5 mr-2 text-purple-500" />
-                  <span>
-                    {campaign.budget_range}
-                    {campaign.budget_unit && (
-                      <span className="text-gray-500 text-sm ml-1">
-                        ({campaign.budget_unit === 'total' ? 'Total Budget' : 
-                          campaign.budget_unit === 'per_person' ? 'Per Creator' : 
-                          campaign.budget_unit === 'per_video' ? 'Per Video' : 
-                          campaign.budget_unit})
-                      </span>
+                
+                {/* Enhanced compensation display */}
+                {campaign.paid_promotion_type === 'video_buyout' && campaign.video_buyout_budget_range && (
+                  <div className="flex items-center text-gray-600 mb-2">
+                    <Video className="h-5 w-5 mr-2 text-purple-500" />
+                    <span>{campaign.video_buyout_budget_range}</span>
+                  </div>
+                )}
+                
+                {campaign.paid_promotion_type === 'hybrid' && (
+                  <>
+                    {campaign.base_fee_budget_range && (
+                      <div className="flex items-center text-gray-600 mb-2">
+                        <DollarSign className="h-5 w-5 mr-2 text-purple-500" />
+                        <span>Base Fee: {campaign.base_fee_budget_range}</span>
+                      </div>
                     )}
-                  </span>
-                </div>
-                {campaign.commission && (
-                  <div className="flex items-center text-gray-600">
+                    {campaign.commission && (
+                      <div className="flex items-center text-gray-600 mb-2">
+                        <Award className="h-5 w-5 mr-2 text-purple-500" />
+                        <span>Commission: {campaign.commission}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+                
+                {campaign.paid_promotion_type === 'commission_based' && campaign.commission && (
+                  <div className="flex items-center text-gray-600 mb-2">
                     <Award className="h-5 w-5 mr-2 text-purple-500" />
                     <span>{campaign.commission}</span>
+                  </div>
+                )}
+                
+                {/* Fallback to original budget display */}
+                {campaign.budget_range && (
+                  <div className="flex items-center text-gray-600 mb-2">
+                    <DollarSign className="h-5 w-5 mr-2 text-purple-500" />
+                    <span>
+                      {campaign.budget_range}
+                      {campaign.budget_unit && (
+                        <span className="text-gray-500 text-sm ml-1">
+                          ({campaign.budget_unit === 'total' ? 'Total Budget' : 
+                            campaign.budget_unit === 'per_person' ? 'Per Creator' : 
+                            campaign.budget_unit === 'per_video' ? 'Per Video' : 
+                            campaign.budget_unit})
+                        </span>
+                      )}
+                    </span>
                   </div>
                 )}
               </div>
