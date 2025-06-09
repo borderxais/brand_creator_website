@@ -344,7 +344,7 @@ export default function NewCampaign() {
         <div className="flex items-center mb-6">
           <Link 
             href="/brandportal/campaigns"
-            className="flex items-center text-blue-600 hover:text-blue-800"
+            className="flex items-center text-purple-600 hover:text-purple-800"
           >
             <ArrowLeft className="w-4 h-4 mr-1" /> Back to Campaigns
           </Link>
@@ -364,7 +364,7 @@ export default function NewCampaign() {
             <button
               type="button"
               onClick={() => toggleSection('campaignInfo')}
-              className="w-full flex items-center justify-between text-xl font-semibold mb-4 pb-2 border-b hover:text-blue-600 transition-colors"
+              className="w-full flex items-center justify-between text-xl font-semibold mb-4 pb-2 border-b hover:text-purple-600 transition-colors"
             >
               <span>Campaign Information</span>
               <svg
@@ -389,7 +389,7 @@ export default function NewCampaign() {
                     name="title"
                     value={formData.title}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="e.g., Summer Fashion Collection Launch"
                     required
                   />
@@ -405,7 +405,7 @@ export default function NewCampaign() {
                     value={formData.brief}
                     onChange={handleInputChange}
                     rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Describe what this campaign is about and what you're looking for"
                   />
                 </div>
@@ -420,7 +420,7 @@ export default function NewCampaign() {
                     value={formData.requirements}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Specific requirements for creators"
                   />
                 </div>
@@ -434,7 +434,7 @@ export default function NewCampaign() {
                     name="industry_category"
                     value={formData.industry_category}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     required
                   >
                     <option value="">Select an industry</option>
@@ -453,7 +453,7 @@ export default function NewCampaign() {
                     name="platform"
                     value={formData.platform}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     <option value="">Select a platform</option>
                     {platforms.map((platform) => (
@@ -477,7 +477,7 @@ export default function NewCampaign() {
                           id={`objective-${objective}`}
                           checked={formData.primary_promotion_objectives.includes(objective)}
                           onChange={() => handleMultiSelectToggle('primary_promotion_objectives', objective)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                         />
                         <label htmlFor={`objective-${objective}`} className="ml-2 text-sm text-gray-700">
                           {objective}
@@ -501,7 +501,7 @@ export default function NewCampaign() {
                         value="disable"
                         checked={formData.ad_placement === 'disable'}
                         onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="ad-disable" className="ml-2 text-sm text-gray-700">
                         Disable (videos won't go through ad-review)
@@ -515,7 +515,7 @@ export default function NewCampaign() {
                         value="enable"
                         checked={formData.ad_placement === 'enable'}
                         onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="ad-enable" className="ml-2 text-sm text-gray-700">
                         Enable
@@ -538,7 +538,7 @@ export default function NewCampaign() {
                         value="direct"
                         checked={formData.campaign_execution_mode === 'direct'}
                         onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="mode-direct" className="ml-2 text-sm text-gray-700">
                         Direct Collaboration (one-to-one assignments)
@@ -552,7 +552,7 @@ export default function NewCampaign() {
                         value="open"
                         checked={formData.campaign_execution_mode === 'open'}
                         onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="mode-open" className="ml-2 text-sm text-gray-700">
                         Open Submission (commission pool, performance-based)
@@ -573,7 +573,7 @@ export default function NewCampaign() {
                       name="deadline"
                       value={formData.deadline}
                       onChange={handleInputChange}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
                 </div>
@@ -589,7 +589,7 @@ export default function NewCampaign() {
                     value={formData.max_creators}
                     onChange={handleInputChange}
                     min="1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
                 
@@ -602,7 +602,7 @@ export default function NewCampaign() {
                       name="is_open"
                       checked={formData.is_open}
                       onChange={handleCheckboxChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                     />
                     <label htmlFor="is_open" className="ml-2 block text-sm text-gray-700">
                       Open for Applications
@@ -620,7 +620,7 @@ export default function NewCampaign() {
                     name="sample_video_url"
                     value={formData.sample_video_url}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="https://example.com/video"
                     pattern="https://.*"
                     title="URL must start with https://"
@@ -644,7 +644,7 @@ export default function NewCampaign() {
                         value="yes"
                         checked={formData.script_required === 'yes'}
                         onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="script-yes" className="ml-2 text-sm text-gray-700">
                         Yes – Creators must submit their script for brand approval before filming
@@ -658,7 +658,7 @@ export default function NewCampaign() {
                         value="no"
                         checked={formData.script_required === 'no'}
                         onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="script-no" className="ml-2 text-sm text-gray-700">
                         No – Creators may film and submit content directly without script approval
@@ -681,7 +681,7 @@ export default function NewCampaign() {
                         value="yes"
                         checked={formData.send_to_creator === 'yes'}
                         onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="send-yes" className="ml-2 text-sm text-gray-700">
                         Yes
@@ -695,7 +695,7 @@ export default function NewCampaign() {
                         value="no"
                         checked={formData.send_to_creator === 'no'}
                         onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="send-no" className="ml-2 text-sm text-gray-700">
                         No
@@ -718,7 +718,7 @@ export default function NewCampaign() {
                         value="yes"
                         checked={formData.approved_by_brand === 'yes'}
                         onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="approve-yes" className="ml-2 text-sm text-gray-700">
                         Yes, first draft must be approved before posting
@@ -732,7 +732,7 @@ export default function NewCampaign() {
                         value="no"
                         checked={formData.approved_by_brand === 'no'}
                         onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="approve-no" className="ml-2 text-sm text-gray-700">
                         No, creators may publish directly
@@ -751,7 +751,7 @@ export default function NewCampaign() {
                     value={formData.kpi_reference_target}
                     onChange={handleInputChange}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Example: Each video must reach at least 50k views with a like-rate above 6%"
                   />
                 </div>
@@ -766,7 +766,7 @@ export default function NewCampaign() {
                     value={formData.prohibited_content_warnings}
                     onChange={handleInputChange}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Example: Avoid certain words, visuals, or tonal pitfalls, etc."
                   />
                 </div>
@@ -781,7 +781,7 @@ export default function NewCampaign() {
                     value={formData.posting_requirements}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="e.g., required topics, hashtags, links, @brand account mentions, etc."
                   />
                 </div>
@@ -794,7 +794,7 @@ export default function NewCampaign() {
             <button
               type="button"
               onClick={() => toggleSection('productInfo')}
-              className="w-full flex items-center justify-between text-xl font-semibold mb-4 pb-2 border-b hover:text-blue-600 transition-colors"
+              className="w-full flex items-center justify-between text-xl font-semibold mb-4 pb-2 border-b hover:text-purple-600 transition-colors"
             >
               <span>Product Information</span>
               <svg
@@ -817,7 +817,7 @@ export default function NewCampaign() {
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Upload a photo of the product being promoted
@@ -833,7 +833,7 @@ export default function NewCampaign() {
                     name="product_name"
                     value={formData.product_name}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Enter product name"
                   />
                 </div>
@@ -847,7 +847,7 @@ export default function NewCampaign() {
                     name="product_highlight"
                     value={formData.product_highlight}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Key selling point or feature"
                   />
                 </div>
@@ -861,7 +861,7 @@ export default function NewCampaign() {
                     name="product_price"
                     value={formData.product_price}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="e.g., $29.99"
                   />
                 </div>
@@ -875,7 +875,7 @@ export default function NewCampaign() {
                     name="product_sold_number"
                     value={formData.product_sold_number}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Number of units sold"
                   />
                 </div>
@@ -888,7 +888,7 @@ export default function NewCampaign() {
             <button
               type="button"
               onClick={() => toggleSection('budgetCreator')}
-              className="w-full flex items-center justify-between text-xl font-semibold mb-4 pb-2 border-b hover:text-blue-600 transition-colors"
+              className="w-full flex items-center justify-between text-xl font-semibold mb-4 pb-2 border-b hover:text-purple-600 transition-colors"
             >
               <span>Budget & Creator Preferences</span>
               <svg
@@ -917,7 +917,7 @@ export default function NewCampaign() {
                         value="video_buyout"
                         checked={formData.paid_promotion_type === 'video_buyout'}
                         onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="promo-video-buyout" className="ml-2 text-sm text-gray-700">
                         Video Buyout
@@ -931,7 +931,7 @@ export default function NewCampaign() {
                         value="hybrid"
                         checked={formData.paid_promotion_type === 'hybrid'}
                         onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="promo-hybrid" className="ml-2 text-sm text-gray-700">
                         Hybrid
@@ -945,7 +945,7 @@ export default function NewCampaign() {
                         value="commission_based"
                         checked={formData.paid_promotion_type === 'commission_based'}
                         onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="promo-commission" className="ml-2 text-sm text-gray-700">
                         Commission Based
@@ -965,7 +965,7 @@ export default function NewCampaign() {
                       name="video_buyout_budget_range"
                       value={formData.video_buyout_budget_range}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                       placeholder="e.g., $500-1,000 per video"
                     />
                   </div>
@@ -982,7 +982,7 @@ export default function NewCampaign() {
                         name="base_fee_budget_range"
                         value={formData.base_fee_budget_range}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                         placeholder="e.g., $200-400 base fee"
                       />
                     </div>
@@ -995,7 +995,7 @@ export default function NewCampaign() {
                         name="commission"
                         value={formData.commission}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                         placeholder="e.g., 15% per sale"
                       />
                     </div>
@@ -1012,7 +1012,7 @@ export default function NewCampaign() {
                       name="commission"
                       value={formData.commission}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                       placeholder="e.g., 15% per sale"
                     />
                   </div>
@@ -1030,14 +1030,14 @@ export default function NewCampaign() {
                         name="budget_range"
                         value={formData.budget_range}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                         placeholder="e.g., 1,000-2,000"
                       />
                       <select
                         name="budgetUnit"
                         value={formData.budgetUnit}
                         onChange={handleInputChange}
-                        className="w-28 px-2 py-2 border border-l-0 border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-28 px-2 py-2 border border-l-0 border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                       >
                         <option value="total">Total</option>
                         <option value="per_person">Per Person</option>
@@ -1059,7 +1059,7 @@ export default function NewCampaign() {
                         id="gender-none"
                         checked={formData.creator_profile_preferences_gender.includes('No preference')}
                         onChange={() => handleMultiSelectToggle('creator_profile_preferences_gender', 'No preference')}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                       />
                       <label htmlFor="gender-none" className="ml-2 text-sm text-gray-700">
                         No preference
@@ -1071,7 +1071,7 @@ export default function NewCampaign() {
                         id="gender-female"
                         checked={formData.creator_profile_preferences_gender.includes('Female')}
                         onChange={() => handleMultiSelectToggle('creator_profile_preferences_gender', 'Female')}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                       />
                       <label htmlFor="gender-female" className="ml-2 text-sm text-gray-700">
                         Female
@@ -1083,7 +1083,7 @@ export default function NewCampaign() {
                         id="gender-male"
                         checked={formData.creator_profile_preferences_gender.includes('Male')}
                         onChange={() => handleMultiSelectToggle('creator_profile_preferences_gender', 'Male')}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                       />
                       <label htmlFor="gender-male" className="ml-2 text-sm text-gray-700">
                         Male
@@ -1104,7 +1104,7 @@ export default function NewCampaign() {
                         id="ethnicity-none"
                         checked={formData.creator_profile_preference_ethnicity.includes('No preference')}
                         onChange={() => handleMultiSelectToggle('creator_profile_preference_ethnicity', 'No preference')}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                       />
                       <label htmlFor="ethnicity-none" className="ml-2 text-sm text-gray-700">
                         No preference
@@ -1117,7 +1117,7 @@ export default function NewCampaign() {
                           id={`ethnicity-${ethnicity}`}
                           checked={formData.creator_profile_preference_ethnicity.includes(ethnicity)}
                           onChange={() => handleMultiSelectToggle('creator_profile_preference_ethnicity', ethnicity)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                         />
                         <label htmlFor={`ethnicity-${ethnicity}`} className="ml-2 text-sm text-gray-700">
                           {ethnicity}
@@ -1139,7 +1139,7 @@ export default function NewCampaign() {
                         id="niche-none"
                         checked={formData.creator_profile_preference_content_niche.includes('No preference')}
                         onChange={() => handleMultiSelectToggle('creator_profile_preference_content_niche', 'No preference')}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                       />
                       <label htmlFor="niche-none" className="ml-2 text-sm text-gray-700">
                         No preference
@@ -1152,7 +1152,7 @@ export default function NewCampaign() {
                           id={`niche-${niche}`}
                           checked={formData.creator_profile_preference_content_niche.includes(niche)}
                           onChange={() => handleMultiSelectToggle('creator_profile_preference_content_niche', niche)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                         />
                         <label htmlFor={`niche-${niche}`} className="ml-2 text-sm text-gray-700">
                           {niche}
@@ -1175,7 +1175,7 @@ export default function NewCampaign() {
                           id={`location-${location}`}
                           checked={formData.preferred_creator_location.includes(location)}
                           onChange={() => handleMultiSelectToggle('preferred_creator_location', location)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                         />
                         <label htmlFor={`location-${location}`} className="ml-2 text-sm text-gray-700">
                           {location}
@@ -1194,7 +1194,7 @@ export default function NewCampaign() {
                     name="language_requirement_for_creators"
                     value={formData.language_requirement_for_creators}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     <option value="english">English</option>
                     <option value="spanish">Spanish</option>
@@ -1218,7 +1218,7 @@ export default function NewCampaign() {
                         name="follower_requirement"
                         value={formData.follower_requirement}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                       >
                         {followerRequirements.map(option => (
                           <option key={option.value} value={option.value}>
@@ -1237,7 +1237,7 @@ export default function NewCampaign() {
                         name="order_requirement"
                         value={formData.order_requirement}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                       >
                         {orderRequirements.map(option => (
                           <option key={option.value} value={option.value}>
@@ -1271,7 +1271,7 @@ export default function NewCampaign() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              className={`px-6 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-300 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               {isLoading ? 'Creating...' : 'Create Campaign'}
             </button>

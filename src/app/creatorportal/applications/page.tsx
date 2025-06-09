@@ -39,6 +39,15 @@ interface CampaignClaim {
   prohibited_content_warnings?: string;
   posting_requirements?: string;
   product_photo?: string;
+  // New frontend fields
+  script_required?: string;
+  product_name?: string;
+  product_highlight?: string;
+  product_price?: string;
+  product_sold_number?: string;
+  paid_promotion_type?: string;
+  video_buyout_budget_range?: string;
+  base_fee_budget_range?: string;
 }
 
 export default function Applications() {
@@ -209,63 +218,161 @@ export default function Applications() {
               {renderStatusBadge(selectedApplication.status)}
             </div>
             
-            {/* Product Photo Section */}
-            {selectedApplication.product_photo && (
+            {/* Enhanced Product Information Section */}
+            {(selectedApplication.product_photo || 
+              selectedApplication.product_name || 
+              selectedApplication.product_highlight || 
+              selectedApplication.product_price || 
+              selectedApplication.product_sold_number) && (
               <div className="border-t border-gray-200 pt-4 mb-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-2">Product</h3>
-                <div className="w-full max-w-sm mx-auto relative">
-                  <Image
-                    src={selectedApplication.product_photo}
-                    alt={`Product for ${selectedApplication.campaign_title}`}
-                    width={300}
-                    height={200}
-                    className="w-full h-auto rounded-lg shadow-sm opacity-0 transition-opacity duration-300"
-                    onLoad={(e) => {
-                      e.currentTarget.classList.remove('opacity-0');
-                      e.currentTarget.classList.add('opacity-100');
-                      // Hide loading indicator
-                      const loader = e.currentTarget.parentElement?.querySelector('.loading-indicator') as HTMLElement;
-                      if (loader) loader.style.display = 'none';
-                    }}
-                    onError={(e) => {
-                      console.error(`Application product image failed to load: ${selectedApplication.product_photo}`);
-                      // Show fallback
-                      const fallback = e.currentTarget.parentElement?.querySelector('.image-fallback') as HTMLElement;
-                      if (fallback) {
-                        fallback.style.display = 'flex';
-                        e.currentTarget.style.display = 'none';
-                      }
-                    }}
-                    unoptimized={true}
-                  />
-                  
-                  {/* Loading indicator */}
-                  <div className="loading-indicator absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
-                    <div className="text-center">
-                      <svg className="w-6 h-6 text-gray-400 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <p className="text-xs text-gray-500 mt-2">Loading image...</p>
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Product Information</h3>
+                
+                {/* Product Photo */}
+                {selectedApplication.product_photo && (
+                  <div className="w-full max-w-sm mx-auto relative mb-4">
+                    <Image
+                      src={selectedApplication.product_photo}
+                      alt={`Product for ${selectedApplication.campaign_title}`}
+                      width={300}
+                      height={200}
+                      className="w-full h-auto rounded-lg shadow-sm opacity-0 transition-opacity duration-300"
+                      onLoad={(e) => {
+                        e.currentTarget.classList.remove('opacity-0');
+                        e.currentTarget.classList.add('opacity-100');
+                        const loader = e.currentTarget.parentElement?.querySelector('.loading-indicator') as HTMLElement;
+                        if (loader) loader.style.display = 'none';
+                      }}
+                      onError={(e) => {
+                        console.error(`Application product image failed to load: ${selectedApplication.product_photo}`);
+                        const fallback = e.currentTarget.parentElement?.querySelector('.image-fallback') as HTMLElement;
+                        if (fallback) {
+                          fallback.style.display = 'flex';
+                          e.currentTarget.style.display = 'none';
+                        }
+                      }}
+                      unoptimized={true}
+                    />
+                    
+                    <div className="loading-indicator absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+                      <div className="text-center">
+                        <svg className="w-6 h-6 text-gray-400 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p className="text-xs text-gray-500 mt-2">Loading image...</p>
+                      </div>
+                    </div>
+                    
+                    <div className="image-fallback hidden w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+                      <div className="text-center text-gray-500">
+                        <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p className="text-sm">Product image unavailable</p>
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Fallback for when image fails to load */}
-                  <div className="image-fallback hidden w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-                    <div className="text-center text-gray-500">
-                      <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-sm">Product image unavailable</p>
+                )}
+
+                {/* Product Details Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {selectedApplication.product_name && (
+                    <div>
+                      <p className="text-xs text-gray-500">Product Name</p>
+                      <p className="text-sm text-gray-900">{formatTextField(selectedApplication.product_name)}</p>
                     </div>
-                  </div>
+                  )}
+
+                  {selectedApplication.product_highlight && (
+                    <div>
+                      <p className="text-xs text-gray-500">Product Highlight</p>
+                      <p className="text-sm text-gray-900">{formatTextField(selectedApplication.product_highlight)}</p>
+                    </div>
+                  )}
+
+                  {selectedApplication.product_price && (
+                    <div>
+                      <p className="text-xs text-gray-500">Product Price</p>
+                      <p className="text-sm text-gray-900 font-semibold">{formatTextField(selectedApplication.product_price)}</p>
+                    </div>
+                  )}
+
+                  {selectedApplication.product_sold_number && (
+                    <div>
+                      <p className="text-xs text-gray-500">Units Sold</p>
+                      <p className="text-sm text-gray-900">{formatTextField(selectedApplication.product_sold_number)}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
-            
+
+            {/* Enhanced Compensation Structure Section */}
+            <div className="border-t border-gray-200 pt-4 mb-4">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Compensation Structure</h3>
+              
+              {/* Paid Promotion Type */}
+              {selectedApplication.paid_promotion_type && (
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500">Paid Promotion Type</p>
+                  <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium capitalize">
+                    {selectedApplication.paid_promotion_type.replace('_', ' ')}
+                  </span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Budget Range */}
+                <div>
+                  <p className="text-xs text-gray-500">Budget Range</p>
+                  <p className="text-sm text-gray-900">
+                    {selectedApplication.campaign_budget_range}
+                    {selectedApplication.campaign_budget_unit && (
+                      <span className="text-xs text-gray-500 ml-1">
+                        ({selectedApplication.campaign_budget_unit === 'total' ? 'Total Budget' : 
+                          selectedApplication.campaign_budget_unit === 'per_person' ? 'Per Creator' : 
+                          selectedApplication.campaign_budget_unit === 'per_video' ? 'Per Video' : 
+                          selectedApplication.campaign_budget_unit})
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {/* Video Buyout Budget Range */}
+                {selectedApplication.video_buyout_budget_range && (
+                  <div>
+                    <p className="text-xs text-gray-500">Video Buyout Budget</p>
+                    <p className="text-sm text-gray-900 font-semibold">{formatTextField(selectedApplication.video_buyout_budget_range)}</p>
+                  </div>
+                )}
+
+                {/* Base Fee Budget Range */}
+                {selectedApplication.base_fee_budget_range && (
+                  <div>
+                    <p className="text-xs text-gray-500">Base Fee Budget</p>
+                    <p className="text-sm text-gray-900 font-semibold">{formatTextField(selectedApplication.base_fee_budget_range)}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="border-t border-gray-200 pt-4 mb-4">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Campaign Details</h3>
               <div className="grid grid-cols-2 gap-4 mb-4">
+                {/* Script Required */}
+                {selectedApplication.script_required && (
+                  <div>
+                    <p className="text-xs text-gray-500">Script Required</p>
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      selectedApplication.script_required === 'yes' 
+                        ? 'bg-orange-100 text-orange-800' 
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {selectedApplication.script_required === 'yes' ? 'Yes - Script approval required' : 'No - Direct content creation allowed'}
+                    </span>
+                  </div>
+                )}
+
                 <div>
                   <p className="text-xs text-gray-500">Budget Range</p>
                   <p className="text-sm text-gray-900">
@@ -527,6 +634,35 @@ export default function Applications() {
                       {new Date(application.created_at).toLocaleDateString()}
                     </span>
                   </div>
+                  
+                  {/* Enhanced compensation display */}
+                  {application.paid_promotion_type && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Promotion Type:</span>
+                      <span className="font-medium text-gray-900 capitalize">
+                        {application.paid_promotion_type.replace('_', ' ')}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {application.video_buyout_budget_range && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Video Buyout:</span>
+                      <span className="font-medium text-gray-900">
+                        {application.video_buyout_budget_range}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {application.base_fee_budget_range && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Base Fee:</span>
+                      <span className="font-medium text-gray-900">
+                        {application.base_fee_budget_range}
+                      </span>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Campaign budget:</span>
                     <span className="font-medium text-gray-900">
@@ -541,12 +677,27 @@ export default function Applications() {
                       )}
                     </span>
                   </div>
+                  
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Deadline:</span>
                     <span className="font-medium text-gray-900">
                       {new Date(application.campaign_deadline).toLocaleDateString()}
                     </span>
                   </div>
+                  
+                  {/* Script requirement indicator */}
+                  {application.script_required && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Script Required:</span>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        application.script_required === 'yes' 
+                          ? 'bg-orange-100 text-orange-800' 
+                          : 'bg-green-100 text-green-800'
+                      }`}>
+                        {application.script_required === 'yes' ? 'Yes' : 'No'}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {application.campaign_sample_video_url && (
