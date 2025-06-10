@@ -1,6 +1,58 @@
+'use client';
+
 import Link from 'next/link';
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Home() {
+  // State for carousel
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // TikTok videos data
+  const tiktokVideos = [
+    {
+      id: '7363002417560046891',
+      username: '@thekfamily33',
+      description: 'Family & Lifestyle Creator'
+    },
+    {
+      id: '7411291540058017070', 
+      username: '@allure_fashion',
+      description: 'Fashion & Style Creator'
+    },
+    {
+      id: '7469853284975660319',
+      username: '@thehannahbrie', 
+      description: 'Beauty & Lifestyle Creator'
+    },
+    {
+      id: '7404220045376654634',
+      username: '@jenny_claross',
+      description: 'Content Creator'
+    },
+    {
+      id: '7389083054423264555',
+      username: '@summerhemphill',
+      description: 'Lifestyle Creator'
+    },
+    {
+      id: '7437194284459199790',
+      username: '@mrs.hannahlong',
+      description: 'Family & Lifestyle Creator'
+    }
+  ];
+
+  const videosPerSlide = 3;
+  const totalSlides = Math.ceil(tiktokVideos.length / videosPerSlide);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % totalSlides);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  };
+
   return (
     <main className="min-h-screen bg-white">
       {/* Hero Section with Enhanced Welcome Message */}
@@ -145,6 +197,111 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* TikTok Videos Showcase Section with Carousel */}
+      <div className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-20">
+            <h2 className="text-base font-semibold text-purple-600 tracking-wide uppercase mb-4">Featured Content</h2>
+            <h3 className="text-4xl font-extrabold text-gray-900 sm:text-5xl mb-6">
+              See our creators in action
+            </h3>
+            <p className="mt-4 max-w-3xl text-xl text-gray-600 mx-auto leading-relaxed">
+              Watch real content from our talented creator community and see the quality of work they produce for brands.
+            </p>
+          </div>
+
+          {/* Carousel Container */}
+          <div className="relative">
+            {/* Navigation Buttons */}
+            <button
+              onClick={prevSlide}
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-purple-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={currentSlide === 0}
+            >
+              <ChevronLeft className="w-6 h-6 text-gray-600 hover:text-purple-600" />
+            </button>
+
+            <button
+              onClick={nextSlide}
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-purple-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={currentSlide === totalSlides - 1}
+            >
+              <ChevronRight className="w-6 h-6 text-gray-600 hover:text-purple-600" />
+            </button>
+
+            {/* Videos Grid */}
+            <div className="overflow-hidden mx-12">
+              <div 
+                className="flex transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+              >
+                {Array.from({ length: totalSlides }).map((_, slideIndex) => (
+                  <div key={slideIndex} className="w-full flex-shrink-0">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      {tiktokVideos
+                        .slice(slideIndex * videosPerSlide, (slideIndex + 1) * videosPerSlide)
+                        .map((video, index) => (
+                          <div key={video.id} className="group">
+                            <div className="relative bg-white rounded-2xl p-4 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-purple-200 transform hover:-translate-y-2">
+                              <div className="relative w-full h-96 rounded-xl overflow-hidden bg-gray-100">
+                                <iframe
+                                  src={`https://www.tiktok.com/embed/v2/${video.id}`}
+                                  width="100%"
+                                  height="100%"
+                                  frameBorder="0"
+                                  allow="encrypted-media"
+                                  allowFullScreen
+                                  className="rounded-xl"
+                                  title={`TikTok video by ${video.username}`}
+                                ></iframe>
+                              </div>
+                              <div className="mt-4 text-center">
+                                <p className="text-sm font-medium text-gray-900">{video.username}</p>
+                                <p className="text-xs text-gray-500 mt-1">{video.description}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Slide Indicators */}
+            <div className="flex justify-center mt-8 space-x-2">
+              {Array.from({ length: totalSlides }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === currentSlide
+                      ? 'bg-purple-600 scale-110'
+                      : 'bg-gray-300 hover:bg-purple-300'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          <div className="text-center mt-16">
+            <p className="text-lg text-gray-600 mb-6">
+              Ready to create amazing content like this? Join our creator community today.
+            </p>
+            <Link
+              href="/join-creator"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
+            >
+              Join as Creator
+              <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
           </div>
         </div>
       </div>
