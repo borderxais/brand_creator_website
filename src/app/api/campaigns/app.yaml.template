@@ -1,15 +1,27 @@
 service: brand-creator-website-campaigns-api
 runtime: python311
-entrypoint: uvicorn main:app --host=0.0.0.0 --port=${PORT}
+entrypoint: uvicorn app:app --host=0.0.0.0 --port=${PORT}
 
 instance_class: F2
 
 # Environment variables with your actual values
 env_variables:
-  SUPABASE_URL: "{{SUPABASE_URL}}"
-  SUPABASE_SERVICE_KEY: "{{SUPABASE_SERVICE_KEY}}"
-  DATABASE_URL: "{{DATABASE_URL}}"
-  DIRECT_URL: "{{DIRECT_URL}}"
+  SUPABASE_URL: "${SUPABASE_URL}"
+  SUPABASE_SERVICE_KEY: "${SUPABASE_SERVICE_KEY}"
+  DATABASE_URL: "${DATABASE_URL}"
+  DIRECT_URL: "${DIRECT_URL}"
+  NEXTAUTH_SECRET: "${NEXTAUTH_SECRET}"
+  NEXTAUTH_URL: "${NEXTAUTH_URL}"
+  SMTP_HOST: "${SMTP_HOST}"
+  SMTP_PORT: "${SMTP_PORT}"
+  SMTP_SECURE: "${SMTP_SECURE}"
+  SMTP_USER: "${SMTP_USER}"
+  SMTP_PASSWORD: "${SMTP_PASSWORD}"
+  NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL}"
+  TIKTOK_ACCESS_TOKEN: "${TIKTOK_ACCESS_TOKEN}"
+  TIKTOK_TCM_ACCOUNT_ID: "${TIKTOK_TCM_ACCOUNT_ID}"
+  CAMPAIGNS_API_URL: "${CAMPAIGNS_API_URL}"
+  TTVERIFICATION_API_URL: "${TTVERIFICATION_API_URL}"
 
 # Automatic scaling configuration
 automatic_scaling:

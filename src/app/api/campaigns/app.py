@@ -1324,7 +1324,7 @@ try:
     import importlib.util
     
     # Get the contact app file path
-    contact_app_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'contact', 'app.py')
+    contact_app_path = os.path.join(os.path.dirname(__file__), 'contact', 'app.py')
     logger.info(f"Looking for contact app at: {contact_app_path}")
     
     if os.path.exists(contact_app_path):
