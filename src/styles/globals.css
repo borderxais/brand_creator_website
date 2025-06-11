@@ -33,4 +33,17 @@
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-start-rgb));
+  
+}
+
+input {
+  color: black;
+}
+
+textarea {
+  color: black;
+}
+
+span {
+  color: black;
 }
