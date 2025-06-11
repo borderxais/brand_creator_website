@@ -20,11 +20,16 @@ export async function POST(request: Request) {
       email, 
       password, 
       name, 
-      role = 'CREATOR', // Default to CREATOR if not specified
-      creatorHandleName = null // New parameter for creator handle
+      role = 'CREATOR',
+      creatorHandleName = null,
+      // Creator profile fields from registration form
+      niches = [],
+      bio = '',
+      audienceSize = '',
+      platforms = []
     } = body;
 
-    console.log('Registration attempt:', { email, name, role });
+    console.log('Registration attempt:', { email, name, role, niches, audienceSize, platforms });
 
     if (!email || !password || !name) {
       return NextResponse.json(
@@ -78,6 +83,18 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Convert audience size to follower count
+    const getFollowerCount = (audienceSize: string): number => {
+      switch (audienceSize) {
+        case '1-5k': return 3000;
+        case '5-10k': return 7500;
+        case '10-50k': return 30000;
+        case '50-100k': return 75000;
+        case '100k+': return 150000;
+        default: return 0;
+      }
+    };
+
     // Create user with transaction to ensure both user and profile are created
     const result = await prisma.$transaction(async (prisma) => {
       // Create user with emailVerified set to null
@@ -87,7 +104,6 @@ export async function POST(request: Request) {
           password: hashedPassword,
           name,
           role,
-          // Generate a placeholder handle for brands to satisfy NOT NULL constraint
           creatorHandleName: role === 'CREATOR' 
             ? creatorHandleName 
             : `brand-${randomUUID().slice(0, 8)}`,
@@ -97,33 +113,45 @@ export async function POST(request: Request) {
 
       // Create corresponding profile based on role
       if (role === 'CREATOR') {
-        // Create basic creator profile
+        // Create creator profile with enhanced data
         const creatorProfile = await prisma.creatorProfile.create({
           data: {
             userId: user.id,
-            bio: '',
+            bio: bio || '',
             location: '',
-            followers: 0,
+            followers: getFollowerCount(audienceSize),
             engagementRate: 0,
-            categories: '[]'
+            categories: JSON.stringify(niches) // Store niches as JSON array
           }
         });
 
-        // Get all available platforms
-        const platforms = await prisma.platform.findMany();
+        // Get all available platforms from database
+        const allPlatforms = await prisma.platform.findMany();
         
-        // Create CreatorPlatform entries for each platform
-        await Promise.all(platforms.map(platform => 
-          prisma.creatorPlatform.create({
+        // Create CreatorPlatform entries - only for selected platforms with proper data
+        for (const platform of allPlatforms) {
+          const isSelected = platforms.includes(platform.name);
+          
+          await prisma.creatorPlatform.create({
             data: {
               creatorId: creatorProfile.id,
               platformId: platform.id,
-              followers: 0,
-              engagementRate: 0,
+              handle: isSelected ? creatorHandleName || '' : null,
+              followers: isSelected ? getFollowerCount(audienceSize) : 0,
+              engagementRate: isSelected ? 5.0 : 0, // Default engagement rate for selected platforms
               isVerified: false
             }
-          })
-        ));
+          });
+        }
+
+        console.log('Creator profile created with enhanced data:', {
+          profileId: creatorProfile.id,
+          bio: creatorProfile.bio,
+          followers: creatorProfile.followers,
+          categories: creatorProfile.categories,
+          selectedPlatforms: platforms
+        });
+
       } else if (role === 'BRAND') {
         await prisma.brandProfile.create({
           data: {

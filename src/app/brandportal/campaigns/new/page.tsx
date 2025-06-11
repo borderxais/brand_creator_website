@@ -389,7 +389,7 @@ export default function NewCampaign() {
                     name="title"
                     value={formData.title}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="e.g., Summer Fashion Collection Launch"
                     required
                   />
@@ -833,7 +833,7 @@ export default function NewCampaign() {
                     name="product_name"
                     value={formData.product_name}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Enter product name"
                   />
                 </div>
@@ -847,7 +847,7 @@ export default function NewCampaign() {
                     name="product_highlight"
                     value={formData.product_highlight}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Key selling point or feature"
                   />
                 </div>
@@ -861,7 +861,7 @@ export default function NewCampaign() {
                     name="product_price"
                     value={formData.product_price}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="e.g., $29.99"
                   />
                 </div>
@@ -875,7 +875,7 @@ export default function NewCampaign() {
                     name="product_sold_number"
                     value={formData.product_sold_number}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Number of units sold"
                   />
                 </div>
@@ -965,7 +965,7 @@ export default function NewCampaign() {
                       name="video_buyout_budget_range"
                       value={formData.video_buyout_budget_range}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                       placeholder="e.g., $500-1,000 per video"
                     />
                   </div>
@@ -982,7 +982,7 @@ export default function NewCampaign() {
                         name="base_fee_budget_range"
                         value={formData.base_fee_budget_range}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                         placeholder="e.g., $200-400 base fee"
                       />
                     </div>
@@ -995,7 +995,7 @@ export default function NewCampaign() {
                         name="commission"
                         value={formData.commission}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                         placeholder="e.g., 15% per sale"
                       />
                     </div>
@@ -1012,7 +1012,7 @@ export default function NewCampaign() {
                       name="commission"
                       value={formData.commission}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                       placeholder="e.g., 15% per sale"
                     />
                   </div>
@@ -1030,7 +1030,7 @@ export default function NewCampaign() {
                         name="budget_range"
                         value={formData.budget_range}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                         placeholder="e.g., 1,000-2,000"
                       />
                       <select

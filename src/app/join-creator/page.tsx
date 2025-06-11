@@ -105,7 +105,18 @@ export default function JoinAsCreator() {
           return;
         }
 
-        // Register the user - Now using the standard registration endpoint
+        console.log('Submitting registration with data:', {
+          email: formData.email,
+          name: formData.name,
+          role: 'CREATOR',
+          creatorHandleName: formData.creatorHandleName,
+          niches: formData.niches,
+          bio: formData.bio,
+          audienceSize: formData.audienceSize,
+          platforms: formData.platforms
+        });
+
+        // Register the user with enhanced profile data
         const response = await fetch('/api/register', {
           method: 'POST',
           headers: {
@@ -116,7 +127,12 @@ export default function JoinAsCreator() {
             password: formData.password,
             name: formData.name,
             role: 'CREATOR',
-            creatorHandleName: formData.creatorHandleName
+            creatorHandleName: formData.creatorHandleName,
+            // Send the additional profile data
+            niches: formData.niches,
+            bio: formData.bio,
+            audienceSize: formData.audienceSize,
+            platforms: formData.platforms
           }),
         });
 
@@ -126,6 +142,7 @@ export default function JoinAsCreator() {
           throw new Error(data.error || 'Registration failed');
         }
 
+        console.log('Registration successful:', data);
         // Redirect to login with success message
         router.push('/login?registered=true');
       } catch (error) {

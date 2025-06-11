@@ -53,44 +53,6 @@ else:
         logger.error(f"Failed to initialize Supabase client: {str(e)}")
         supabase = None
 
-# Mock data for when real data isn't available
-MOCK_CAMPAIGNS = [
-    {
-        "id": "1",
-        "brand_id": "123",
-        "title": "Summer Collection Launch",
-        "brief": "Looking for fashion influencers to showcase our new summer collection through creative posts and stories.",
-        "requirements": "Fashion & Lifestyle creators with 10K+ followers",
-        "budget_range": "$1,000-$2,000",
-        "budget_unit": "total",  # Add budget_unit
-        "commission": "15% per sale",
-        "platform": "instagram",
-        "deadline": "2024-06-30",
-        "max_creators": 5,
-        "is_open": True,
-        "created_at": "2024-01-01T00:00:00Z",
-        "brand_name": "StyleCo",
-        "sample_video_url": "https://example.com/sample/video1.mp4"  # Add sample_video_url
-    },
-    {
-        "id": "2",
-        "brand_id": "456",
-        "title": "Fitness Challenge",
-        "brief": "30-day fitness challenge promotion featuring our supplements and workout gear.",
-        "requirements": "Fitness & Wellness creators with 20K+ followers",
-        "budget_range": "$500-$1,000",
-        "budget_unit": "per_person",  # Add budget_unit with a different value
-        "commission": "20% per sale",
-        "platform": "tiktok",
-        "deadline": "2024-07-15",
-        "max_creators": 10,
-        "is_open": True,
-        "created_at": "2024-01-15T00:00:00Z",
-        "brand_name": "FitLife",
-        "sample_video_url": "https://example.com/sample/video2.mp4"  # Add sample_video_url
-    }
-]
-
 # Update the data models
 class Campaign(BaseModel):
     id: str
@@ -295,17 +257,17 @@ async def get_campaigns(
 ):
     logger.info(f"Received request with params: search={search}, platform={platform}, category={category}")
     
-    # Return mock data if Supabase is not configured
+    # Return empty list if Supabase is not configured
     if not supabase:
-        logger.warning("Supabase client not available, returning mock data")
-        return filter_mock_data(MOCK_CAMPAIGNS, search, platform, category)
+        logger.warning("Supabase client not available, returning empty list")
+        return []
     
     try:
         # Check if campaigns table exists
         table_exists = await check_table_exists(supabase, 'campaigns')
         if not table_exists:
-            logger.warning("Campaigns table does not exist or is inaccessible, returning mock data")
-            return filter_mock_data(MOCK_CAMPAIGNS, search, platform, category)
+            logger.warning("Campaigns table does not exist or is inaccessible, returning empty list")
+            return []
             
         # Query campaigns from Supabase
         logger.info("Querying Supabase for campaigns")
@@ -328,8 +290,7 @@ async def get_campaigns(
             # Check for permission denied errors
             if "permission denied" in error_msg.lower():
                 logger.error("Permission denied error. Check your Supabase RLS policies and service key permissions.")
-                # Return mock data as fallback
-                return filter_mock_data(MOCK_CAMPAIGNS, search, platform, category)
+                return []
             raise HTTPException(status_code=500, detail=f"Database query error: {error_msg}")
         
         # Additional filtering that might need to be done client-side
@@ -344,10 +305,10 @@ async def get_campaigns(
             campaigns = filtered_campaigns
             logger.info(f"Filtered to {len(campaigns)} campaigns after search")
         
-        # If no campaigns found, return mock data for development
+        # If no campaigns found, return empty list
         if not campaigns:
-            logger.warning("No campaigns found in database, returning mock data")
-            return filter_mock_data(MOCK_CAMPAIGNS, search, platform, category)
+            logger.info("No campaigns found in database, returning empty list")
+            return []
         
         # Get brand details for each campaign
         for campaign in campaigns:
@@ -369,24 +330,7 @@ async def get_campaigns(
         
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}")
-        return filter_mock_data(MOCK_CAMPAIGNS, search, platform, category)
-
-def filter_mock_data(mock_data, search=None, platform=None, category=None):
-    """Filter mock data based on search and platform filters."""
-    filtered_data = mock_data
-    
-    if search:
-        search_lower = search.lower()
-        filtered_data = [c for c in filtered_data if 
-                         search_lower in c['title'].lower() or 
-                         search_lower in c['brand_name'].lower()]
-    
-    if platform and platform != 'all':
-        platform_lower = platform.lower()
-        filtered_data = [c for c in filtered_data if c['platform'].lower() == platform_lower]
-    
-    logger.info(f"Returning {len(filtered_data)} mock campaigns")
-    return filtered_data
+        return []
 
 # Add an endpoint to get SQL for table creation
 @app.get("/setup-sql")
@@ -425,7 +369,7 @@ async def check_campaign_claim(
     """Check if a creator has already applied to a campaign."""
     try:
         if not supabase:
-            # Mock response for development
+            # Return no existing claim for development
             return {"exists": False}
             
         logger.info(f"Looking up creator profile for userId: {creatorId}")
@@ -469,12 +413,9 @@ async def create_campaign_claim(
         logger.info(f"Creating campaign claim for user {campaign_claim.user_id} and campaign {campaign_claim.campaign_id}")
         
         if not supabase:
-            # Return mock response for development
-            logger.warning("Supabase not available, returning mock response")
-            return {
-                "status": "success", 
-                "claim_id": "mock-claim-id-12345"
-            }
+            # Cannot create claim without database
+            logger.error("Supabase not available, cannot create campaign claim")
+            raise HTTPException(status_code=500, detail="Database not available")
         
         # First, look up the creator's profile to get the actual creator ID
         creator_profile = supabase.table('CreatorProfile')\
@@ -556,23 +497,9 @@ async def get_creator_campaign_claims(
         logger.info(f"Fetching campaign claims for creator with userId: {creator_id}")
         
         if not supabase:
-            # Return mock data for development
-            logger.warning("Supabase not available, returning mock data")
-            return [
-                {
-                    "id": "mock-claim-id-1",
-                    "campaign_id": "mock-campaign-id-1",
-                    "creator_id": creator_id,
-                    "status": "pending",
-                    "sample_text": "This is a sample script for the campaign",
-                    "sample_video_url": "https://example.com/video",
-                    "created_at": "2023-01-01T00:00:00Z",
-                    "campaign_title": "Mock Campaign 1",
-                    "campaign_brand_name": "MockBrand",
-                    "campaign_deadline": "2023-12-31",
-                    "campaign_budget_range": "$100-$200"
-                }
-            ]
+            # Return empty list if no database
+            logger.warning("Supabase not available, returning empty list")
+            return []
         
         # First look up the creator's actual ID from CreatorProfile using userId
         creator_profile = supabase.table('CreatorProfile')\
@@ -712,10 +639,9 @@ async def get_brand_campaigns(
     
     try:
         if not supabase:
-            # Return mock data for development if no Supabase connection
-            mock_campaigns = [c for c in MOCK_CAMPAIGNS if c['brand_id'] == brand_id]
-            logger.warning(f"No Supabase connection, returning {len(mock_campaigns)} mock campaigns")
-            return mock_campaigns
+            # Return empty list if no database connection
+            logger.warning(f"No Supabase connection, returning empty list")
+            return []
 
         # Based on your clarification: users.id = BrandProfile.userId = campaigns.brand_id
         # So we can directly use the brand_id (user's ID) to query campaigns
@@ -1152,11 +1078,8 @@ async def get_campaign(campaign_id: str):
         logger.info(f"Fetching campaign with ID: {campaign_id}")
         
         if not supabase:
-            # Return mock data for development if no Supabase connection
-            for campaign in MOCK_CAMPAIGNS:
-                if campaign["id"] == campaign_id:
-                    return campaign
-            logger.warning(f"Campaign not found with ID: {campaign_id}")
+            # Return not found if no Supabase connection
+            logger.warning(f"No Supabase connection available")
             raise HTTPException(status_code=404, detail="Campaign not found")
 
         # Fetch the campaign from the database

@@ -26,72 +26,65 @@ interface IncomeDataType {
   month: IncomePeriodData;
 }
 
-// Mock data for current and previous periods
+// Mock data for current and previous periods - set to 0 for new users
 const incomeData: IncomeDataType = {
   yesterday: {
-    total: 1250,
-    business: 750,
-    douyin: 250,
-    live: 150,
-    xingtu: 100
+    total: 0,
+    business: 0,
+    douyin: 0,
+    live: 0,
+    xingtu: 0
   },
   week: {
-    total: 8500,
-    business: 4500,
-    douyin: 2200,
-    live: 1200,
-    xingtu: 600
+    total: 0,
+    business: 0,
+    douyin: 0,
+    live: 0,
+    xingtu: 0
   },
   month: {
-    total: 32000,
-    business: 18000,
-    douyin: 8000,
-    live: 4500,
-    xingtu: 1500
+    total: 0,
+    business: 0,
+    douyin: 0,
+    live: 0,
+    xingtu: 0
   }
 };
 
-// Previous period data for comparison
+// Previous period data for comparison - set to 0 for new users
 const previousData: IncomeDataType = {
   yesterday: {
-    total: 1100,
-    business: 680,
-    douyin: 220,
-    live: 130,
-    xingtu: 70
+    total: 0,
+    business: 0,
+    douyin: 0,
+    live: 0,
+    xingtu: 0
   },
   week: {
-    total: 7800,
-    business: 4100,
-    douyin: 1900,
-    live: 1100,
-    xingtu: 700
+    total: 0,
+    business: 0,
+    douyin: 0,
+    live: 0,
+    xingtu: 0
   },
   month: {
-    total: 29000,
-    business: 16500,
-    douyin: 7200,
-    live: 4000,
-    xingtu: 1300
+    total: 0,
+    business: 0,
+    douyin: 0,
+    live: 0,
+    xingtu: 0
   }
 };
 
-// Sample daily income data for the current month
-const dailyIncomeData = Array(30).fill(0).map((_, index) => {
-  const baseAmount = 1000;
-  const dayOfWeek = (index % 7) + 1;
-  const weekMultiplier = Math.floor(index / 7) * 0.1 + 1;
-  const dayMultiplier = dayOfWeek >= 6 ? 1.5 : 1;
-  const randomFactor = 0.8 + Math.random() * 0.4;
-
-  return {
-    day: index + 1,
-    income: Math.round(baseAmount * dayMultiplier * weekMultiplier * randomFactor)
-  };
-});
+// Sample daily income data for the current month - set to 0 for new users
+const dailyIncomeData = Array(30).fill(0).map((_, index) => ({
+  day: index + 1,
+  income: 0
+}));
 
 // Calculate percentage change
 const getPercentChange = (current: number, previous: number) => {
+  if (previous === 0 && current === 0) return 0;
   if (previous === 0) return 100;
   return Math.round(((current - previous) / previous) * 100);
 };
@@ -177,13 +170,16 @@ export default function IncomePage() {
               <p className="text-gray-500 text-sm">Total Balance</p>
               <p className="text-3xl font-bold text-gray-900">${incomeData[activeTimeFilter].total.toLocaleString()}</p>
             </div>
-            <div className="text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm">
-              +{getPercentChange(incomeData[activeTimeFilter].total, previousData[activeTimeFilter].total)}% from last period
+            <div className="text-gray-500 bg-gray-50 px-3 py-1 rounded-full text-sm">
+              {getPercentChange(incomeData[activeTimeFilter].total, previousData[activeTimeFilter].total) === 0 
+                ? 'No previous data' 
+                : `${getPercentChange(incomeData[activeTimeFilter].total, previousData[activeTimeFilter].total) >= 0 ? '+' : ''}${getPercentChange(incomeData[activeTimeFilter].total, previousData[activeTimeFilter].total)}% from last period`
+              }
             </div>
           </div>
           
           <div className="mt-4">
-            <p className="text-sm text-gray-500">Income breakdown by category and time period</p>
+            <p className="text-sm text-gray-500">Start earning by applying to campaigns and completing collaborations</p>
           </div>
         </div>
         
@@ -200,16 +196,16 @@ export default function IncomePage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Available to Withdraw</p>
-              <p className="text-3xl font-bold text-gray-900">${Math.floor(incomeData[activeTimeFilter].total * 0.85).toLocaleString()}</p>
+              <p className="text-3xl font-bold text-gray-900">$0</p>
             </div>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center">
+            <button className="bg-gray-400 text-white px-4 py-2 rounded-md flex items-center cursor-not-allowed" disabled>
               <ArrowDown className="mr-2 h-4 w-4" />
               Withdraw
             </button>
           </div>
           
           <div className="mt-4">
-            <p className="text-sm text-gray-500">Next automatic payout: 15th of next month</p>
+            <p className="text-sm text-gray-500">Complete campaigns to start earning and enable withdrawals</p>
           </div>
         </div>
       </div>
@@ -235,12 +231,16 @@ export default function IncomePage() {
                 ${incomeData[activeTimeFilter][type.id].toLocaleString()}
               </p>
               <div className={`text-xs mt-1 ${
-                getPercentChange(incomeData[activeTimeFilter][type.id], previousData[activeTimeFilter][type.id]) >= 0 
-                  ? 'text-green-600' 
-                  : 'text-red-600'
+                getPercentChange(incomeData[activeTimeFilter][type.id], previousData[activeTimeFilter][type.id]) === 0
+                  ? 'text-gray-500'
+                  : getPercentChange(incomeData[activeTimeFilter][type.id], previousData[activeTimeFilter][type.id]) >= 0 
+                    ? 'text-green-600' 
+                    : 'text-red-600'
               }`}>
-                {getPercentChange(incomeData[activeTimeFilter][type.id], previousData[activeTimeFilter][type.id]) >= 0 ? '+' : ''}
-                {getPercentChange(incomeData[activeTimeFilter][type.id], previousData[activeTimeFilter][type.id])}%
+                {getPercentChange(incomeData[activeTimeFilter][type.id], previousData[activeTimeFilter][type.id]) === 0 
+                  ? 'No data' 
+                  : `${getPercentChange(incomeData[activeTimeFilter][type.id], previousData[activeTimeFilter][type.id]) >= 0 ? '+' : ''}${getPercentChange(incomeData[activeTimeFilter][type.id], previousData[activeTimeFilter][type.id])}%`
+                }
               </div>
             </div>
           ))}
@@ -272,20 +272,29 @@ export default function IncomePage() {
                   </div>
                   
                   <div className="flex items-center mt-3">
-                    <div className={`text-sm ${isIncrease ? 'text-green-600' : 'text-red-600'}`}>
-                      {isIncrease ? '+' : ''}{percentChange}% vs {period.previous}
+                    <div className={`text-sm ${
+                      percentChange === 0 
+                        ? 'text-gray-500' 
+                        : isIncrease ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {percentChange === 0 
+                        ? 'No previous data' 
+                        : `${isIncrease ? '+' : ''}${percentChange}% vs ${period.previous}`
+                      }
                     </div>
                     <div className="flex-1 mx-4">
                       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div 
-                          className={`h-full rounded-full ${isIncrease ? 'bg-green-500' : 'bg-red-500'}`}
-                          style={{ width: `${Math.min(Math.abs(percentChange), 100)}%` }}
+                          className={`h-full rounded-full ${percentChange === 0 ? 'bg-gray-300' : isIncrease ? 'bg-green-500' : 'bg-red-500'}`}
+                          style={{ width: `${percentChange === 0 ? 0 : Math.min(Math.abs(percentChange), 100)}%` }}
                         ></div>
                       </div>
                     </div>
-                    {isIncrease ? 
-                      <TrendingUp className="h-5 w-5 text-green-600" /> : 
-                      <TrendingDown className="h-5 w-5 text-red-600" />
+                    {percentChange === 0 ? 
+                      <div className="h-5 w-5" /> : 
+                      isIncrease ? 
+                        <TrendingUp className="h-5 w-5 text-green-600" /> : 
+                        <TrendingDown className="h-5 w-5 text-red-600" />
                     }
                   </div>
                 </div>

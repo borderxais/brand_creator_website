@@ -22,8 +22,8 @@ const navigationItems = [
 // System items that are always in the dropdown
 const systemItems = [
   { name: 'Profile', href: '/creatorportal/profile', icon: Users },
-  { name: 'Messages', href: '/creatorportal/messages', icon: MessageSquare },
-  { name: 'Settings', href: '/creatorportal/settings', icon: Settings },
+  { name: 'Message Us', href: '/contact', icon: MessageSquare },
+  // { name: 'Settings', href: '/creatorportal/settings', icon: Settings },
   { name: 'Sign out', icon: LogOut, onClick: () => signOut({ callbackUrl: '/' }) },
 ];
 
@@ -56,14 +56,14 @@ export default function CreatorPortalLayout({
         <div className="nav-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center">
             {/* Logo */}
-            <div className="portal-logo">
+            <Link href="/" className="portal-logo">
               <img
                 src="/logo.jpg"
                 alt="BorderX Logo"
                 className="w-6 h-6"
               />
               <span className="text-xl font-bold text-gray-600 whitespace-nowrap">BorderX<br />CreatorHub</span>
-            </div>
+            </Link>
 
             {/* Desktop Navigation */}
             <div className="nav-links ml-8">

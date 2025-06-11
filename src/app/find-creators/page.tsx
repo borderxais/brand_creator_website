@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSession } from 'next-auth/react';
 import ErrorHandlingImage from '@/components/ui/ErrorHandlingImage';
 
 // Type definitions for creator data
@@ -359,34 +360,6 @@ export default function FindCreators() {
           >
             Clear Filters & Try Again
           </button>
-        </div>
-      )}
-
-      {/* Show refreshing progress indicator if applicable */}
-      {isRefreshing && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="animate-spin h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">Refreshing Creator Data</h3>
-                <div className="mt-2 text-sm text-blue-700">
-                  <p>Refreshing {refreshProgress.current} of {refreshProgress.total} creators...</p>
-                  <div className="mt-1 w-full bg-blue-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full" 
-                      style={{ width: `${(refreshProgress.current / refreshProgress.total) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 

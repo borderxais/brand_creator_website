@@ -236,7 +236,7 @@ export default function Campaigns() {
               placeholder="Search campaigns..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-500 shadow-sm focus:ring-2focus:ring-purple-500 focus:border-purple-500"
+              className="w-full px-4 py-2 text-black border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-500 shadow-sm focus:ring-2focus:ring-purple-500 focus:border-purple-500"
             />
           </div>
           <div className="flex gap-4">

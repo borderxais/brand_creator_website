@@ -50,14 +50,14 @@ export default function BrandPortalLayout({
         <div className="nav-content">
           <div className="flex h-16 items-center">
             {/* Logo */}
-            <div className="portal-logo">
+            <Link href="/" className="portal-logo">
               <img
                 src="/logo.jpg"
                 alt="BorderX Logo"
                 className="w-6 h-6"
               />
               <span className="text-xl font-bold text-gray-600 whitespace-nowrap">BorderX<br />BrandHub</span>
-            </div>
+            </Link>
 
             {/* Desktop Navigation */}
             <div className="nav-links ml-8">
