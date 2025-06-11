@@ -405,7 +405,7 @@ export default function NewCampaign() {
                     value={formData.brief}
                     onChange={handleInputChange}
                     rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Describe what this campaign is about and what you're looking for"
                   />
                 </div>
@@ -420,7 +420,7 @@ export default function NewCampaign() {
                     value={formData.requirements}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Specific requirements for creators"
                   />
                 </div>
@@ -751,7 +751,7 @@ export default function NewCampaign() {
                     value={formData.kpi_reference_target}
                     onChange={handleInputChange}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Example: Each video must reach at least 50k views with a like-rate above 6%"
                   />
                 </div>
@@ -766,7 +766,7 @@ export default function NewCampaign() {
                     value={formData.prohibited_content_warnings}
                     onChange={handleInputChange}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Example: Avoid certain words, visuals, or tonal pitfalls, etc."
                   />
                 </div>
@@ -781,7 +781,7 @@ export default function NewCampaign() {
                     value={formData.posting_requirements}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="e.g., required topics, hashtags, links, @brand account mentions, etc."
                   />
                 </div>
