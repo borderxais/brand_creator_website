@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Clock, DollarSign, Tag, Filter, Search, Calendar, X, Link as LinkIcon } from 'lucide-react';
+import { Clock, DollarSign, Tag, Filter, Search, Calendar, X, Link as LinkIcon, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -45,11 +45,16 @@ interface Campaign {
   kpi_reference_target: string | null;
   prohibited_content_warnings: string | null;
   posting_requirements: string | null;
-  product_photo_url: string | null;
+  // Fix field name to match database
+  product_photo: string | null;
   applications?: Array<{ id: string; status: string; creator_id: string; }>;
 }
 
-function CampaignCard({ campaign }: { campaign: Campaign }) {
+function CampaignCard({ campaign, onEdit, onDelete }: { 
+  campaign: Campaign; 
+  onEdit: (campaignId: string) => void;
+  onDelete: (campaignId: string) => void;
+}) {
   // Handle requirements parsing safely
   let requirements = [];
   try {
@@ -194,25 +199,33 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
       )}
 
       {/* Product Photo section */}
-      {campaign.product_photo_url && (
+      {campaign.product_photo && (
         <div className="mb-4 py-2 px-2 bg-gray-50 rounded">
-          <p className="text-sm text-gray-600 mb-1">Product Photo:</p>
-          <a 
-            href={campaign.product_photo_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center"
-          >
-            {/* Fix the Image component by adding required src and alt props */}
-            <Image 
-              src="/icons/image.svg" 
-              alt="Product image icon" 
-              width={16} 
-              height={16}
-              className="w-4 h-4 mr-1" 
+          <p className="text-sm text-gray-600 mb-2">Product Photo:</p>
+          <div className="flex items-center space-x-2">
+            <img 
+              src={campaign.product_photo}
+              alt="Product"
+              className="w-16 h-16 object-cover rounded border"
+              onError={(e) => {
+                // Fallback if image fails to load
+                e.currentTarget.style.display = 'none';
+                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = 'block';
+              }}
             />
-            View product photo
-          </a>
+            <div style={{ display: 'none' }} className="text-sm text-gray-500">
+              Image unavailable
+            </div>
+            <a 
+              href={campaign.product_photo}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 text-sm"
+            >
+              View full size
+            </a>
+          </div>
         </div>
       )}
 
@@ -237,10 +250,24 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
           <span className="font-medium">{campaign.applications?.length || 0}</span>
         </div>
         <div className="flex space-x-2">
+          <button
+            onClick={() => onEdit(campaign.id)}
+            className="flex items-center px-3 py-1.5 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 text-sm"
+          >
+            <Edit className="w-4 h-4 mr-1" />
+            Edit
+          </button>
+          <button
+            onClick={() => onDelete(campaign.id)}
+            className="flex items-center px-3 py-1.5 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 text-sm"
+          >
+            <Trash2 className="w-4 h-4 mr-1" />
+            Delete
+          </button>
           <a
             href={`/brandportal/campaigns/${campaign.id}/applications`}
             className="flex items-center px-3 py-1.5 text-white bg-blue-600 rounded-lg hover:bg-blue-700 text-sm"
-            onClick={(e) => e.stopPropagation()} // Prevent parent onClick
+            onClick={(e) => e.stopPropagation()}
           >
             View Applications
           </a>
@@ -276,6 +303,7 @@ export default function Campaigns() {
   const [startDateFilter, setStartDateFilter] = useState<string>('');
   const [endDateFilter, setEndDateFilter] = useState<string>('');
   const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   
   // Campaign status options
   const statusOptions = [
@@ -383,6 +411,34 @@ export default function Campaigns() {
     setEndDateFilter('');
     setSearchQuery('');
     fetchCampaigns();
+  };
+
+  const handleEdit = (campaignId: string) => {
+    router.push(`/brandportal/campaigns/${campaignId}/edit`);
+  };
+
+  const handleDelete = async (campaignId: string) => {
+    if (deleteConfirm !== campaignId) {
+      setDeleteConfirm(campaignId);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/brand/campaigns/${campaignId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete campaign');
+      }
+
+      // Refresh the campaigns list
+      fetchCampaigns();
+      setDeleteConfirm(null);
+    } catch (error) {
+      console.error('Error deleting campaign:', error);
+      setError(error instanceof Error ? error.message : 'Failed to delete campaign');
+    }
   };
 
   // Server-side filtering
@@ -528,7 +584,32 @@ export default function Campaigns() {
         {campaigns && campaigns.length > 0 ? (
           campaigns.map((campaign) => (
             <div key={campaign.id} className="cursor-default">
-              <CampaignCard campaign={campaign} />
+              <CampaignCard 
+                campaign={campaign} 
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+              {deleteConfirm === campaign.id && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-800 text-sm mb-2">
+                    Are you sure you want to delete "{campaign.title}"? This action cannot be undone.
+                  </p>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleDelete(campaign.id)}
+                      className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                    >
+                      Confirm Delete
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(null)}
+                      className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))
         ) : (

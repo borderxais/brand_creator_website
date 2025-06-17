@@ -31,16 +31,16 @@ export async function GET(request: Request) {
 
     // Extract any query parameters from the request
     const { searchParams } = new URL(request.url);
-    const isOpen = searchParams.get('is_open'); // Changed from status to is_open
+    const isOpen = searchParams.get('is_open');
     const search = searchParams.get('search');
-    const startDate = searchParams.get('start_date'); // Using snake_case
-    const endDate = searchParams.get('end_date'); // Using snake_case
+    const startDate = searchParams.get('start_date');
+    const endDate = searchParams.get('end_date');
 
-    // Build the Python API URL with query parameters
-    let pythonApiUrl = `${PYTHON_API_URL}/brand-campaigns/${user.brand.id}`;
+    // Build the Python API URL with query parameters using brand profile ID directly
+    let pythonApiUrl = `${PYTHON_API_URL}/brand-campaigns/${user.brand.id}`;  // Use brand profile ID
     const queryParams = new URLSearchParams();
     
-    if (isOpen) queryParams.append('is_open', isOpen); // Changed from status to is_open
+    if (isOpen) queryParams.append('is_open', isOpen);
     if (search) queryParams.append('search', search);
     if (startDate) queryParams.append('start_date', startDate);
     if (endDate) queryParams.append('end_date', endDate);
@@ -49,19 +49,17 @@ export async function GET(request: Request) {
       pythonApiUrl += `?${queryParams.toString()}`;
     }
     
-    console.log('Fetching from Python API:', pythonApiUrl);
+    console.log('Fetching from Python API with brand profile ID:', pythonApiUrl);
     
     const response = await fetch(pythonApiUrl, {
       headers: {
         'Content-Type': 'application/json',
       },
-      // Set a reasonable timeout
-      signal: AbortSignal.timeout(5000)  // 5 second timeout
+      signal: AbortSignal.timeout(5000)
     });
     
     if (!response.ok) {
       console.error(`Python API returned status ${response.status}`);
-      // Instead of falling back to Prisma, return an error or empty data
       return NextResponse.json(
         { 
           error: `API Error: ${response.status}`,

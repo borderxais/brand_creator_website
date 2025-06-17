@@ -387,12 +387,20 @@ async def check_campaign_claim(
         creator_id = creator_profile.data[0]['id']
         logger.info(f"Found creator ID: {creator_id} for userId: {creatorId}")
         
-        # Query to check if claim exists using the actual creator ID
-        response = supabase.table('campaignclaims')\
-            .select('id')\
-            .eq('campaign_id', campaignId)\
-            .eq('creator_id', creator_id)\
-            .execute()
+        # Query to check if claim exists using UUID campaign_id
+        try:
+            response = supabase.table('campaignclaims')\
+                .select('id')\
+                .eq('campaign_id', campaignId)\
+                .eq('creator_id', creator_id)\
+                .execute()
+        except Exception as db_error:
+            logger.error(f"Database error checking claim: {str(db_error)}")
+            # If it's a UUID format error, return false
+            if "invalid input syntax for type uuid" in str(db_error).lower():
+                logger.warning(f"Invalid UUID format for campaign_id: {campaignId}")
+                return {"exists": False}
+            raise
         
         claim_exists = len(response.data) > 0
         logger.info(f"Checking if claim exists for creator {creator_id} and campaign {campaignId}: {claim_exists}")
@@ -417,6 +425,14 @@ async def create_campaign_claim(
             logger.error("Supabase not available, cannot create campaign claim")
             raise HTTPException(status_code=500, detail="Database not available")
         
+        # Validate campaign_id is a valid UUID format
+        try:
+            import uuid
+            uuid.UUID(campaign_claim.campaign_id)
+        except ValueError:
+            logger.error(f"Invalid UUID format for campaign_id: {campaign_claim.campaign_id}")
+            raise HTTPException(status_code=400, detail="Invalid campaign ID format")
+        
         # First, look up the creator's profile to get the actual creator ID
         creator_profile = supabase.table('CreatorProfile')\
             .select('id')\
@@ -432,44 +448,52 @@ async def create_campaign_claim(
         logger.info(f"Found creator ID: {creator_id} for user ID: {campaign_claim.user_id}")
         
         # Check if creator has already applied to this campaign
-        existing_claim = supabase.table('campaignclaims')\
-            .select('id')\
-            .eq('campaign_id', campaign_claim.campaign_id)\
-            .eq('creator_id', creator_id)\
-            .execute()
+        try:
+            existing_claim = supabase.table('campaignclaims')\
+                .select('id')\
+                .eq('campaign_id', campaign_claim.campaign_id)\
+                .eq('creator_id', creator_id)\
+                .execute()
+        except Exception as db_error:
+            logger.error(f"Database error checking existing claim: {str(db_error)}")
+            if "invalid input syntax for type uuid" in str(db_error).lower():
+                raise HTTPException(status_code=400, detail="Invalid campaign ID format")
+            raise HTTPException(status_code=500, detail="Database error checking existing claim")
         
         if existing_claim.data and len(existing_claim.data) > 0:
             logger.info(f"Creator {creator_id} has already applied to campaign {campaign_claim.campaign_id}")
             return {"status": "already_applied", "claim_id": existing_claim.data[0]['id']}
 
-        # Validate campaign exists
-        campaign = supabase.table('campaigns')\
-            .select('id')\
-            .eq('id', campaign_claim.campaign_id)\
-            .execute()
+        # Validate campaign exists using UUID
+        try:
+            campaign = supabase.table('campaigns')\
+                .select('id')\
+                .eq('id', campaign_claim.campaign_id)\
+                .execute()
+        except Exception as db_error:
+            logger.error(f"Database error validating campaign: {str(db_error)}")
+            if "invalid input syntax for type uuid" in str(db_error).lower():
+                raise HTTPException(status_code=400, detail="Invalid campaign ID format")
+            raise HTTPException(status_code=500, detail="Database error validating campaign")
             
         if not campaign.data or len(campaign.data) == 0:
             logger.error(f"Campaign {campaign_claim.campaign_id} not found")
             raise HTTPException(status_code=404, detail="Campaign not found")
-            
-        # Validate creator exists in CreatorProfile table
-        creator = supabase.table('CreatorProfile')\
-            .select('id')\
-            .eq('userId', campaign_claim.user_id)\
-            .execute()
-            
-        if not creator.data or len(creator.data) == 0:
-            logger.error(f"Creator with userId {campaign_claim.user_id} not found in CreatorProfile table")
-            raise HTTPException(status_code=404, detail="Creator not found")
 
-        # Insert claim with the creator ID that's already in the correct format
-        response = supabase.table('campaignclaims').insert({
-            'campaign_id': campaign_claim.campaign_id,
-            'creator_id': creator_id,
-            'status': 'pending',
-            'sample_text': campaign_claim.sample_text,
-            'sample_video_url': campaign_claim.sample_video_url
-        }).execute()
+        # Insert claim with UUID campaign_id
+        try:
+            response = supabase.table('campaignclaims').insert({
+                'campaign_id': campaign_claim.campaign_id,  # Now expects UUID
+                'creator_id': creator_id,
+                'status': 'pending',
+                'sample_text': campaign_claim.sample_text,
+                'sample_video_url': campaign_claim.sample_video_url
+            }).execute()
+        except Exception as db_error:
+            logger.error(f"Database error creating claim: {str(db_error)}")
+            if "invalid input syntax for type uuid" in str(db_error).lower():
+                raise HTTPException(status_code=400, detail="Invalid campaign ID format")
+            raise HTTPException(status_code=500, detail="Database error creating claim")
 
         if not response.data or len(response.data) == 0:
             logger.error("Failed to create campaign claim, no data returned from database")
@@ -515,7 +539,7 @@ async def get_creator_campaign_claims(
         actual_creator_id = creator_profile.data[0]['id']
         logger.info(f"Found actual creator ID: {actual_creator_id} for userId: {creator_id}")
         
-        # Use direct query instead of RPC to avoid UUID format issues
+        # Use direct query with UUID campaign_id handling
         try:
             logger.info(f"Using direct query for creator claims with ID: {actual_creator_id}")
             claims_response = supabase.table('campaignclaims')\
@@ -532,32 +556,24 @@ async def get_creator_campaign_claims(
             # Process and format the results with campaign details including new fields
             result = []
             for claim in claims_response.data:
-                # Query campaigns table with all fields including new ones
-                campaign_response = supabase.table('campaigns')\
-                    .select('''
-                        *,
-                        id, title, brief, deadline, budget_range, budget_unit, 
-                        sample_video_url, industry_category, primary_promotion_objectives,
-                        ad_placement, campaign_execution_mode, creator_profile_preferences_gender,
-                        creator_profile_preference_ethnicity, creator_profile_preference_content_niche,
-                        preferred_creator_location, language_requirement_for_creators,
-                        creator_tier_requirement, send_to_creator, approved_by_brand,
-                        kpi_reference_target, prohibited_content_warnings, posting_requirements,
-                        product_photo, script_required, product_name, product_highlight,
-                        product_price, product_sold_number, paid_promotion_type,
-                        video_buyout_budget_range, base_fee_budget_range
-                    ''')\
-                    .eq('id', claim.get('campaign_id'))\
-                    .execute()
+                # Query campaigns table using UUID campaign_id
+                try:
+                    campaign_response = supabase.table('campaigns')\
+                        .select('*')\
+                        .eq('id', claim.get('campaign_id'))\
+                        .execute()
+                except Exception as db_error:
+                    logger.error(f"Error fetching campaign for claim {claim.get('id')}: {str(db_error)}")
+                    campaign_response = None
                 
                 campaign_data = {}
-                if campaign_response.data and len(campaign_response.data) > 0:
+                if campaign_response and campaign_response.data and len(campaign_response.data) > 0:
                     campaign_data = campaign_response.data[0]
                 
                 # Create result item with all relevant fields including the new ones
                 result_item = {
                     "id": claim.get('id'),
-                    "campaign_id": claim.get('campaign_id'),
+                    "campaign_id": str(claim.get('campaign_id')),  # Convert UUID to string for JSON
                     "creator_id": claim.get('creator_id'),
                     "status": claim.get('status'),
                     "sample_text": claim.get('sample_text'),
@@ -626,7 +642,7 @@ async def get_creator_campaign_claims(
 
 @app.get("/brand-campaigns/{brand_id}", response_model=List[dict])
 async def get_brand_campaigns(
-    brand_id: str = Path(..., description="The ID of the brand"),
+    brand_id: str = Path(..., description="The brand profile ID (not user ID)"),
     status: Optional[str] = Query(None, description="Filter by campaign status (e.g., DRAFT, ACTIVE, COMPLETED, CANCELLED)"),
     start_date: Optional[str] = Query(None, description="Filter by start date (format: YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="Filter by end date (format: YYYY-MM-DD)"),
@@ -635,7 +651,7 @@ async def get_brand_campaigns(
     """
     Get all campaigns for a specific brand with optional filtering.
     """
-    logger.info(f"Fetching campaigns for brand ID: {brand_id} with filters: status={status}, start_date={start_date}, end_date={end_date}, search={search}")
+    logger.info(f"Fetching campaigns for brand profile ID: {brand_id} with filters: status={status}, start_date={start_date}, end_date={end_date}, search={search}")
     
     try:
         if not supabase:
@@ -643,8 +659,11 @@ async def get_brand_campaigns(
             logger.warning(f"No Supabase connection, returning empty list")
             return []
 
-        # Based on your clarification: users.id = BrandProfile.userId = campaigns.brand_id
-        # So we can directly use the brand_id (user's ID) to query campaigns
+        # The brand_id passed here is already the actual brand profile ID, not user ID
+        # No need to look it up again
+        logger.info(f"Using brand profile ID directly: {brand_id}")
+
+        # Query campaigns using the brand profile ID
         query = supabase.table('campaigns').select('*').eq('brand_id', brand_id)
         
         # Apply filters
@@ -671,11 +690,11 @@ async def get_brand_campaigns(
         response = query.execute()
         
         if not response.data:
-            logger.info(f"No campaigns found for brand ID: {brand_id}")
+            logger.info(f"No campaigns found for brand profile ID: {brand_id}")
             return []
             
         campaigns = response.data
-        logger.info(f"Found {len(campaigns)} campaigns for brand ID: {brand_id}")
+        logger.info(f"Found {len(campaigns)} campaigns for brand profile ID: {brand_id}")
         
         # If search parameter is provided, filter results
         if search and search.strip():
@@ -687,10 +706,10 @@ async def get_brand_campaigns(
             ]
             logger.info(f"After search filter, found {len(campaigns)} campaigns")
         
-        # Fetch claims (applications) for each campaign - Updated to use campaignclaims table
+        # Fetch claims (applications) for each campaign - Updated to handle UUID campaign_id
         for campaign in campaigns:
             try:
-                # Use campaignclaims table instead of applications
+                # Use campaignclaims table with UUID campaign_id
                 claims_response = supabase.table('campaignclaims')\
                     .select('*')\
                     .eq('campaign_id', campaign['id'])\
@@ -704,11 +723,7 @@ async def get_brand_campaigns(
                 for claim in campaign['applications']:
                     try:
                         if claim.get('creator_id'):
-                            creator_response = supabase.table('CreatorProfile')\
-                                .select('*')\
-                                .eq('id', claim['creator_id'])\
-                                .execute()
-                            
+                            creator_response = supabase.table('CreatorProfile').select('*').eq('id', claim['creator_id']).execute()
                             if creator_response.data and len(creator_response.data) > 0:
                                 claim['creator'] = creator_response.data[0]
                     except Exception as e:
@@ -716,9 +731,12 @@ async def get_brand_campaigns(
                 
             except Exception as e:
                 logger.error(f"Error fetching claims for campaign ID {campaign['id']}: {str(e)}")
+                # If it's a UUID error, log it but continue
+                if "invalid input syntax for type uuid" in str(e).lower():
+                    logger.warning(f"UUID format issue for campaign {campaign['id']}")
                 campaign['applications'] = []
         
-        # Get brand information - using simpler query that doesn't need relationships
+        # Get brand information - use the brand profile ID directly
         try:
             brand_response = supabase.table('BrandProfile')\
                 .select('*')\
@@ -732,21 +750,20 @@ async def get_brand_campaigns(
                 for campaign in campaigns:
                     campaign['brand'] = brand_info
             else:
-                logger.warning(f"Brand profile not found for user ID: {brand_id}")
+                logger.warning(f"Brand profile not found for ID: {brand_id}")
         except Exception as e:
-            logger.error(f"Error fetching brand information for user ID {brand_id}: {str(e)}")
+            logger.error(f"Error fetching brand information for ID {brand_id}: {str(e)}")
         
         return campaigns
         
     except Exception as e:
-        logger.error(f"Error fetching campaigns for brand ID {brand_id}: {str(e)}")
+        logger.error(f"Error fetching campaigns for brand profile ID {brand_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch brand campaigns: {str(e)}")
 
-# Add this new endpoint
-
+# Update get_brand_campaign endpoint - keep the user ID lookup for backward compatibility
 @app.get("/brand-campaigns/{brand_id}/campaign/{campaign_id}", response_model=dict)
 async def get_brand_campaign(
-    brand_id: str = Path(..., description="The ID of the brand"),
+    brand_id: str = Path(..., description="The brand profile ID or user ID"),
     campaign_id: str = Path(..., description="The ID of the campaign")
 ):
     """
@@ -759,20 +776,59 @@ async def get_brand_campaign(
             # Return mock data for development if no Supabase connection
             return {"error": "Supabase connection not available"}
 
-        # Verify the campaign belongs to the brand
-        campaign_response = supabase.table('campaigns')\
-            .select('*')\
-            .eq('id', campaign_id)\
-            .eq('brand_id', brand_id)\
+        # Validate campaign_id is a valid UUID format
+        try:
+            import uuid
+            uuid.UUID(campaign_id)
+        except ValueError:
+            logger.error(f"Invalid UUID format for campaign_id: {campaign_id}")
+            raise HTTPException(status_code=400, detail="Invalid campaign ID format")
+
+        # Try to determine if brand_id is a user ID or brand profile ID
+        # First, check if it's a brand profile ID by querying BrandProfile directly
+        brand_profile_response = supabase.table('BrandProfile')\
+            .select('id')\
+            .eq('id', brand_id)\
             .execute()
             
+        if brand_profile_response.data and len(brand_profile_response.data) > 0:
+            # It's a brand profile ID
+            actual_brand_id = brand_id
+            logger.info(f"Using brand profile ID directly: {actual_brand_id}")
+        else:
+            # It might be a user ID, try to look it up
+            user_brand_response = supabase.table('BrandProfile')\
+                .select('id')\
+                .eq('userId', brand_id)\
+                .execute()
+                
+            if not user_brand_response.data or len(user_brand_response.data) == 0:
+                logger.warning(f"Brand profile not found for ID: {brand_id}")
+                raise HTTPException(status_code=404, detail="Brand profile not found")
+                
+            actual_brand_id = user_brand_response.data[0]['id']
+            logger.info(f"Found brand profile ID: {actual_brand_id} for user ID: {brand_id}")
+
+        # Verify the campaign belongs to the brand using actual brand_id
+        try:
+            campaign_response = supabase.table('campaigns')\
+                .select('*')\
+                .eq('id', campaign_id)\
+                .eq('brand_id', actual_brand_id)\
+                .execute()
+        except Exception as db_error:
+            logger.error(f"Database error fetching campaign: {str(db_error)}")
+            if "invalid input syntax for type uuid" in str(db_error).lower():
+                raise HTTPException(status_code=400, detail="Invalid campaign ID format")
+            raise HTTPException(status_code=500, detail="Database error fetching campaign")
+            
         if not campaign_response.data or len(campaign_response.data) == 0:
-            logger.warning(f"Campaign {campaign_id} not found for brand {brand_id}")
+            logger.warning(f"Campaign {campaign_id} not found for brand profile {actual_brand_id}")
             raise HTTPException(status_code=404, detail="Campaign not found")
             
         campaign = campaign_response.data[0]
         
-        # Fetch all claims/applications for this campaign
+        # Fetch all claims/applications for this campaign with UUID handling
         try:
             claims_response = supabase.table('campaignclaims')\
                 .select('*')\
@@ -821,6 +877,8 @@ async def get_brand_campaign(
             
         except Exception as e:
             logger.error(f"Error fetching applications for campaign {campaign_id}: {str(e)}")
+            if "invalid input syntax for type uuid" in str(e).lower():
+                logger.warning(f"UUID format issue fetching applications for campaign {campaign_id}")
             campaign['applications'] = []
         
         return campaign
@@ -829,95 +887,41 @@ async def get_brand_campaign(
         # Re-raise HTTP exceptions
         raise
     except Exception as e:
-        logger.error(f"Error fetching campaign {campaign_id} for brand {brand_id}: {str(e)}")
+        logger.error(f"Error fetching campaign {campaign_id} for brand ID {brand_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch campaign details: {str(e)}")
 
-# Add this new endpoint for updating application status
-
-@app.patch("/campaign-claims/{claim_id}/status")
-async def update_campaign_claim_status(
-    claim_id: str = Path(..., description="The ID of the claim/application"),
-    status_update: dict = Body(..., description="Status update details")
-):
-    """Update the status of a campaign claim (application)."""
-    try:
-        status = status_update.get('status')
-        brand_id = status_update.get('brand_id')
-        
-        if not status or status not in ['pending', 'approved', 'rejected']:
-            raise HTTPException(status_code=400, detail="Invalid status value")
-        
-        logger.info(f"Updating campaign claim {claim_id} status to {status}")
-        
-        # Validate that the claim exists
-        claim_response = supabase.table('campaignclaims')\
-            .select('*')\
-            .eq('id', claim_id)\
-            .execute()
-            
-        if not claim_response.data or len(claim_response.data) == 0:
-            logger.error(f"Claim {claim_id} not found")
-            raise HTTPException(status_code=404, detail="Application not found")
-        
-        # Get the campaign to verify ownership
-        claim = claim_response.data[0]
-        campaign_id = claim.get('campaign_id')
-        
-        campaign_response = supabase.table('campaigns')\
-            .select('brand_id')\
-            .eq('id', campaign_id)\
-            .execute()
-            
-        if not campaign_response.data or len(campaign_response.data) == 0:
-            logger.error(f"Campaign {campaign_id} not found for claim {claim_id}")
-            raise HTTPException(status_code=404, detail="Campaign not found")
-            
-        # Verify the campaign is owned by the brand
-        campaign = campaign_response.data[0]
-        if campaign.get('brand_id') != brand_id:
-            logger.error(f"Brand {brand_id} does not own campaign {campaign_id}")
-            raise HTTPException(status_code=403, detail="You do not have permission to update this application")
-            
-        # Update the claim status
-        update_response = supabase.table('campaignclaims')\
-            .update({'status': status})\
-            .eq('id', claim_id)\
-            .execute()
-            
-        if not update_response.data:
-            logger.error(f"Failed to update claim {claim_id} status")
-            raise HTTPException(status_code=500, detail="Failed to update application status")
-            
-        logger.info(f"Successfully updated claim {claim_id} status to {status}")
-        return {"success": True, "claim_id": claim_id, "status": status}
-        
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        logger.error(f"Error updating campaign claim status: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to update application status: {str(e)}")
-
-# Add Campaign Creation Endpoint to Python API
-
+# Update campaign creation endpoint - keep user ID lookup
 @app.post("/brand-campaigns/{brand_id}/add_campaign", response_model=dict)
 async def add_campaign(
-    brand_id: str = Path(..., description="The ID of the brand"),
+    brand_id: str = Path(..., description="The user ID of the brand"),
     campaign: CampaignCreate = Body(..., description="Campaign details to create")
 ):
     """
     Create a new campaign for a specific brand
     """
     try:
-        logger.info(f"Creating campaign for brand {brand_id}: {campaign.title}")
-        logger.info(f"Campaign data received: {campaign.dict()}")
+        logger.info(f"Creating campaign for user ID {brand_id}: {campaign.title}")
         
         if not supabase:
             logger.warning("Supabase not configured, cannot create campaign")
             raise HTTPException(500, "Database not configured")
         
+        # For creation, we expect user ID, so look up the brand profile
+        brand_profile_response = supabase.table('BrandProfile')\
+            .select('id')\
+            .eq('userId', brand_id)\
+            .execute()
+            
+        if not brand_profile_response.data or len(brand_profile_response.data) == 0:
+            logger.warning(f"Brand profile not found for user ID: {brand_id}")
+            raise HTTPException(status_code=404, detail="Brand profile not found")
+            
+        actual_brand_id = brand_profile_response.data[0]['id']
+        logger.info(f"Found brand profile ID: {actual_brand_id} for user ID: {brand_id}")
+        
         # Convert the campaign data to a dictionary for database insertion
         campaign_data = campaign.dict()
-        campaign_data['brand_id'] = brand_id
+        campaign_data['brand_id'] = actual_brand_id  # Use the actual brand profile ID
         campaign_data['created_at'] = datetime.now().isoformat()
         
         # Handle array fields - convert lists to JSON strings for storage
@@ -977,266 +981,159 @@ async def add_campaign(
         logger.error(f"Unexpected error creating campaign: {str(e)}")
         raise HTTPException(500, f"An unexpected error occurred: {str(e)}")
 
-@app.get("/debug/supabase-connection", response_model=dict)
-async def test_supabase_connection():
-    """Test the Supabase connection and return detailed diagnostics."""
-    
-    # Check environment variables
-    env_vars = {
-        "SUPABASE_URL": os.environ.get("SUPABASE_URL", "Not set"),
-        "SUPABASE_SERVICE_KEY": "****" if os.environ.get("SUPABASE_SERVICE_KEY") else "Not set"
-    }
-    
-    # Test if variables are available
-    variables_ok = all([
-        os.environ.get("SUPABASE_URL"),
-        os.environ.get("SUPABASE_SERVICE_KEY")
-    ])
-    
-    # Test connection
-    connection_test = False
-    error_message = None
-    tables_info = {}
-    
-    if variables_ok:
-        try:
-            # Test basic connection
-            test_client = create_client(
-                os.environ.get("SUPABASE_URL", ""),
-                os.environ.get("SUPABASE_SERVICE_KEY", "")
-            )
-            
-            # Try a simple query
-            tables_to_test = ['campaigns', 'campaignclaims', 'BrandProfile', 'CreatorProfile']
-            
-            for table in tables_to_test:
-                try:
-                    table_response = test_client.table(table).select('id').limit(1).execute()
-                    tables_info[table] = {
-                        "accessible": True,
-                        "records": len(table_response.data or [])
-                    }
-                except Exception as table_error:
-                    tables_info[table] = {
-                        "accessible": False,
-                        "error": str(table_error)
-                    }
-            
-            connection_test = True
-            
-        except Exception as e:
-            error_message = str(e)
-            connection_test = False
-    
-    return {
-        "timestamp": datetime.now().isoformat(),
-        "environment": "production" if os.environ.get("GOOGLE_CLOUD_PROJECT") else "development",
-        "environment_variables": {
-            "configured": variables_ok,
-            "details": env_vars
-        },
-        "connection_test": {
-            "success": connection_test,
-            "error": error_message
-        },
-        "tables": tables_info,
-        "python_version": platform.python_version(),
-        "packages": {
-            "supabase": supabase.__version__ if hasattr(supabase, "__version__") else "unknown"
-        }
-    }
-
-# Improve the existing debug endpoint to show even more information
-@app.get("/debug/environment", response_model=dict)
-async def check_environment():
-    """Check all environment variables and their values (with redaction for sensitive values)."""
-    env_vars = {}
-    sensitive_vars = ['key', 'password', 'secret', 'token']
-    
-    # Get all environment variables
-    for key, value in os.environ.items():
-        # Redact sensitive values
-        if any(s in key.lower() for s in sensitive_vars):
-            value = f"{value[:4]}...{value[-4:]}" if len(value) > 8 else "****"
-        env_vars[key] = value
-    
-    return {
-        "environment_variables": env_vars,
-        "environment": os.environ.get("GOOGLE_CLOUD_PROJECT", "development"),
-        "python_version": platform.python_version(),
-        "packages": {
-            "supabase": getattr(supabase, "__version__", "unknown"),
-            "fastapi": "latest"
-        }
-    }
-
-# Add this new endpoint for getting a single campaign by ID
-@app.get("/campaigns/{campaign_id}", response_model=dict)
-async def get_campaign(campaign_id: str):
-    """Get a specific campaign by ID without needing to know the brand ID"""
-    try:
-        logger.info(f"Fetching campaign with ID: {campaign_id}")
-        
-        if not supabase:
-            # Return not found if no Supabase connection
-            logger.warning(f"No Supabase connection available")
-            raise HTTPException(status_code=404, detail="Campaign not found")
-
-        # Fetch the campaign from the database
-        campaign_response = supabase.table('campaigns')\
-            .select('*')\
-            .eq('id', campaign_id)\
-            .execute()
-            
-        if not campaign_response.data or len(campaign_response.data) == 0:
-            logger.warning(f"Campaign not found with ID: {campaign_id}")
-            raise HTTPException(status_code=404, detail="Campaign not found")
-            
-        campaign = campaign_response.data[0]
-        logger.info(f"Retrieved campaign: {campaign.get('title', 'Untitled')} with ID: {campaign_id}")
-        
-        # Add brand_name if available
-        if campaign.get('brand_id'):
-            try:
-                brand_response = supabase.table('BrandProfile').select('companyName').eq('id', campaign['brand_id']).execute()
-                if brand_response.data and len(brand_response.data) > 0:
-                    campaign['brand_name'] = brand_response.data[0].get('companyName', 'Unknown Brand')
-                else:
-                    campaign['brand_name'] = f"Brand {campaign['brand_id']}"
-            except Exception as brand_error:
-                logger.error(f"Error fetching brand name: {str(brand_error)}")
-                campaign['brand_name'] = f"Brand {campaign['brand_id']}"
-        
-        # Fetch applications for this campaign if any
-        try:
-            applications_response = supabase.table('campaignclaims')\
-                .select('*')\
-                .eq('campaign_id', campaign_id)\
-                .execute()
-            
-            campaign['applications'] = applications_response.data or []
-            logger.info(f"Found {len(campaign['applications'])} applications for campaign {campaign_id}")
-        except Exception as app_error:
-            logger.error(f"Error fetching applications: {str(app_error)}")
-            campaign['applications'] = []
-        
-        return campaign
-    except HTTPException:
-        # Re-raise HTTP exceptions
-        raise
-    except Exception as e:
-        logger.error(f"Error fetching campaign {campaign_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch campaign: {str(e)}")
-
-# Add upload endpoint to the campaigns API
-@app.post("/upload")
-async def upload_file(
-    file: UploadFile = File(...),
-    brand_id: str = Form(...),
-    campaign_id: str = Form(...)
+# Update campaign update endpoint - keep user ID lookup
+@app.put("/brand-campaigns/{brand_id}/campaign/{campaign_id}", response_model=dict)
+async def update_campaign(
+    brand_id: str = Path(..., description="The user ID of the brand"),
+    campaign_id: str = Path(..., description="The ID of the campaign"),
+    campaign_update: CampaignCreate = Body(..., description="Updated campaign details")
 ):
     """
-    Upload a file (product photo) for a campaign
+    Update an existing campaign for a specific brand
     """
     try:
-        logger.info(f"Uploading file for brand {brand_id}, campaign {campaign_id}")
+        logger.info(f"Updating campaign {campaign_id} for user ID {brand_id}")
         
         if not supabase:
-            logger.warning("Supabase not configured, cannot upload file")
-            raise HTTPException(500, "Storage not configured")
+            logger.warning("Supabase not configured, cannot update campaign")
+            raise HTTPException(500, "Database not configured")
         
-        # Validate file
-        if not file.filename:
-            raise HTTPException(400, "No file provided")
-        
-        # Check file size (5MB limit)
-        file_content = await file.read()
-        if len(file_content) > 5 * 1024 * 1024:
-            raise HTTPException(400, "File size exceeds 5MB limit")
-        
-        # Generate unique filename
-        file_extension = file.filename.split('.')[-1] if '.' in file.filename else ''
-        unique_filename = f"{uuid.uuid4()}.{file_extension}" if file_extension else str(uuid.uuid4())
-        
-        # Fix: Remove "campaigns" from the path since bucket is already named "campaigns"
-        # This prevents double "campaigns" in the URL
-        storage_path = f"{brand_id}/{campaign_id}/{unique_filename}"
-        
-        logger.info(f"Storage path: {storage_path}")
-        logger.info(f"Expected public URL: https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/public/campaigns/{storage_path}")
-        
-        try:
-            # Upload to Supabase storage with correct file options format and correct bucket name
-            file_options = {
-                "content-type": file.content_type or "application/octet-stream",
-                "upsert": "true"  # Convert boolean to string
-            }
+        # For updates, we expect user ID, so look up the brand profile
+        brand_profile_response = supabase.table('BrandProfile')\
+            .select('id')\
+            .eq('userId', brand_id)\
+            .execute()
             
-            response = supabase.storage.from_("campaigns").upload(
-                storage_path,
-                file_content,
-                file_options
-            )
+        if not brand_profile_response.data or len(brand_profile_response.data) == 0:
+            logger.warning(f"Brand profile not found for user ID: {brand_id}")
+            raise HTTPException(status_code=404, detail="Brand profile not found")
             
-            logger.info(f"File uploaded successfully: {response}")
+        actual_brand_id = brand_profile_response.data[0]['id']
+        logger.info(f"Found brand profile ID: {actual_brand_id} for user ID: {brand_id}")
+        
+        # Verify the campaign exists and belongs to the brand using actual brand_id
+        existing_campaign = supabase.table('campaigns')\
+            .select('*')\
+            .eq('id', campaign_id)\
+            .eq('brand_id', actual_brand_id)\
+            .execute()
             
-            # Get public URL with correct bucket name
-            public_url_response = supabase.storage.from_("campaigns").get_public_url(storage_path)
-            public_url = public_url_response if isinstance(public_url_response, str) else public_url_response.get('publicUrl', '')
-            
-            logger.info(f"Generated public URL: {public_url}")
-            
+        if not existing_campaign.data or len(existing_campaign.data) == 0:
+            raise HTTPException(404, "Campaign not found or access denied")
+        
+        # Convert the campaign data to a dictionary for database update
+        campaign_data = campaign_update.dict()
+        
+        # Remove updated_at since it doesn't exist in the table
+        # Handle array fields - convert lists to JSON strings for storage
+        array_fields = [
+            'primary_promotion_objectives',
+            'creator_profile_preferences_gender',
+            'creator_profile_preference_ethnicity',
+            'creator_profile_preference_content_niche',
+            'preferred_creator_location',
+            'creator_tier_requirement'
+        ]
+        
+        for field in array_fields:
+            if field in campaign_data and isinstance(campaign_data[field], list):
+                campaign_data[field] = json.dumps(campaign_data[field])
+        
+        # Remove None values and brand_id (shouldn't be updated)
+        campaign_data = {k: v for k, v in campaign_data.items() if v is not None and v != '' and k != 'brand_id'}
+        
+        logger.info(f"Updating campaign with data: {campaign_data}")
+        
+        # Update the campaign in the database
+        response = supabase.table("campaigns")\
+            .update(campaign_data)\
+            .eq('id', campaign_id)\
+            .eq('brand_id', actual_brand_id)\
+            .execute()
+        
+        if response.data:
+            logger.info(f"Campaign {campaign_id} updated successfully")
             return {
                 "success": True,
-                "url": public_url,
-                "path": storage_path,
-                "filename": unique_filename
+                "campaign_id": campaign_id,
+                "message": "Campaign updated successfully"
             }
-            
-        except Exception as storage_error:
-            logger.error(f"Storage error: {str(storage_error)}")
-            
-            # Try alternative upload method without upsert
-            try:
-                logger.info("Trying alternative upload method without upsert option")
-                
-                # First try to remove the file if it exists
-                try:
-                    supabase.storage.from_("campaigns").remove([storage_path])
-                except:
-                    pass  # Ignore removal errors
-                
-                # Upload without file options to correct bucket
-                response = supabase.storage.from_("campaigns").upload(
-                    storage_path,
-                    file_content
-                )
-                
-                logger.info(f"Alternative upload successful: {response}")
-                
-                # Get public URL with correct bucket name
-                public_url_response = supabase.storage.from_("campaigns").get_public_url(storage_path)
-                public_url = public_url_response if isinstance(public_url_response, str) else public_url_response.get('publicUrl', '')
-                
-                logger.info(f"Alternative method - Generated public URL: {public_url}")
-                
-                return {
-                    "success": True,
-                    "url": public_url,
-                    "path": storage_path,
-                    "filename": unique_filename
-                }
-                
-            except Exception as alt_error:
-                logger.error(f"Alternative upload also failed: {str(alt_error)}")
-                raise HTTPException(500, f"Storage error: {str(alt_error)}")
+        else:
+            logger.error(f"No data returned from update operation for campaign {campaign_id}")
+            raise HTTPException(500, "Failed to update campaign - no data returned")
             
     except HTTPException as he:
-        logger.error(f"HTTP error uploading file: {he.detail}")
         raise he
     except Exception as e:
-        logger.error(f"Unexpected error uploading file: {str(e)}")
-        raise HTTPException(500, f"Upload failed: {str(e)}")
+        logger.error(f"Error updating campaign: {str(e)}")
+        raise HTTPException(500, f"Failed to update campaign: {str(e)}")
+
+# Update campaign delete endpoint - keep user ID lookup
+@app.delete("/brand-campaigns/{brand_id}/campaign/{campaign_id}", response_model=dict)
+async def delete_campaign(
+    brand_id: str = Path(..., description="The user ID of the brand"),
+    campaign_id: str = Path(..., description="The ID of the campaign")
+):
+    """
+    Delete a campaign for a specific brand
+    """
+    try:
+        logger.info(f"Deleting campaign {campaign_id} for user ID {brand_id}")
+        
+        if not supabase:
+            logger.warning("Supabase not configured, cannot delete campaign")
+            raise HTTPException(500, "Database not configured")
+        
+        # For deletes, we expect user ID, so look up the brand profile
+        brand_profile_response = supabase.table('BrandProfile')\
+            .select('id')\
+            .eq('userId', brand_id)\
+            .execute()
+            
+        if not brand_profile_response.data or len(brand_profile_response.data) == 0:
+            logger.warning(f"Brand profile not found for user ID: {brand_id}")
+            raise HTTPException(status_code=404, detail="Brand profile not found")
+            
+        actual_brand_id = brand_profile_response.data[0]['id']
+        logger.info(f"Found brand profile ID: {actual_brand_id} for user ID: {brand_id}")
+        
+        # Verify the campaign exists and belongs to the brand using actual brand_id
+        existing_campaign = supabase.table('campaigns')\
+            .select('id')\
+            .eq('id', campaign_id)\
+            .eq('brand_id', actual_brand_id)\
+            .execute()
+            
+        if not existing_campaign.data or len(existing_campaign.data) == 0:
+            raise HTTPException(404, "Campaign not found or access denied")
+        
+        # Delete associated campaign claims first (to maintain referential integrity)
+        try:
+            supabase.table('campaignclaims')\
+                .delete()\
+                .eq('campaign_id', campaign_id)\
+                .execute()
+        except Exception as e:
+            logger.warning(f"Error deleting campaign claims: {str(e)}")
+        
+        # Delete the campaign using actual brand_id
+        response = supabase.table("campaigns")\
+            .delete()\
+            .eq('id', campaign_id)\
+            .eq('brand_id', actual_brand_id)\
+            .execute()
+        
+        return {
+            "success": True,
+            "campaign_id": campaign_id,
+            "message": "Campaign deleted successfully"
+        }
+            
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Error deleting campaign: {str(e)}")
+        raise HTTPException(500, f"Failed to delete campaign: {str(e)}")
 
 # Add import for contact app - fix the import path conflict
 try:
@@ -1292,4 +1189,68 @@ async def contact_redirect():
             "schema": "/contact/schema"
         }
     }
+
+@app.get("/campaigns/{campaign_id}", response_model=dict)
+async def get_campaign_by_id(
+    campaign_id: str = Path(..., description="The ID of the campaign")
+):
+    """
+    Get a specific campaign by ID for public viewing
+    """
+    logger.info(f"Fetching public campaign details for ID: {campaign_id}")
+    
+    try:
+        if not supabase:
+            return {"error": "Supabase connection not available"}
+
+        # Validate campaign_id is a valid UUID format
+        try:
+            import uuid
+            uuid.UUID(campaign_id)
+        except ValueError:
+            logger.error(f"Invalid UUID format for campaign_id: {campaign_id}")
+            raise HTTPException(status_code=400, detail="Invalid campaign ID format")
+
+        # Fetch the campaign from database
+        try:
+            campaign_response = supabase.table('campaigns')\
+                .select('*')\
+                .eq('id', campaign_id)\
+                .eq('is_open', True)\
+                .execute()
+        except Exception as db_error:
+            logger.error(f"Database error fetching campaign: {str(db_error)}")
+            if "invalid input syntax for type uuid" in str(db_error).lower():
+                raise HTTPException(status_code=400, detail="Invalid campaign ID format")
+            raise HTTPException(status_code=500, detail="Database error fetching campaign")
+            
+        if not campaign_response.data or len(campaign_response.data) == 0:
+            logger.warning(f"Campaign {campaign_id} not found or not open")
+            raise HTTPException(status_code=404, detail="Campaign not found")
+            
+        campaign = campaign_response.data[0]
+        
+        # Get brand information
+        try:
+            brand_response = supabase.table('BrandProfile')\
+                .select('companyName')\
+                .eq('id', campaign['brand_id'])\
+                .execute()
+            
+            if brand_response.data and len(brand_response.data) > 0:
+                campaign['brand_name'] = brand_response.data[0].get('companyName', 'Unknown Brand')
+            else:
+                campaign['brand_name'] = 'Unknown Brand'
+        except Exception as e:
+            logger.error(f"Error fetching brand information: {str(e)}")
+            campaign['brand_name'] = 'Unknown Brand'
+        
+        return campaign
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching campaign {campaign_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch campaign details: {str(e)}")
 
