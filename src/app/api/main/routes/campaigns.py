@@ -128,3 +128,11 @@ async def delete_campaign(
 ):
     """Delete a campaign for a specific brand."""
     return await CampaignService.delete_campaign(brand_id, campaign_id)
+
+@router.delete("/brand-campaigns/{brand_id}/campaign/{campaign_id}", response_model=dict)
+async def delete_brand_campaign(
+    brand_id: str = Path(..., description="The brand profile ID or user ID"),
+    campaign_id: str = Path(..., description="The ID of the campaign to delete")
+):
+    """Delete a specific campaign for a brand."""
+    return await BrandService.delete_brand_campaign(brand_id, campaign_id)

@@ -213,3 +213,93 @@ class BrandService:
         except Exception as e:
             logger.error(f"Error fetching campaign {campaign_id}: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Failed to fetch campaign details: {str(e)}")
+
+    @staticmethod
+    async def delete_brand_campaign(brand_id: str, campaign_id: str) -> Dict[str, Any]:
+        """Delete a specific campaign for a brand."""
+        logger.info(f"Deleting campaign {campaign_id} for brand ID: {brand_id}")
+        
+        try:
+            if not supabase:
+                raise HTTPException(status_code=500, detail="Database not configured")
+
+            if not validate_uuid(campaign_id):
+                logger.error(f"Invalid UUID format for campaign_id: {campaign_id}")
+                raise HTTPException(status_code=400, detail="Invalid campaign ID format")
+
+            # Determine if brand_id is a profile ID or user ID
+            brand_profile_response = supabase.table('BrandProfile')\
+                .select('id')\
+                .eq('id', brand_id)\
+                .execute()
+                
+            if brand_profile_response.data and len(brand_profile_response.data) > 0:
+                actual_brand_id = brand_id
+            else:
+                user_brand_response = supabase.table('BrandProfile')\
+                    .select('id')\
+                    .eq('userId', brand_id)\
+                    .execute()
+                    
+                if not user_brand_response.data or len(user_brand_response.data) == 0:
+                    logger.warning(f"Brand profile not found for ID: {brand_id}")
+                    raise HTTPException(status_code=404, detail="Brand profile not found")
+                    
+                actual_brand_id = user_brand_response.data[0]['id']
+
+            # Verify the campaign exists and belongs to this brand
+            try:
+                existing_campaign = supabase.table('campaigns')\
+                    .select('id, title')\
+                    .eq('id', campaign_id)\
+                    .eq('brand_id', actual_brand_id)\
+                    .execute()
+            except Exception as db_error:
+                logger.error(f"Database error checking campaign: {str(db_error)}")
+                if "invalid input syntax for type uuid" in str(db_error).lower():
+                    raise HTTPException(status_code=400, detail="Invalid campaign ID format")
+                raise HTTPException(status_code=500, detail="Database error checking campaign")
+                
+            if not existing_campaign.data or len(existing_campaign.data) == 0:
+                logger.warning(f"Campaign {campaign_id} not found for brand profile {actual_brand_id}")
+                raise HTTPException(status_code=404, detail="Campaign not found or access denied")
+                
+            campaign_title = existing_campaign.data[0].get('title', 'Unknown Campaign')
+            
+            # Delete related campaign claims first (cascade delete)
+            try:
+                claims_delete_response = supabase.table('campaignclaims')\
+                    .delete()\
+                    .eq('campaign_id', campaign_id)\
+                    .execute()
+                logger.info(f"Deleted campaign claims for campaign {campaign_id}")
+            except Exception as claims_error:
+                logger.warning(f"Error deleting campaign claims for {campaign_id}: {str(claims_error)}")
+                # Continue with campaign deletion even if claims deletion fails
+            
+            # Delete the campaign
+            try:
+                campaign_delete_response = supabase.table('campaigns')\
+                    .delete()\
+                    .eq('id', campaign_id)\
+                    .eq('brand_id', actual_brand_id)\
+                    .execute()
+                    
+                logger.info(f"Successfully deleted campaign {campaign_id} ({campaign_title}) for brand {actual_brand_id}")
+                
+                return {
+                    "success": True,
+                    "campaign_id": campaign_id,
+                    "campaign_title": campaign_title,
+                    "message": f"Campaign '{campaign_title}' deleted successfully"
+                }
+                
+            except Exception as delete_error:
+                logger.error(f"Database error deleting campaign: {str(delete_error)}")
+                raise HTTPException(status_code=500, detail="Failed to delete campaign from database")
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error deleting campaign {campaign_id}: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to delete campaign: {str(e)}")

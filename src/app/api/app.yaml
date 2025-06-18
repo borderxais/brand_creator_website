@@ -2,8 +2,8 @@ runtime: python311
 
 service: brand-creator-website-campaigns-api
 
-# Force uvicorn as the ASGI server for FastAPI
-entrypoint: python -m uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
+# Use uvicorn as the ASGI server for FastAPI
+entrypoint: uvicorn main:app --host 0.0.0.0 --port $PORT
 
 env_variables:
   # Database URLs
@@ -28,9 +28,6 @@ env_variables:
   # App URLs
   NEXT_PUBLIC_APP_URL: "https://borderx.net"
   NEXTAUTH_URL: "https://borderx.net"
-  
-  # Explicitly set server type
-  WEB_CONCURRENCY: "1"
 
 automatic_scaling:
   min_instances: 0
