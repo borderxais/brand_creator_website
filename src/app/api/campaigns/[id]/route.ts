@@ -33,6 +33,7 @@ export async function GET(
           const error = await response.json();
           return NextResponse.json(
             { error: error.detail || 'Campaign not found' },
+            
             { status: response.status }
           );
         } catch (parseError) {

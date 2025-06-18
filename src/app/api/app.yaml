@@ -1,0 +1,58 @@
+runtime: python311
+
+service: brand-creator-website-campaigns-api
+
+# Force uvicorn as the ASGI server for FastAPI
+entrypoint: python -m uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
+
+env_variables:
+  # Database URLs
+  DATABASE_URL: "postgresql://postgres.ldlxyyctxylgmstfqlzh:299976387y!@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true&prepared_statements=false"
+  DIRECT_URL: "postgresql://postgres.ldlxyyctxylgmstfqlzh:299976387y!@aws-0-us-west-1.pooler.supabase.com:5432/postgres"
+  
+  # Supabase API Credentials
+  SUPABASE_URL: "https://ldlxyyctxylgmstfqlzh.supabase.co"
+  SUPABASE_SERVICE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkbHh5eWN0eHlsZ21zdGZxbHpoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MTA0NDEwMSwiZXhwIjoyMDU2NjIwMTAxfQ.7m2VEaoRI4tur6BxBseL-jczHULlLgVt0xV0RYJb5BM"
+  
+  # SMTP Settings
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_SECURE: "false"
+  SMTP_USER: "info@borderxmedia.com"
+  SMTP_PASSWORD: "kvdtzvwjivhsjkgo"
+  
+  # TikTok API Credentials
+  TIKTOK_ACCESS_TOKEN: "501451aac8e52709146ce1791efe81b15c26cbfe"
+  TIKTOK_TCM_ACCOUNT_ID: "7491077961832202247"
+  
+  # App URLs
+  NEXT_PUBLIC_APP_URL: "https://borderx.net"
+  NEXTAUTH_URL: "https://borderx.net"
+  
+  # Explicitly set server type
+  WEB_CONCURRENCY: "1"
+
+automatic_scaling:
+  min_instances: 0
+  max_instances: 10
+  target_cpu_utilization: 0.6
+
+resources:
+  cpu: 1
+  memory_gb: 1
+  disk_size_gb: 10
+
+# Health check configuration
+readiness_check:
+  path: "/_ah/health"
+  check_interval_sec: 5
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+
+liveness_check:
+  path: "/_ah/health"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 4
+  success_threshold: 2
