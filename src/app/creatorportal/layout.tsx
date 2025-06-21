@@ -23,7 +23,7 @@ const navigationItems = [
 const systemItems = [
   { name: 'Profile', href: '/creatorportal/profile', icon: Users },
   { name: 'Message Us', href: '/contact', icon: MessageSquare },
-  // { name: 'Settings', href: '/creatorportal/settings', icon: Settings },
+  { name: 'Settings', href: '/creatorportal/settings', icon: Settings },
   { name: 'Sign out', icon: LogOut, onClick: () => signOut({ callbackUrl: '/' }) },
 ];
 

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from .config.settings import settings
-    from .routes import campaigns, claims, health, upload, contact
+    from .routes import campaigns, claims, health, upload, contact, entertainment
     logger.info("Successfully imported all modules")
 except ImportError as e:
     logger.error(f"Import error: {e}")
@@ -55,6 +55,7 @@ try:
     app.include_router(contact.router, prefix="/contact", tags=["contact"])
     app.include_router(campaigns.router, tags=["brand-campaigns"])
     app.include_router(claims.router, tags=["claims"])
+    app.include_router(entertainment.router, prefix="/entertainment-live", tags=["entertainment-live"])
     logger.info("Successfully included all routers")
 except Exception as e:
     logger.error(f"Error including routers: {e}")

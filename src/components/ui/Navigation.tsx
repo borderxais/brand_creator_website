@@ -95,13 +95,13 @@ export default function Navigation() {
     en: [
       { href: '/find-creators', label: 'Find Creators', width: '120px' },
       { href: '/campaigns', label: 'Campaigns', width: '100px' },
-      //{ href: '/advertiserservice', label: 'Advertiser Service', width: '150px' },
+      { href: '/entertainment-live', label: 'Live Streaming', width: '130px' },
       { href: '/how-it-works', label: 'How it Works', width: '120px' },
     ],
     zh: [
       { href: '/zh/find-creators', label: '寻找创作者', width: '120px' },
       { href: '/zh/campaigns', label: '广告活动', width: '100px' },
-      //{ href: '/zh/advertiser-services', label: '广告主服务', width: '150px' },
+      { href: '/zh/entertainment-live', label: '娱乐直播', width: '100px' },
       { href: '/zh/about', label: '关于我们', width: '120px' },
     ],
   };
