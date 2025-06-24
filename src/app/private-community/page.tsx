@@ -25,6 +25,10 @@ export default function PrivateCommunityPage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [selectedAdPlatform, setSelectedAdPlatform] = useState<string>('google');
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
+  const [addOnQuantities, setAddOnQuantities] = useState<{ [key: string]: number }>({
+    'extra-content': 1,
+    'extra-campaigns': 1
+  });
 
   // Toggle features visibility for all cards
   const toggleFeaturesVisibility = () => {
@@ -183,6 +187,14 @@ export default function PrivateCommunityPage() {
     });
   };
 
+  // Handle quantity change for add-ons
+  const handleQuantityChange = (addOnId: string, quantity: number) => {
+    setAddOnQuantities(prev => ({
+      ...prev,
+      [addOnId]: Math.max(1, quantity) // Ensure minimum quantity is 1
+    }));
+  };
+
   // Add-on services configuration
   const addOnServices = [
     {
@@ -254,7 +266,7 @@ export default function PrivateCommunityPage() {
     const managementFeeRate = parseInt(selectedPlatform.managementFee.replace(/[%of ad spend]/g, '')) / 100;
     const advertisingFees = minBudget + (minBudget * managementFeeRate);
 
-    // Calculate add-on fees
+    // Calculate add-on fees with quantities
     const addOnPrices: { [key: string]: number } = {
       'extra-content': 8,
       'custom-chatbot': 1500,
@@ -264,7 +276,15 @@ export default function PrivateCommunityPage() {
     };
 
     const totalAddOnFees = selectedAddOns.reduce((total, addOnId) => {
-      return total + (addOnPrices[addOnId] || 0);
+      const basePrice = addOnPrices[addOnId] || 0;
+      const quantity = addOnQuantities[addOnId] || 1;
+      
+      // Apply quantity for services that support it
+      if (addOnId === 'extra-content' || addOnId === 'extra-campaigns') {
+        return total + (basePrice * quantity);
+      } else {
+        return total + basePrice;
+      }
     }, 0);
 
     const totalPrice = planPrice + advertisingFees + totalAddOnFees;
@@ -705,8 +725,7 @@ export default function PrivateCommunityPage() {
             {addOnServices.map((addOn) => (
               <div
                 key={addOn.id}
-                onClick={() => handleAddOnSelection(addOn.id)}
-                className={`relative p-6 border-2 rounded-lg cursor-pointer transition-all duration-300 ${
+                className={`relative p-6 border-2 rounded-lg transition-all duration-300 ${
                   selectedAddOns.includes(addOn.id)
                     ? 'border-purple-500 bg-purple-50 shadow-lg scale-105'
                     : 'border-gray-200 hover:border-purple-300 hover:shadow-md'
@@ -736,12 +755,54 @@ export default function PrivateCommunityPage() {
                     </div>
                   </div>
 
+                  {/* Quantity Selector for specific add-ons */}
+                  {selectedAddOns.includes(addOn.id) && (addOn.id === 'extra-content' || addOn.id === 'extra-campaigns') && (
+                    <div className="bg-white p-3 rounded-lg border">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Quantity: {addOn.id === 'extra-content' ? 'Number of Extra Messages' : 'Number of Extra Campaigns'}
+                      </label>
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuantityChange(addOn.id, (addOnQuantities[addOn.id] || 1) - 1);
+                          }}
+                          className="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-full text-gray-600"
+                          disabled={addOnQuantities[addOn.id] <= 1}
+                        >
+                          -
+                        </button>
+                        <span className="w-12 text-center font-semibold">
+                          {addOnQuantities[addOn.id] || 1}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuantityChange(addOn.id, (addOnQuantities[addOn.id] || 1) + 1);
+                          }}
+                          className="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-full text-gray-600"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className="mt-2 text-sm text-purple-600 font-semibold">
+                        Subtotal: ${addOn.id === 'extra-content' 
+                          ? (8 * (addOnQuantities[addOn.id] || 1)).toLocaleString()
+                          : (500 * (addOnQuantities[addOn.id] || 1)).toLocaleString()
+                        }/month
+                      </div>
+                    </div>
+                  )}
+
                   <div className="pt-2 border-t border-gray-100">
-                    <button className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                      selectedAddOns.includes(addOn.id)
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-purple-50 hover:text-purple-700'
-                    }`}>
+                    <button 
+                      onClick={() => handleAddOnSelection(addOn.id)}
+                      className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                        selectedAddOns.includes(addOn.id)
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-purple-50 hover:text-purple-700'
+                      }`}
+                    >
                       {selectedAddOns.includes(addOn.id) ? 'Selected' : 'Add to Plan'}
                     </button>
                   </div>
@@ -759,14 +820,25 @@ export default function PrivateCommunityPage() {
                   const addOn = addOnServices.find(service => service.id === addOnId);
                   if (!addOn) return null;
                   
+                  const quantity = addOnQuantities[addOnId] || 1;
+                  const hasQuantity = addOnId === 'extra-content' || addOnId === 'extra-campaigns';
+                  const unitPrice = addOnId === 'extra-content' ? 8 : addOnId === 'extra-campaigns' ? 500 : 0;
+                  
                   return (
                     <div key={addOnId} className="flex items-center justify-between bg-white p-3 rounded-lg">
                       <div>
                         <h4 className="font-medium text-gray-900">{addOn.name}</h4>
                         <p className="text-sm text-gray-600">{addOn.description}</p>
+                        {hasQuantity && (
+                          <p className="text-sm text-purple-600">
+                            Quantity: {quantity} × ${unitPrice} = ${(unitPrice * quantity).toLocaleString()}/month
+                          </p>
+                        )}
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-purple-600">{addOn.pricing}</div>
+                        <div className="font-bold text-purple-600">
+                          {hasQuantity ? `$${(unitPrice * quantity).toLocaleString()}/month` : addOn.pricing}
+                        </div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -909,10 +981,18 @@ export default function PrivateCommunityPage() {
                         };
                         if (!addOn) return null;
                         
+                        const quantity = addOnQuantities[addOnId] || 1;
+                        const unitPrice = addOnPrices[addOnId];
+                        const hasQuantity = addOnId === 'extra-content' || addOnId === 'extra-campaigns';
+                        const totalPrice = hasQuantity ? unitPrice * quantity : unitPrice;
+                        
                         return (
                           <div key={addOnId} className="flex justify-between">
-                            <span>• {addOn.name}:</span>
-                            <span>${addOnPrices[addOnId]}/month</span>
+                            <span>
+                              • {addOn.name}
+                              {hasQuantity && ` (${quantity}x)`}:
+                            </span>
+                            <span>${totalPrice}/month</span>
                           </div>
                         );
                       })}
