@@ -97,6 +97,7 @@ export default function Navigation() {
       { href: '/campaigns', label: 'Campaigns', width: '100px' },
       { href: '/entertainment-live', label: 'Live Streaming', width: '130px' },
       { href: '/private-community', label: 'Private Community', width: '150px' },
+      { href: '/pear', label: 'Pear', width: '80px' },
       { href: '/how-it-works', label: 'How it Works', width: '120px' },
     ],
     zh: [
@@ -104,6 +105,7 @@ export default function Navigation() {
       { href: '/zh/campaigns', label: '广告活动', width: '100px' },
       { href: '/zh/entertainment-live', label: '娱乐直播', width: '100px' },
       { href: '/zh/private-community', label: '私域社区', width: '100px' },
+      { href: '/zh/pear', label: 'Pear', width: '80px' },
       { href: '/zh/about', label: '关于我们', width: '120px' },
     ],
   };
