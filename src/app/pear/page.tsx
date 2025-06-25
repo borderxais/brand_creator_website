@@ -17,6 +17,31 @@ export default function PearPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Check authentication status
+  const checkAuthStatus = async () => {
+    try {
+      setAuthLoading(true);
+      const response = await fetch('/api/pear/auth', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      setIsLoggedIn(false);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   const fetchStores = async (search?: string) => {
     try {
@@ -45,6 +70,7 @@ export default function PearPage() {
 
   useEffect(() => {
     fetchStores();
+    checkAuthStatus();
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -55,6 +81,14 @@ export default function PearPage() {
   const handleClearSearch = () => {
     setSearchTerm('');
     fetchStores();
+  };
+
+  const handleAffiliateClick = (e: React.MouseEvent) => {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      setShowLoginModal(true);
+    }
+    // If logged in, the link will work normally
   };
 
   if (loading) {
@@ -280,22 +314,39 @@ export default function PearPage() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <a
-                  href="https://pear.us/borderx/invitation?invitationCode=akgy4a"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
-                >
-                  Get a Try
-                  <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
+                {authLoading ? (
+                  <div className="inline-flex items-center px-8 py-4 bg-gray-200 text-gray-500 text-lg font-semibold rounded-lg cursor-not-allowed">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-400 mr-2"></div>
+                    Checking...
+                  </div>
+                ) : isLoggedIn ? (
+                  <a
+                    href="https://pear.us/borderx/invitation?invitationCode=akgy4a"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  >
+                    Get a Try
+                    <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                ) : (
+                  <button
+                    onClick={handleAffiliateClick}
+                    className="inline-flex items-center px-8 py-4 bg-gray-400 text-white text-lg font-semibold rounded-lg cursor-not-allowed opacity-75 hover:opacity-80 transition-opacity"
+                  >
+                    Login Required
+                    <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </button>
+                )}
                 
                 <div className="text-sm text-gray-600">
                   <p className="flex items-center">
                     <span className="text-green-500 mr-2">✓</span>
-                    Free to join
+                    {isLoggedIn ? 'Ready to join' : 'Login required'}
                   </p>
                   <p className="flex items-center">
                     <span className="text-green-500 mr-2">✓</span>
@@ -303,9 +354,71 @@ export default function PearPage() {
                   </p>
                 </div>
               </div>
+
+              {/* Signup Prompt */}
+              {!isLoggedIn && (
+                <div className="mt-6 text-center">
+                  <p className="text-gray-600 text-sm">
+                    Don't have an account? Join as{' '}
+                    <Link
+                      href="/join-creator"
+                      className="text-purple-600 hover:text-purple-700 font-medium underline transition-colors"
+                    >
+                      creator
+                    </Link>
+                    {' '}or{' '}
+                    <Link
+                      href="/join-brand"
+                      className="text-purple-600 hover:text-purple-700 font-medium underline transition-colors"
+                    >
+                      brand
+                    </Link>
+                    {' '}right now!
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Login Modal */}
+        {showLoginModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+              <div className="text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 mb-4">
+                  <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Login Required</h3>
+                <p className="text-gray-600 mb-6">
+                  You need to be logged in to access the affiliate link. Please log in to continue.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link
+                    href="/auth/signin"
+                    className="inline-flex items-center px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/auth/signup"
+                    className="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    Sign Up
+                  </Link>
+                  <button
+                    onClick={() => setShowLoginModal(false)}
+                    className="inline-flex items-center px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

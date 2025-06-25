@@ -56,8 +56,7 @@ try:
     app.include_router(claims.router, tags=["claims"])
     app.include_router(entertainment.router, prefix="/entertainment-live", tags=["entertainment-live"])
     app.include_router(pear.router, prefix="/pear", tags=["pear"])
-    # Move this LAST or remove it completely
-    #app.include_router(campaigns.router, tags=["brand-campaigns"])
+    app.include_router(campaigns.router, tags=["brand-campaigns"])
     logger.info("Successfully included all routers")
 except Exception as e:
     logger.error(f"Error including routers: {e}")

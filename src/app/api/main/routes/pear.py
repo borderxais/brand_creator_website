@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-@router.get("/", response_model=List[Dict[str, Any]])
+@router.get("", response_model=List[Dict[str, Any]])
 async def get_pear_stores(
     search: Optional[str] = Query(None, description="Search term for store name or intro"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of stores to return")
