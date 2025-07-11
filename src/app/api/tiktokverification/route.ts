@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
       return `${key}: ${String(value).substring(0, 100)}${String(value).length > 100 ? '...' : ''}`;
     }));
     
-    // API URL from environment or fallback to default
-    const apiUrl = `${process.env.TTVERIFICATION_API_URL || 'http://localhost:8000'}/api/verification`;
+    // API URL from environment or fallback to main API
+    const apiUrl = `${process.env.CAMPAIGNS_API_URL || 'http://127.0.0.1:5000'}/tiktokverification/verification`;
     console.log("Forwarding request to:", apiUrl);
     
     // Set a longer timeout for large files
