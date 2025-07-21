@@ -14,7 +14,7 @@ def run_daily_metrics():
        (or loop over multiple advertiser IDs if needed).
     """
     today_str = datetime.now().strftime("%Y-%m-%d")
-    advertiser_id = "7385681808811294736"  # or any fixed ID; edit as needed
+    advertiser_id = "7385681808811294736"  # or any fixed ID
 
     print(f"Running automation for advertiser_id={advertiser_id}, date_range={today_str} to {today_str}")
     run_automation(advertiser_id, today_str, today_str)
