@@ -23,52 +23,65 @@ export async function POST(request: NextRequest) {
       return `${key}: ${String(value).substring(0, 100)}${String(value).length > 100 ? '...' : ''}`;
     }));
     
-    // API URL from environment or fallback to main API
-    const apiUrl = `${process.env.CAMPAIGNS_API_URL || 'http://127.0.0.1:5000'}/tiktokverification/verification`;
+    // API URL - use environment variable or fallback
+    const baseUrl = process.env.CAMPAIGNS_API_URL || process.env.PYTHON_API_URL || 'http://127.0.0.1:5000';
+    const apiUrl = `${baseUrl}/tiktokverification/verification`;
     console.log("Forwarding request to:", apiUrl);
     
     // Set a longer timeout for large files
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30-second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60-second timeout for cloud
     
     try {
       // Forward the request to FastAPI with longer timeout
       const response = await fetch(apiUrl, {
         method: 'POST',
         body: formData,
-        signal: controller.signal
+        signal: controller.signal,
+        // Add headers for better cloud compatibility
+        headers: {
+          'Accept': 'application/json',
+        }
       });
       
-      clearTimeout(timeoutId); // Clear the timeout
+      clearTimeout(timeoutId);
       
-      // Read response as text first (can only read once)
+      // Read response as text first
       const responseText = await response.text();
       console.log("Response status:", response.status);
-      console.log("Response text:", responseText);
+      console.log("Response text (first 200 chars):", responseText.substring(0, 200));
       
       // Check if request was successful
       if (!response.ok) {
         let errorDetail = 'Failed to submit verification';
         
         try {
-          // Try to parse as JSON if the response looks like JSON
+          // Try to parse as JSON
           if (responseText.trim().startsWith('{') || responseText.trim().startsWith('[')) {
             const errorData = JSON.parse(responseText);
-            errorDetail = errorData.detail || errorDetail;
+            errorDetail = errorData.detail || errorData.message || errorDetail;
           } else {
-            // Use the raw text if not JSON
-            errorDetail = responseText || errorDetail;
+            // Handle HTML error pages from cloud services
+            if (responseText.includes('<html>') || responseText.includes('<!DOCTYPE')) {
+              errorDetail = `Server error: ${response.status} - HTML response received (likely infrastructure error)`;
+            } else {
+              errorDetail = responseText.substring(0, 200) || errorDetail;
+            }
           }
         } catch (parseError) {
           console.error('Error parsing response:', parseError);
-          errorDetail = responseText || errorDetail;
+          errorDetail = `Server error: ${response.status} - ${responseText.substring(0, 100)}`;
         }
         
         console.error('API error response:', errorDetail);
         
         return NextResponse.json(
-          { detail: errorDetail },
-          { status: response.status }
+          { 
+            success: false,
+            detail: errorDetail,
+            status: response.status
+          },
+          { status: response.status >= 500 ? 500 : response.status }
         );
       }
       
@@ -78,22 +91,43 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(data);
       } catch (parseError) {
         console.error('Error parsing success response:', parseError);
-        return NextResponse.json({ message: responseText || 'Success' });
+        // Return a valid JSON response even if parsing fails
+        return NextResponse.json({ 
+          success: true,
+          message: responseText || 'Verification submitted successfully' 
+        });
       }
     } catch (fetchError) {
       console.error('Fetch error:', fetchError);
+      
+      // Handle different types of fetch errors
+      let errorMessage = 'Error connecting to API';
+      if (fetchError instanceof Error) {
+        if (fetchError.name === 'AbortError') {
+          errorMessage = 'Request timeout - please try again';
+        } else if (fetchError.message.includes('ECONNREFUSED')) {
+          errorMessage = 'API service is not available';
+        } else {
+          errorMessage = fetchError.message;
+        }
+      }
+      
       return NextResponse.json(
-        { detail: `Error connecting to API: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}` },
-        { status: 500 }
+        { 
+          success: false,
+          detail: errorMessage,
+          error_type: 'connection_error'
+        },
+        { status: 503 } // Service Unavailable
       );
     }
   } catch (error) {
-    // Detailed error logging
     console.error('API route error:', error);
     return NextResponse.json(
       { 
+        success: false,
         detail: error instanceof Error ? error.message : 'Internal server error',
-        stack: error instanceof Error ? error.stack : undefined
+        error_type: 'internal_error'
       },
       { status: 500 }
     );

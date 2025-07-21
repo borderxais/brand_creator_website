@@ -3,9 +3,13 @@ runtime: python311
 service: brand-creator-website-campaigns-api
 
 # Use uvicorn as the ASGI server for FastAPI
-entrypoint: uvicorn main:app --host 0.0.0.0 --port $PORT
+entrypoint: uvicorn main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 65
 
 env_variables:
+  # API Configuration
+  CAMPAIGNS_API_URL: "https://brand-creator-website-campaigns-api-dot-borderx-media.uc.r.appspot.com"
+  PYTHON_API_URL: "https://brand-creator-website-campaigns-api-dot-borderx-media.uc.r.appspot.com"
+  
   # Database URLs
   DATABASE_URL: "postgresql://postgres.ldlxyyctxylgmstfqlzh:299976387y!@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true&prepared_statements=false"
   DIRECT_URL: "postgresql://postgres.ldlxyyctxylgmstfqlzh:299976387y!@aws-0-us-west-1.pooler.supabase.com:5432/postgres"
@@ -28,28 +32,36 @@ env_variables:
   # App URLs
   NEXT_PUBLIC_APP_URL: "https://borderx.net"
   NEXTAUTH_URL: "https://borderx.net"
+  
+  # FastAPI Configuration
+  API_TITLE: "Campaign API"
+  API_VERSION: "1.0.0"
 
 automatic_scaling:
-  min_instances: 0
+  min_instances: 1
   max_instances: 10
   target_cpu_utilization: 0.6
 
 resources:
   cpu: 1
-  memory_gb: 1
+  memory_gb: 2
   disk_size_gb: 10
 
-# Health check configuration
+# Health check configuration with more reasonable timeouts
 readiness_check:
   path: "/_ah/health"
-  check_interval_sec: 5
-  timeout_sec: 4
-  failure_threshold: 2
+  check_interval_sec: 10
+  timeout_sec: 10
+  failure_threshold: 3
   success_threshold: 2
 
 liveness_check:
   path: "/_ah/health"
   check_interval_sec: 30
-  timeout_sec: 4
+  timeout_sec: 10
   failure_threshold: 4
   success_threshold: 2
+
+# Add network settings for better performance
+network:
+  session_affinity: true
