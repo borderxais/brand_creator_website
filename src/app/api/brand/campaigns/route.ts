@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     const endDate = searchParams.get('end_date');
 
     // Build the Python API URL with query parameters using brand profile ID directly
-    let pythonApiUrl = `${PYTHON_API_URL}/brand-campaigns/${user.brand.id}`;  // Use brand profile ID
+    let pythonApiUrl = `${PYTHON_API_URL}/campaigns/brand-campaigns/${user.brand.id}`;  // Updated path
     const queryParams = new URLSearchParams();
     
     if (isOpen) queryParams.append('is_open', isOpen);
@@ -179,7 +179,7 @@ export async function POST(request: Request) {
       });
       
       // Forward the request to the Python API
-      const pythonApiUrl = `${PYTHON_API_URL}/brand-campaigns/${user.brand.id}/add_campaign`;
+      const pythonApiUrl = `${PYTHON_API_URL}/campaigns/brand-campaigns/${user.brand.id}/add_campaign`;  // Updated path
       
       console.log('Creating campaign via Python API:', pythonApiUrl);
       
@@ -223,7 +223,7 @@ export async function POST(request: Request) {
       };
 
       // Forward the request to the Python API
-      const pythonApiUrl = `${PYTHON_API_URL}/brand-campaigns/${user.brand.id}/add_campaign`;
+      const pythonApiUrl = `${PYTHON_API_URL}/campaigns/brand-campaigns/${user.brand.id}/add_campaign`;
       
       console.log('Creating campaign via Python API (JSON):', pythonApiUrl);
       

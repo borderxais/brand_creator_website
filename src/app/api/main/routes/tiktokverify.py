@@ -10,6 +10,23 @@ router = APIRouter()
 # Initialize service
 verification_service = TikTokVerificationService()
 
+@router.get("/")
+async def get_tiktok_verification_info():
+    """Get TikTok verification API information"""
+    return {
+        "message": "TikTok Verification API",
+        "endpoints": {
+            "submit_verification": "POST /verification",
+            "get_verification": "GET /verification/{verification_id}",
+            "get_verifications": "GET /verifications",
+            "setup_storage": "GET /setup-storage",
+            "setup_database": "GET /setup-database",
+            "diagnose": "GET /diagnose-database",
+            "test": "GET /test"
+        },
+        "status": "active"
+    }
+
 @router.post("/verification", response_model=TikTokVerificationResponse)
 async def upload_verification(
     # ------------ plain fields ------------

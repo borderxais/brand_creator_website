@@ -25,7 +25,8 @@ async def get_campaign_by_id(
     """Get a specific campaign by ID for public viewing."""
     return await CampaignService.get_campaign_by_id(campaign_id)
 
-@router.get("/brand-campaigns/{brand_id}", response_model=List[dict])
+# Fix the brand campaigns routes to have proper paths
+@router.get("/brand/{brand_id}", response_model=List[dict])
 async def get_brand_campaigns(
     brand_id: str = Path(..., description="The brand profile ID (not user ID)"),
     status: Optional[str] = Query(None, description="Filter by campaign status"),
@@ -36,7 +37,7 @@ async def get_brand_campaigns(
     """Get all campaigns for a specific brand with optional filtering."""
     return await BrandService.get_brand_campaigns(brand_id, status, start_date, end_date, search)
 
-@router.get("/brand-campaigns/{brand_id}/campaign/{campaign_id}", response_model=dict)
+@router.get("/brand/{brand_id}/campaign/{campaign_id}", response_model=dict)
 async def get_brand_campaign(
     brand_id: str = Path(..., description="The brand profile ID or user ID"),
     campaign_id: str = Path(..., description="The ID of the campaign")
@@ -44,7 +45,7 @@ async def get_brand_campaign(
     """Get a specific campaign by ID with all its applications."""
     return await BrandService.get_brand_campaign(brand_id, campaign_id)
 
-@router.post("/brand-campaigns/{brand_id}/add_campaign", response_model=dict)
+@router.post("/brand/{brand_id}/add", response_model=dict)
 async def add_campaign(
     brand_id: str = Path(..., description="The user ID of the brand"),
     campaign: CampaignCreate = Body(..., description="Campaign details to create")
@@ -66,8 +67,7 @@ async def add_campaign(
         logger.error(f"Unexpected error in add_campaign endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create campaign")
 
-# Add a new endpoint to check/create brand profile
-@router.post("/brand-campaigns/{brand_id}/ensure-profile", response_model=dict)
+@router.post("/brand/{brand_id}/ensure-profile", response_model=dict)
 async def ensure_brand_profile(
     brand_id: str = Path(..., description="The user ID of the brand")
 ):
@@ -112,7 +112,7 @@ async def ensure_brand_profile(
         logger.error(f"Error ensuring brand profile: {str(e)}")
         raise HTTPException(500, f"Failed to ensure brand profile: {str(e)}")
 
-@router.put("/brand-campaigns/{brand_id}/campaign/{campaign_id}", response_model=dict)
+@router.put("/brand/{brand_id}/campaign/{campaign_id}", response_model=dict)
 async def update_campaign(
     brand_id: str = Path(..., description="The user ID of the brand"),
     campaign_id: str = Path(..., description="The ID of the campaign"),
@@ -121,18 +121,10 @@ async def update_campaign(
     """Update an existing campaign for a specific brand."""
     return await CampaignService.update_campaign(brand_id, campaign_id, campaign_update)
 
-@router.delete("/brand-campaigns/{brand_id}/campaign/{campaign_id}", response_model=dict)
+@router.delete("/brand/{brand_id}/campaign/{campaign_id}", response_model=dict)
 async def delete_campaign(
     brand_id: str = Path(..., description="The user ID of the brand"),
     campaign_id: str = Path(..., description="The ID of the campaign")
 ):
     """Delete a campaign for a specific brand."""
     return await CampaignService.delete_campaign(brand_id, campaign_id)
-
-@router.delete("/brand-campaigns/{brand_id}/campaign/{campaign_id}", response_model=dict)
-async def delete_brand_campaign(
-    brand_id: str = Path(..., description="The brand profile ID or user ID"),
-    campaign_id: str = Path(..., description="The ID of the campaign to delete")
-):
-    """Delete a specific campaign for a brand."""
-    return await BrandService.delete_brand_campaign(brand_id, campaign_id)

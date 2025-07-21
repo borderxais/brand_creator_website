@@ -50,14 +50,13 @@ async def global_exception_handler(request: Request, exc: Exception):
 # Include routers with error handling
 try:
     app.include_router(health.router, tags=["health"])
+    app.include_router(tiktokverify.router, prefix="/tiktokverification", tags=["tiktokverification"])
     app.include_router(campaigns.router, prefix="/campaigns", tags=["campaigns"])
     app.include_router(upload.router, tags=["upload"])
     app.include_router(contact.router, prefix="/contact", tags=["contact"])
     app.include_router(claims.router, tags=["claims"])
     app.include_router(entertainment.router, prefix="/entertainment-live", tags=["entertainment-live"])
     app.include_router(pear.router, prefix="/pear", tags=["pear"])
-    app.include_router(tiktokverify.router, prefix="/tiktokverification", tags=["tiktokverification"])
-    app.include_router(campaigns.router, tags=["brand-campaigns"])
     logger.info("Successfully included all routers")
 except Exception as e:
     logger.error(f"Error including routers: {e}")
@@ -77,4 +76,5 @@ async def root():
 @app.get("/_ah/health")
 async def app_engine_health():
     """App Engine health check endpoint."""
+    return {"status": "healthy"}
     return {"status": "healthy"}

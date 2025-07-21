@@ -22,7 +22,7 @@ export async function GET(
     const brandId = session.user.id;
 
     // Use the same URL structure as the working route
-    const response = await fetch(`${PYTHON_API_URL}/brand-campaigns/${brandId}/campaign/${campaignId}`, {
+    const response = await fetch(`${PYTHON_API_URL}/campaigns/brand-campaigns/${brandId}/campaign/${campaignId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ export async function PUT(
 
     console.log('Updating campaign:', campaignId, 'for brand:', brandId);
 
-    const response = await fetch(`${PYTHON_API_URL}/brand-campaigns/${brandId}/campaign/${campaignId}`, {
+    const response = await fetch(`${PYTHON_API_URL}/campaigns/brand-campaigns/${brandId}/campaign/${campaignId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -147,7 +147,7 @@ export async function DELETE(
 
     console.log('Deleting campaign:', campaignId, 'for brand:', brandId);
 
-    const response = await fetch(`${PYTHON_API_URL}/brand-campaigns/${brandId}/campaign/${campaignId}`, {
+    const response = await fetch(`${PYTHON_API_URL}/campaigns/brand-campaigns/${brandId}/campaign/${campaignId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

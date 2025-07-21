@@ -1,44 +1,41 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+
+const PYTHON_API_URL = process.env.CAMPAIGNS_API_URL || 'http://localhost:5000';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     
-    // Get API URL from environment variable or use default
-    const apiBaseUrl = process.env.CAMPAIGNS_API_URL || 'http://localhost:5000';
+    // Build query string from search params
+    const queryString = searchParams.toString();
     
-    // Determine if we're calling the main API or a utility endpoint
-    const path = searchParams.get('path') || '/';
+    // Forward to the correct campaigns endpoint with /campaigns prefix
+    const apiUrl = `${PYTHON_API_URL}/campaigns/${queryString ? `?${queryString}` : ''}`;
     
-    // Create the URL to forward to the FastAPI app
-    const url = new URL(`${apiBaseUrl}${path}`);
+    console.log('Forwarding request to:', apiUrl);
     
-    // Forward all query parameters except 'path'
-    searchParams.forEach((value, key) => {
-      if (key !== 'path') {
-        url.searchParams.append(key, value);
-      }
-    });
-    
-    console.log(`Forwarding request to: ${url.toString()}`);
-    
-    // Make the request to the FastAPI app
-    const response = await fetch(url.toString(), {
+    const response = await fetch(apiUrl, {
+      method: 'GET',
       headers: {
-        'Accept': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
+      signal: AbortSignal.timeout(5000),
     });
+
+    if (!response.ok) {
+      console.error(`Python API returned status ${response.status}`);
+      return NextResponse.json(
+        { error: `API Error: ${response.status}` },
+        { status: response.status }
+      );
+    }
+
+    const campaigns = await response.json();
+    console.log('Retrieved campaigns:', Array.isArray(campaigns) ? campaigns.length : 'not an array');
     
-    const data = await response.json();
-    
-    // Even if status is not OK, we want to return the data as it may contain error details
-    return NextResponse.json(data, { status: response.status });
-  } catch (error: any) {
-    console.error('API route error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', message: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json(campaigns);
+  } catch (error) {
+    console.error('Error fetching campaigns:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
