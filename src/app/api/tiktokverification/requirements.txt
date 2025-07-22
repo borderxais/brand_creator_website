@@ -1,7 +1,0 @@
-fastapi
-uvicorn
-python-multipart
-supabase
-python-dotenv
-psycopg2-binary
-aiofile
