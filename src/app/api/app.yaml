@@ -7,8 +7,8 @@ entrypoint: uvicorn main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 65
 
 env_variables:
   # API Configuration
-  CAMPAIGNS_API_URL: "https://brand-creator-website-campaigns-api-dot-borderx-media.uc.r.appspot.com"
-  PYTHON_API_URL: "https://brand-creator-website-campaigns-api-dot-borderx-media.uc.r.appspot.com"
+  CAMPAIGNS_API_URL: "https://brand-creator-website-campaigns-api-dot-overseabiz-453023.wl.r.appspot.com"
+  PYTHON_API_URL: "https://brand-creator-website-campaigns-api-dot-overseabiz-453023.wl.r.appspot.com"
   
   # Database URLs
   DATABASE_URL: "postgresql://postgres.ldlxyyctxylgmstfqlzh:299976387y!@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true&prepared_statements=false"

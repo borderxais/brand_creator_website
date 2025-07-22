@@ -13,8 +13,8 @@ from main.main import app
 # It will look for the 'app' variable in this main.py file
 
 # This is for local development only
-if __name__ == "__main__":
-    import uvicorn
-    # App Engine expects the app to run on port 8080
-    port = int(os.environ.get("PORT", 8080))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+# if __name__ == "__main__":
+#     import uvicorn
+#     # App Engine expects the app to run on port 8080
+#     port = int(os.environ.get("PORT", 8080))
+#     uvicorn.run(app, host="0.0.0.0", port=port)

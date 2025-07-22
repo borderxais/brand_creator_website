@@ -3,6 +3,7 @@ from typing import Optional, Union
 from ..services.tiktokverify import TikTokVerificationService
 from ..models.tiktokverify import TikTokVerificationCreate, TikTokVerificationResponse
 import logging
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -22,6 +23,7 @@ async def get_tiktok_verification_info():
             "setup_storage": "GET /setup-storage",
             "setup_database": "GET /setup-database",
             "diagnose": "GET /diagnose-database",
+            "health": "GET /health",
             "test": "GET /test"
         },
         "status": "active"
@@ -174,6 +176,61 @@ async def diagnose_database():
     except Exception as e:
         logger.error(f"Error diagnosing database: {str(e)}")
         raise HTTPException(500, f"Failed to diagnose database: {str(e)}")
+
+@router.get("/health")
+async def health_check():
+    """Health check endpoint for TikTok verification service"""
+    try:
+        # Check database connectivity
+        db_status = "healthy"
+        db_message = "Database connection successful"
+        try:
+            verification_service.supabase.table("influencer_verifications").select("id").limit(1).execute()
+        except Exception as db_error:
+            db_status = "unhealthy"
+            db_message = f"Database connection failed: {str(db_error)}"
+            logger.warning(f"Database health check failed: {db_error}")
+        
+        # Check storage connectivity
+        storage_status = "healthy"
+        storage_message = "Storage service accessible"
+        try:
+            # Test storage connectivity by checking if we can access the bucket
+            verification_service.supabase.storage.list_buckets()
+        except Exception as storage_error:
+            storage_status = "unhealthy" 
+            storage_message = f"Storage service failed: {str(storage_error)}"
+            logger.warning(f"Storage health check failed: {storage_error}")
+        
+        # Overall health status
+        overall_status = "healthy" if db_status == "healthy" and storage_status == "healthy" else "degraded"
+        
+        return {
+            "status": overall_status,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "service": "TikTok Verification API",
+            "version": "1.0.0",
+            "checks": {
+                "database": {
+                    "status": db_status,
+                    "message": db_message
+                },
+                "storage": {
+                    "status": storage_status,
+                    "message": storage_message
+                }
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return {
+            "status": "unhealthy",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "service": "TikTok Verification API",
+            "version": "1.0.0",
+            "error": str(e)
+        }
 
 @router.get("/test")
 async def test_endpoint():
