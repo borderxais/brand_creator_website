@@ -12,8 +12,14 @@ export const config = {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("=== TIKTOK VERIFICATION ROUTE START ===");
+    console.log("Request URL:", request.url);
+    console.log("Request method:", request.method);
+    console.log("Request headers:", Object.fromEntries(request.headers.entries()));
+    
     // Get form data from the request
     const formData = await request.formData();
+    console.log("Form data received successfully");
     
     // Log what we're sending for debugging
     console.log("Form data fields:", Array.from(formData.entries()).map(([key, value]) => {
@@ -26,7 +32,10 @@ export async function POST(request: NextRequest) {
     // API URL - use environment variable or fallback
     const baseUrl = process.env.CAMPAIGNS_API_URL || process.env.PYTHON_API_URL || 'http://127.0.0.1:5000';
     const apiUrl = `${baseUrl}/tiktokverification/verification`;
-    console.log("Forwarding request to:", apiUrl);
+    console.log("Environment variables:");
+    console.log("- CAMPAIGNS_API_URL:", process.env.CAMPAIGNS_API_URL);
+    console.log("- PYTHON_API_URL:", process.env.PYTHON_API_URL);
+    console.log("- Final API URL:", apiUrl);
     
     // Set a longer timeout for large files
     const controller = new AbortController();
@@ -122,7 +131,12 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('API route error:', error);
+    console.error('=== ROUTE ERROR ===');
+    console.error('Error type:', error?.constructor?.name);
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('=== END ROUTE ERROR ===');
+    
     return NextResponse.json(
       { 
         success: false,
