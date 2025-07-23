@@ -39,6 +39,22 @@ class TikTokVerificationCreate(BaseModel):
     other_platforms: Optional[str] = None
     agent_email: str
 
+class TikTokVerificationWithPaths(BaseModel):
+    passport_name: str
+    real_name: str
+    id_type: str
+    gender: str
+    nationality: str
+    stage_name: Optional[str] = None
+    id_number: str
+    date_of_birth: str
+    account_intro: str
+    overseas_platform_url: str
+    follower_count: int
+    other_platforms: Optional[str] = None
+    agent_email: str
+    file_paths: dict  # Contains the file paths from direct uploads
+
 class TikTokVerificationResponse(BaseModel):
     success: bool
     message: str

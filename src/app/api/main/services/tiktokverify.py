@@ -246,3 +246,121 @@ class TikTokVerificationService:
                 "database_connected": False,
                 "error": str(e)
             }
+    
+    def generate_upload_urls(self, id_number: str, files: list) -> dict:
+        """Generate pre-signed upload URLs for direct file uploads to Supabase"""
+        try:
+            folder = f"{id_number}"
+            upload_urls = {}
+            
+            # Define file mapping
+            file_mappings = {
+                "id_front_file": "id_front",
+                "handheld_id_file": "id_handheld", 
+                "backend_ss_file": "backend_ss",
+                "signed_auth_file": "authorization",
+                "identity_video_file": "identity_video"
+            }
+            
+            for file_info in files:
+                file_key = file_info.get("key")
+                file_extension = file_info.get("extension", "jpg")
+                
+                if file_key in file_mappings:
+                    file_name = file_mappings[file_key]
+                    file_path = f"{folder}/{file_name}.{file_extension}"
+                    
+                    try:
+                        # Generate pre-signed URL for upload (expires in 1 hour)
+                        signed_url_response = self.supabase.storage.from_("verification-assets").create_signed_upload_url(file_path)
+                        
+                        logger.info(f"Supabase response for {file_key}: {signed_url_response}")
+                        
+                        # Handle different possible response formats
+                        if isinstance(signed_url_response, dict):
+                            # Check for different possible key names
+                            upload_url = None
+                            if "signedURL" in signed_url_response:
+                                upload_url = signed_url_response["signedURL"]
+                            elif "signed_url" in signed_url_response:
+                                upload_url = signed_url_response["signed_url"]
+                            elif "url" in signed_url_response:
+                                upload_url = signed_url_response["url"]
+                            else:
+                                # If it's a direct URL string
+                                upload_url = str(signed_url_response)
+                        else:
+                            # If response is a direct string URL
+                            upload_url = str(signed_url_response)
+                        
+                        if not upload_url:
+                            raise Exception(f"Could not extract upload URL from response: {signed_url_response}")
+                        
+                        upload_urls[file_key] = {
+                            "upload_url": upload_url,
+                            "file_path": file_path,
+                            "token": signed_url_response.get("token") if isinstance(signed_url_response, dict) else None
+                        }
+                        
+                        logger.info(f"Generated upload URL for {file_key}: {file_path}")
+                    except Exception as url_error:
+                        logger.error(f"Error generating upload URL for {file_key}: {str(url_error)}")
+                        raise HTTPException(500, f"Failed to generate upload URL for {file_key}: {str(url_error)}")
+            
+            return {
+                "success": True,
+                "upload_urls": upload_urls
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating upload URLs: {str(e)}")
+            raise HTTPException(500, f"Failed to generate upload URLs: {str(e)}")
+    
+    def create_verification_with_paths(self, verification_data) -> dict:
+        """Create a new verification record using pre-uploaded file paths"""
+        try:
+            logger.info("Creating verification record with file paths...")
+            
+            # Format date of birth
+            dob = datetime.strptime(verification_data.date_of_birth, "%m/%d/%y").date()
+            
+            # Map the file paths from the frontend format to database format
+            file_paths = {
+                "id_front_path": verification_data.file_paths.get("id_front_file"),
+                "handheld_id_path": verification_data.file_paths.get("handheld_id_file"),
+                "backend_ss_path": verification_data.file_paths.get("backend_ss_file"),
+                "authorization_path": verification_data.file_paths.get("signed_auth_file"),
+                "identity_video_path": verification_data.file_paths.get("identity_video_file")
+            }
+            
+            # Prepare the record data
+            record = {
+                "passport_name": verification_data.passport_name,
+                "real_name": verification_data.real_name,
+                "id_type": verification_data.id_type,
+                "gender": verification_data.gender,
+                "nationality": verification_data.nationality,
+                "stage_name": verification_data.stage_name,
+                "id_number": verification_data.id_number,
+                "date_of_birth": dob.isoformat(),
+                "account_intro": verification_data.account_intro,
+                "overseas_platform_url": verification_data.overseas_platform_url,
+                "follower_count": verification_data.follower_count,
+                "other_platforms": verification_data.other_platforms,
+                "agent_email": verification_data.agent_email,
+                **file_paths
+            }
+            
+            # Insert into database
+            insert_response = self.supabase.table("influencer_verifications").insert(record).execute()
+            logger.info(f"Record inserted successfully: {insert_response}")
+            
+            return {
+                "success": True,
+                "message": "Verification submitted successfully",
+                "data": record
+            }
+            
+        except Exception as e:
+            logger.error(f"Database insert error: {str(e)}")
+            raise HTTPException(500, f"Failed to save verification data: {str(e)}")

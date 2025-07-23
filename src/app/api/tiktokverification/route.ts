@@ -17,21 +17,37 @@ export async function POST(request: NextRequest) {
     console.log("Request method:", request.method);
     console.log("Request headers:", Object.fromEntries(request.headers.entries()));
     
-    // Get form data from the request
-    const formData = await request.formData();
-    console.log("Form data received successfully");
+    const contentType = request.headers.get('content-type') || '';
+    let requestBody: FormData | any;
+    let isJsonRequest = false;
     
-    // Log what we're sending for debugging
-    console.log("Form data fields:", Array.from(formData.entries()).map(([key, value]) => {
-      if (value instanceof File) {
-        return `${key}: File (${value.name}, ${value.size} bytes)`;
-      }
-      return `${key}: ${String(value).substring(0, 100)}${String(value).length > 100 ? '...' : ''}`;
-    }));
+    if (contentType.includes('application/json')) {
+      // New JSON format with file paths
+      requestBody = await request.json();
+      isJsonRequest = true;
+      console.log("JSON data received successfully");
+      console.log("Submission data:", {
+        ...requestBody,
+        file_paths: Object.keys(requestBody.file_paths || {})
+      });
+    } else {
+      // Legacy FormData format
+      requestBody = await request.formData();
+      console.log("Form data received successfully");
+      const formDataEntries = Array.from(requestBody.entries()) as [string, FormDataEntryValue][];
+      console.log("Form data fields:", formDataEntries.map(([key, value]) => {
+        if (value instanceof File) {
+          return `${key}: File (${value.name}, ${value.size} bytes)`;
+        }
+        return `${key}: ${String(value).substring(0, 100)}${String(value).length > 100 ? '...' : ''}`;
+      }));
+    }
     
     // API URL - use environment variable or fallback
     const baseUrl = process.env.CAMPAIGNS_API_URL || process.env.PYTHON_API_URL || 'http://127.0.0.1:5000';
-    const apiUrl = `${baseUrl}/tiktokverification/verification`;
+    const apiUrl = isJsonRequest 
+      ? `${baseUrl}/tiktokverification/verification-with-paths`
+      : `${baseUrl}/tiktokverification/verification`;
     console.log("Environment variables:");
     console.log("- CAMPAIGNS_API_URL:", process.env.CAMPAIGNS_API_URL);
     console.log("- PYTHON_API_URL:", process.env.PYTHON_API_URL);
@@ -43,15 +59,17 @@ export async function POST(request: NextRequest) {
     
     try {
       // Forward the request to FastAPI with longer timeout
-      const response = await fetch(apiUrl, {
+      const fetchOptions: RequestInit = {
         method: 'POST',
-        body: formData,
+        body: isJsonRequest ? JSON.stringify(requestBody) : requestBody as FormData,
         signal: controller.signal,
-        // Add headers for better cloud compatibility
         headers: {
           'Accept': 'application/json',
+          ...(isJsonRequest ? { 'Content-Type': 'application/json' } : {})
         }
-      });
+      };
+      
+      const response = await fetch(apiUrl, fetchOptions);
       
       clearTimeout(timeoutId);
       

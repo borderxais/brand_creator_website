@@ -45,3 +45,5 @@ next-env.d.ts
 .env.development
 .env.production
 prisma/temp.prisma
+
+*.pyc

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Upload, FileText, ExternalLink, Save, Check, Info, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { generateUploadUrls, uploadMultipleFiles, getFileExtension, FileUploadInfo } from './uploadHelper';
 
 export default function TikTokVerify() {
   const router = useRouter();
@@ -41,6 +42,11 @@ export default function TikTokVerify() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  
+  // Upload progress state
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'completed' | 'error'>('idle');
+  const [currentUploadStep, setCurrentUploadStep] = useState<string>('');
 
   // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -124,55 +130,120 @@ export default function TikTokVerify() {
     return Object.keys(errors).length === 0;
   };
 
-  // Handle form submission
+  // Handle form submission with direct upload
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setApiError(null);
+    setUploadStatus('idle');
+    setUploadProgress({});
     
     if (validateForm()) {
       setIsSubmitting(true);
       
       try {
-        // Create FormData object for multipart/form-data submission
-        const formDataToSubmit = new FormData();
+        // Step 1: Prepare files for upload
+        setCurrentUploadStep('Preparing files...');
+        setUploadStatus('uploading');
         
-        // Add all text fields
-        formDataToSubmit.append('passport_name', formData.passport_name);
-        formDataToSubmit.append('real_name', formData.real_name);
-        formDataToSubmit.append('id_type', formData.id_type);
-        formDataToSubmit.append('gender', formData.gender);
-        formDataToSubmit.append('nationality', formData.nationality);
-        if (formData.stage_name) formDataToSubmit.append('stage_name', formData.stage_name);
-        formDataToSubmit.append('id_number', formData.id_number);
-        formDataToSubmit.append('date_of_birth', formatDate(formData.date_of_birth));
-        formDataToSubmit.append('account_intro', formData.account_intro);
-        formDataToSubmit.append('overseas_platform_url', formData.overseas_platform_url);
-        formDataToSubmit.append('follower_count', formData.follower_count.toString());
-        if (formData.other_platforms) formDataToSubmit.append('other_platforms', formData.other_platforms);
-        formDataToSubmit.append('agent_email', formData.agent_email);
+        const filesToUpload: FileUploadInfo[] = [];
         
-        // Add file fields with null checking
-        if (formData.id_front_file) formDataToSubmit.append('id_front_file', formData.id_front_file as File);
-        if (formData.handheld_id_file) formDataToSubmit.append('handheld_id_file', formData.handheld_id_file as File);
-        if (formData.backend_ss_file) formDataToSubmit.append('backend_ss_file', formData.backend_ss_file as File);
-        if (formData.signed_auth_file) formDataToSubmit.append('signed_auth_file', formData.signed_auth_file as File);
-        
-        // For optional video file, check if it exists and if it's too large
-        if (formData.identity_video_file) {
-          const videoSize = (formData.identity_video_file as File).size;
-          // If video is less than 5MB, include it in the initial request
-          if (videoSize < 5 * 1024 * 1024) {
-            formDataToSubmit.append('identity_video_file', formData.identity_video_file as File);
-          } else {
-            // Otherwise, we'll need to send it separately
-            console.log("Video file is large, will be processed separately");
-          }
+        // Add required files
+        if (formData.id_front_file) {
+          filesToUpload.push({
+            key: 'id_front_file',
+            extension: getFileExtension((formData.id_front_file as File).name),
+            file: formData.id_front_file as File
+          });
         }
         
-        // Submit to API - Use the correct API path
+        if (formData.handheld_id_file) {
+          filesToUpload.push({
+            key: 'handheld_id_file',
+            extension: getFileExtension((formData.handheld_id_file as File).name),
+            file: formData.handheld_id_file as File
+          });
+        }
+        
+        if (formData.backend_ss_file) {
+          filesToUpload.push({
+            key: 'backend_ss_file',
+            extension: getFileExtension((formData.backend_ss_file as File).name),
+            file: formData.backend_ss_file as File
+          });
+        }
+        
+        if (formData.signed_auth_file) {
+          filesToUpload.push({
+            key: 'signed_auth_file',
+            extension: getFileExtension((formData.signed_auth_file as File).name),
+            file: formData.signed_auth_file as File
+          });
+        }
+        
+        // Add optional video file
+        if (formData.identity_video_file) {
+          filesToUpload.push({
+            key: 'identity_video_file',
+            extension: getFileExtension((formData.identity_video_file as File).name),
+            file: formData.identity_video_file as File
+          });
+        }
+        
+        let filePaths: Record<string, string> = {};
+        
+        if (filesToUpload.length > 0) {
+          // Step 2: Generate upload URLs
+          setCurrentUploadStep('Generating upload URLs...');
+          const uploadUrlsResponse = await generateUploadUrls(formData.id_number, filesToUpload);
+          
+          if (!uploadUrlsResponse.success) {
+            throw new Error('Failed to generate upload URLs');
+          }
+          
+          // Step 3: Upload files directly to Supabase
+          setCurrentUploadStep('Uploading files...');
+          filePaths = await uploadMultipleFiles(
+            filesToUpload,
+            uploadUrlsResponse.upload_urls,
+            (fileKey, progress) => {
+              setUploadProgress(prev => ({ ...prev, [fileKey]: progress }));
+            },
+            (fileKey) => {
+              console.log(`Completed upload: ${fileKey}`);
+            }
+          );
+        }
+        
+        // Step 4: Submit form data with file paths
+        setCurrentUploadStep('Submitting verification...');
+        setUploadStatus('completed');
+        
+        const submissionData = {
+          // Text fields
+          passport_name: formData.passport_name,
+          real_name: formData.real_name,
+          id_type: formData.id_type,
+          gender: formData.gender,
+          nationality: formData.nationality,
+          stage_name: formData.stage_name || undefined,
+          id_number: formData.id_number,
+          date_of_birth: formatDate(formData.date_of_birth),
+          account_intro: formData.account_intro,
+          overseas_platform_url: formData.overseas_platform_url,
+          follower_count: parseInt(formData.follower_count),
+          other_platforms: formData.other_platforms || undefined,
+          agent_email: formData.agent_email,
+          // File paths (instead of files)
+          file_paths: filePaths
+        };
+        
+        // Submit to API with JSON data instead of FormData
         const response = await fetch('/api/tiktokverification', {
           method: 'POST',
-          body: formDataToSubmit,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(submissionData),
         });
         
         if (!response.ok) {
@@ -180,11 +251,13 @@ export default function TikTokVerify() {
           throw new Error(errorData.detail || 'Error submitting form');
         }
         
-        // Redirect to success page instead of showing inline success message
+        // Redirect to success page
         router.push('/creatorportal/tiktok-verify/success');
+        
       } catch (error) {
         console.error('Form submission error:', error);
         setApiError(error instanceof Error ? error.message : 'Failed to submit form');
+        setUploadStatus('error');
       } finally {
         setIsSubmitting(false);
       }
@@ -831,6 +904,46 @@ export default function TikTokVerify() {
             </div>
           </div>
         </div>
+        
+        {/* Upload Progress */}
+        {uploadStatus !== 'idle' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+            <div className="flex items-center">
+              <Info className="h-5 w-5 text-blue-400 mr-2" />
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-blue-800">
+                  {uploadStatus === 'uploading' && 'Uploading Files...'}
+                  {uploadStatus === 'completed' && 'Upload Complete!'}
+                  {uploadStatus === 'error' && 'Upload Error'}
+                </h3>
+                <p className="text-sm text-blue-700 mt-1">{currentUploadStep}</p>
+                
+                {uploadStatus === 'uploading' && Object.keys(uploadProgress).length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {Object.entries(uploadProgress).map(([fileKey, progress]) => (
+                      <div key={fileKey} className="flex items-center justify-between">
+                        <span className="text-xs text-blue-600 capitalize">
+                          {fileKey.replace('_file', '').replace('_', ' ')}
+                        </span>
+                        <div className="flex items-center ml-4">
+                          <div className="w-24 bg-blue-200 rounded-full h-2 mr-2">
+                            <div 
+                              className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                              style={{ width: `${progress}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs text-blue-600 w-10 text-right">
+                            {Math.round(progress)}%
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Form Actions */}
         <div className="flex space-x-4 justify-end">

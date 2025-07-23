@@ -1,7 +1,8 @@
 from fastapi import APIRouter, File, Form, UploadFile, HTTPException
 from typing import Optional, Union
+from pydantic import BaseModel
 from ..services.tiktokverify import TikTokVerificationService
-from ..models.tiktokverify import TikTokVerificationCreate, TikTokVerificationResponse
+from ..models.tiktokverify import TikTokVerificationCreate, TikTokVerificationResponse, TikTokVerificationWithPaths
 import logging
 from datetime import datetime, timezone
 
@@ -11,6 +12,15 @@ router = APIRouter()
 # Initialize service
 verification_service = TikTokVerificationService()
 
+# Request models
+class FileInfo(BaseModel):
+    key: str
+    extension: str
+
+class UploadUrlsRequest(BaseModel):
+    id_number: str
+    files: list[FileInfo]
+
 @router.get("/")
 async def get_tiktok_verification_info():
     """Get TikTok verification API information"""
@@ -18,6 +28,7 @@ async def get_tiktok_verification_info():
         "message": "TikTok Verification API",
         "endpoints": {
             "submit_verification": "POST /verification",
+            "generate_upload_urls": "POST /upload-urls",
             "get_verification": "GET /verification/{verification_id}",
             "get_verifications": "GET /verifications",
             "setup_storage": "GET /setup-storage",
@@ -104,6 +115,52 @@ async def upload_verification(
     except Exception as e:
         # Catch-all for unexpected errors
         logger.error(f"Unexpected error in upload_verification: {str(e)}")
+        raise HTTPException(500, f"An unexpected error occurred: {str(e)}")
+
+@router.post("/upload-urls")
+async def generate_upload_urls(request: UploadUrlsRequest):
+    """Generate pre-signed upload URLs for direct file uploads to Supabase"""
+    try:
+        logger.info(f"Generating upload URLs for ID: {request.id_number}")
+        
+        # Convert Pydantic models to dict for the service
+        files_list = [file_info.dict() for file_info in request.files]
+        
+        result = verification_service.generate_upload_urls(request.id_number, files_list)
+        
+        return result
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions to preserve status codes
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error generating upload URLs: {str(e)}")
+        raise HTTPException(500, f"Failed to generate upload URLs: {str(e)}")
+
+@router.post("/verification-with-paths", response_model=TikTokVerificationResponse)
+async def submit_verification_with_paths(verification_data: TikTokVerificationWithPaths):
+    """Submit verification with pre-uploaded file paths (bypasses Netlify limits)"""
+    try:
+        logger.info(f"Processing verification with paths for ID: {verification_data.id_number}")
+        
+        # Check if ID already exists
+        if verification_service.check_id_exists(verification_data.id_number):
+            raise HTTPException(400, f"ID number {verification_data.id_number} already exists")
+        
+        # Create verification record with the provided file paths
+        result = verification_service.create_verification_with_paths(verification_data)
+        
+        return TikTokVerificationResponse(
+            success=True,
+            message="Verification submitted successfully",
+            data=result.get("data")
+        )
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions to preserve status codes
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in submit_verification_with_paths: {str(e)}")
         raise HTTPException(500, f"An unexpected error occurred: {str(e)}")
 
 @router.get("/verification/{verification_id}")
