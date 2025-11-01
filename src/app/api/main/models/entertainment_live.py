@@ -1,8 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 
 class EntertainmentLive(BaseModel):
+    model_config = ConfigDict(extra='allow')
     id: str
     created_at: Optional[datetime] = None
     task_title: str
@@ -29,6 +30,7 @@ class EntertainmentLive(BaseModel):
     brand_name: Optional[str] = None  # For joined data
 
 class EntertainmentLiveCreate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     task_title: str
     brand_id: str
     campaign_objective: Optional[str] = None

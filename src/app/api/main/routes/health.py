@@ -2,10 +2,11 @@ from fastapi import APIRouter
 from ..database.connection import supabase
 from ..utils.validators import validate_supabase_connection
 from ..config.settings import settings
+from ..models.common import GenericStatusResponse, SQLScriptResponse
 
 router = APIRouter()
 
-@router.get("/health")
+@router.get("/health", response_model=GenericStatusResponse)
 async def health_check():
     """API health check endpoint."""
     connection_ok, connection_msg = await validate_supabase_connection(supabase)
@@ -26,7 +27,7 @@ async def health_check():
         "api_version": settings.API_VERSION
     }
 
-@router.get("/setup-sql")
+@router.get("/setup-sql", response_model=SQLScriptResponse)
 async def get_setup_sql():
     """Return SQL that can be used to set up the necessary tables and permissions."""
     from ..database.schemas import CREATE_TABLE_SQL

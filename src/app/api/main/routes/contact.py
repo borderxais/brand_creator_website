@@ -1,6 +1,14 @@
 from fastapi import APIRouter, HTTPException, Request, Query, Path
 from typing import Optional
-from ..models.contact import ContactFormData, ContactResponse
+from ..models.contact import (
+    ContactFormData,
+    ContactFormSchema,
+    ContactHealthStatus,
+    ContactMessageStatusResponse,
+    ContactMessagesResponse,
+    ContactResponse,
+    EmailTestResponse,
+)
 from ..services.contact_service import ContactService
 import logging
 
@@ -15,22 +23,22 @@ async def submit_contact_form(
     """Submit a contact form with enhanced database handling."""
     return await ContactService.submit_contact_form(contact_data)
 
-@router.get("/health")
+@router.get("/health", response_model=ContactHealthStatus)
 async def contact_health_check():
     """Health check for contact API including database status."""
     return await ContactService.get_health_status()
 
-@router.get("/schema")
+@router.get("/schema", response_model=ContactFormSchema)
 async def get_contact_form_schema():
     """Return the contact form schema for frontend validation."""
     return await ContactService.get_form_schema()
 
-@router.post("/test-email")
+@router.post("/test-email", response_model=EmailTestResponse)
 async def test_email_configuration():
     """Test email configuration by sending a test email."""
     return await ContactService.test_email_configuration()
 
-@router.get("/messages")
+@router.get("/messages", response_model=ContactMessagesResponse)
 async def get_contact_messages(
     status: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of messages"),
@@ -39,7 +47,7 @@ async def get_contact_messages(
     """Get contact messages from database (admin only)."""
     return await ContactService.get_contact_messages(status, limit, offset)
 
-@router.patch("/messages/{message_id}/status")
+@router.patch("/messages/{message_id}/status", response_model=ContactMessageStatusResponse)
 async def update_message_status(
     request: Request,
     message_id: int = Path(..., description="Message ID")

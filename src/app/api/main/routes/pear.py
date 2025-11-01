@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query, HTTPException, Path, Body
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from ..models.pear import PearBrand, PearBrandCreate, PearBrandResponse
 from ..services.pear import PearService
 import logging
@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-@router.get("", response_model=List[Dict[str, Any]])
+@router.get("", response_model=List[PearBrand])
 async def get_pear_stores(
     search: Optional[str] = Query(None, description="Search term for store name or intro"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of stores to return")
@@ -16,7 +16,7 @@ async def get_pear_stores(
     logger.info(f"Getting pear stores with search='{search}', limit={limit}")
     return await PearService.get_all_stores(search, limit)
 
-@router.get("/{store_id}", response_model=Dict[str, Any])
+@router.get("/{store_id}", response_model=PearBrand)
 async def get_pear_store_by_id(
     store_id: str = Path(..., description="The ID of the pear brand store")
 ):

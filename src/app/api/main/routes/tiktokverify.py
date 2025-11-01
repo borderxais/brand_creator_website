@@ -2,7 +2,17 @@ from fastapi import APIRouter, File, Form, UploadFile, HTTPException
 from typing import Optional, Union
 from pydantic import BaseModel
 from ..services.tiktokverify import TikTokVerificationService
-from ..models.tiktokverify import TikTokVerificationCreate, TikTokVerificationResponse, TikTokVerificationWithPaths
+from ..models.common import GenericStatusResponse
+from ..models.tiktokverify import (
+    TikTokDiagnosticsResponse,
+    TikTokHealthResponse,
+    TikTokSetupResponse,
+    TikTokVerificationCreate,
+    TikTokVerificationListResponse,
+    TikTokVerificationResponse,
+    TikTokVerificationWithPaths,
+    UploadUrlsResponse,
+)
 import logging
 from datetime import datetime, timezone
 
@@ -21,7 +31,7 @@ class UploadUrlsRequest(BaseModel):
     id_number: str
     files: list[FileInfo]
 
-@router.get("/")
+@router.get("/", response_model=GenericStatusResponse)
 async def get_tiktok_verification_info():
     """Get TikTok verification API information"""
     return {
@@ -117,7 +127,7 @@ async def upload_verification(
         logger.error(f"Unexpected error in upload_verification: {str(e)}")
         raise HTTPException(500, f"An unexpected error occurred: {str(e)}")
 
-@router.post("/upload-urls")
+@router.post("/upload-urls", response_model=UploadUrlsResponse)
 async def generate_upload_urls(request: UploadUrlsRequest):
     """Generate pre-signed upload URLs for direct file uploads to Supabase"""
     try:
@@ -163,7 +173,7 @@ async def submit_verification_with_paths(verification_data: TikTokVerificationWi
         logger.error(f"Unexpected error in submit_verification_with_paths: {str(e)}")
         raise HTTPException(500, f"An unexpected error occurred: {str(e)}")
 
-@router.get("/verification/{verification_id}")
+@router.get("/verification/{verification_id}", response_model=TikTokVerificationResponse)
 async def get_verification(verification_id: str):
     """Get verification by ID"""
     try:
@@ -181,7 +191,7 @@ async def get_verification(verification_id: str):
         logger.error(f"Error fetching verification: {str(e)}")
         raise HTTPException(500, f"Failed to fetch verification: {str(e)}")
 
-@router.get("/verifications")
+@router.get("/verifications", response_model=TikTokVerificationListResponse)
 async def get_verifications(limit: int = 50, offset: int = 0):
     """Get all verifications with pagination"""
     try:
@@ -199,7 +209,7 @@ async def get_verifications(limit: int = 50, offset: int = 0):
         logger.error(f"Error fetching verifications: {str(e)}")
         raise HTTPException(500, f"Failed to fetch verifications: {str(e)}")
 
-@router.get("/setup-storage")
+@router.get("/setup-storage", response_model=TikTokSetupResponse)
 async def setup_storage():
     """Setup storage bucket for verification assets"""
     try:
@@ -209,7 +219,7 @@ async def setup_storage():
         logger.error(f"Error setting up storage: {str(e)}")
         raise HTTPException(500, f"Failed to set up storage: {str(e)}")
 
-@router.get("/setup-database")
+@router.get("/setup-database", response_model=TikTokSetupResponse)
 async def setup_database():
     """Check database table status"""
     try:
@@ -224,7 +234,7 @@ async def setup_database():
         logger.error(f"Error setting up database: {str(e)}")
         raise HTTPException(500, f"Failed to set up database: {str(e)}")
 
-@router.get("/diagnose-database")
+@router.get("/diagnose-database", response_model=TikTokDiagnosticsResponse)
 async def diagnose_database():
     """Diagnose database and storage status"""
     try:
@@ -234,7 +244,7 @@ async def diagnose_database():
         logger.error(f"Error diagnosing database: {str(e)}")
         raise HTTPException(500, f"Failed to diagnose database: {str(e)}")
 
-@router.get("/health")
+@router.get("/health", response_model=TikTokHealthResponse)
 async def health_check():
     """Health check endpoint for TikTok verification service"""
     try:
@@ -289,7 +299,7 @@ async def health_check():
             "error": str(e)
         }
 
-@router.get("/test")
+@router.get("/test", response_model=GenericStatusResponse)
 async def test_endpoint():
     """Test endpoint to verify API is working"""
     return {"status": "ok", "message": "TikTok Verification API is working"}
