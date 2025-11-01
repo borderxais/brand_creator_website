@@ -1,19 +1,24 @@
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, ConfigDict, EmailStr
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr, field_serializer
+
 
 class ContactFormData(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(
+        extra='forbid',
+    )
     name: str
     email: EmailStr
     subject: str
     message: str
     timestamp: Optional[datetime] = None
-    
-    class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+
+    @field_serializer("timestamp")
+    def serialize_timestamp(cls, value: Optional[datetime]) -> Optional[str]:
+        if value is None:
+            return None
+        return value.isoformat()
 
 class ContactResponse(BaseModel):
     success: bool
