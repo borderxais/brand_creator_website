@@ -1,3 +1,3 @@
 @echo off
-cd src\app\api\advertiser
-python -m uvicorn api_endpoints:app --reload --host 0.0.0.0 --port 8000
+cd /d "%~dp0backend\app"
+python -m uvicorn main.main:app --reload --host 0.0.0.0 --port 5000

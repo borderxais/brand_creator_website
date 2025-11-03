@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Determine repository root and API directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-API_DIR="${SCRIPT_DIR}/src/app/api"
+API_DIR="${SCRIPT_DIR}/backend/app"
 
 UVICORN_BIN="${UVICORN_BIN:-uvicorn}"
 UVICORN_HOST="${UVICORN_HOST:-0.0.0.0}"
