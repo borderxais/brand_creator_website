@@ -25,8 +25,8 @@ class Settings:
     
     # CORS settings - more permissive for App Engine
     ALLOWED_ORIGINS: List[str] = [
-        "https://borderx.net",
-        "https://www.borderx.net", 
+        "https://cricher.ai",
+        "https://www.cricher.ai", 
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "*"  # Allow all origins in production if needed
