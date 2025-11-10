@@ -167,7 +167,7 @@ class ContactService:
                         <strong>Other ways to reach us:</strong><br>
                         📧 Support: info@borderxmedia.com<br>
                         📧 Business Inquiries: sam@borderxmedia.com<br>
-                        🌐 Website: https://borderx.net
+                        🌐 Website: https://cricher.ai
                     </div>
                     
                     <p>In the meantime, feel free to explore our platform and discover the exciting opportunities available for creators and brands!</p>

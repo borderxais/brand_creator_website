@@ -26,8 +26,8 @@ app = FastAPI(title="Campaign API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://borderx.net",
-        "https://www.borderx.net", 
+        "https://cricher.ai",
+        "https://www.cricher.ai", 
         "http://localhost:3000",  # For local development
         "http://127.0.0.1:3000"   # Alternative localhost
     ],
