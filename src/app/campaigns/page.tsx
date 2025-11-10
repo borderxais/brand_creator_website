@@ -56,7 +56,7 @@ export default function Campaigns() {
         
         console.log(`Fetching campaigns with params: ${params.toString()}`);
         
-        const response = await fetch(`/api/campaigns?${params.toString()}`);
+        const response= await fetch(`/api/campaigns?${params.toString()}`);
         
         if (!response.ok) {
           const errorData = await response.json().catch(() => null);
