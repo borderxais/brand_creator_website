@@ -29,6 +29,7 @@ class Settings:
         "https://www.cricher.ai", 
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://192.168.0.135:3000"
         "*"  # Allow all origins in production if needed
     ]
     
