@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import logging
 import os
 import sys
@@ -78,3 +79,8 @@ async def app_engine_health():
     """App Engine health check endpoint."""
     return {"status": "healthy"}
     return {"status": "healthy"}
+
+
+@app.get("/_ah/warmup")
+async def warmup():
+    return JSONResponse(content={"status": "warmup complete"})
