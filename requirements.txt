@@ -1,7 +1,0 @@
-fastapi>=0.68.0
-uvicorn>=0.15.0
-python-multipart>=0.0.5
-python-dotenv>=0.19.1
-supabase>=0.7.1
-psycopg2-binary>=2.9.3
-pillow>=9.0.0
