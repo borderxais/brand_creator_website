@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CalendarClock,
+  ChevronDown,
   Download,
+  FileText,
+  Image as ImageIcon,
+  Mic,
   Pause,
   Play,
   PlayCircle,
@@ -30,6 +34,12 @@ export type AiVideoRecord = {
   videoUrl?: string;
   thumbnail?: string;
   campaign?: string;
+  promptPreview: string;
+  fullPrompt: string;
+  targetVoice: string;
+  targetVoiceNotes?: string;
+  targetImage?: string;
+  targetImageAlt?: string;
 };
 
 interface DashboardProps {
@@ -57,10 +67,13 @@ function SectionHeading({
       <p className="text-sm uppercase tracking-[0.2em] text-indigo-500">{eyebrow}</p>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <h1 className="text-3xl font-semibold text-slate-900">{title}</h1>
-        <button className="inline-flex items-center justify-center rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-900 hover:text-slate-900">
+        <Link
+          href="/creatorportal/ai-video/generate"
+          className="inline-flex items-center justify-center rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
+        >
           <Sparkles className="mr-2 h-4 w-4 text-indigo-500" />
           Generate New Video
-        </button>
+        </Link>
       </div>
       <p className="text-base text-slate-600">{description}</p>
     </div>
@@ -86,7 +99,10 @@ interface VideoCardProps {
 }
 
 function VideoCard({ video, onPreview }: VideoCardProps) {
+  const [showFullPrompt, setShowFullPrompt] = useState(false);
+  const [showReferenceAssets, setShowReferenceAssets] = useState(false);
   const isExpired = video.status === 'expired';
+  const isGenerating = video.status === 'generating';
   const canPreview = Boolean(video.videoUrl && video.status === 'ready');
 
   return (
@@ -109,6 +125,14 @@ function VideoCard({ video, onPreview }: VideoCardProps) {
               </div>
               <p className="text-sm font-medium text-slate-600">Preview no longer available</p>
               <p className="text-xs text-slate-500">Regenerate to unlock another 7-day window.</p>
+            </div>
+          ) : isGenerating ? (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-4 py-10 text-center">
+              <div className="flex h-28 w-20 items-center justify-center rounded-lg bg-indigo-50 text-indigo-500">
+                <RefreshCw className="h-10 w-10 animate-spin" />
+              </div>
+              <p className="text-sm font-medium text-slate-600">Rendering in progress</p>
+              <p className="text-xs text-slate-500">We will surface a thumbnail once the render is ready.</p>
             </div>
           ) : (
             <>
@@ -168,20 +192,85 @@ function VideoCard({ video, onPreview }: VideoCardProps) {
             <p className="text-sm text-slate-500">Videos are archived after 7 days</p>
           </div>
           <div className="rounded-xl border border-slate-100 p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Delivery channel</p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">Direct Supabase storage</p>
-            <p className="text-sm text-slate-500">Optimize creative briefs before resubmitting.</p>
-          </div>
-          <div className="rounded-xl border border-slate-100 p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Actions</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700 hover:border-slate-900 hover:text-slate-900">
-                View prompts
-              </button>
-              <button className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700 hover:border-slate-900 hover:text-slate-900">
-                Duplicate brief
-              </button>
+            <p className="text-xs uppercase tracking-wide text-slate-500">Creative prompt</p>
+            <div className="mt-2 flex items-start gap-2 text-sm text-slate-700">
+              <FileText className="mt-0.5 h-4 w-4 text-indigo-500" />
+              <span>{video.promptPreview}</span>
             </div>
+            <button
+              type="button"
+              onClick={() => setShowFullPrompt((prev) => !prev)}
+              className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+            >
+              {showFullPrompt ? 'Hide full prompt' : 'View full prompt'}
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition ${showFullPrompt ? 'rotate-180' : ''}`}
+              />
+            </button>
+            {showFullPrompt && (
+              <p className="mt-3 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600">
+                {video.fullPrompt}
+              </p>
+            )}
+          </div>
+          <div
+            className={`rounded-xl border border-slate-100 p-4 transition ${showReferenceAssets ? 'bg-slate-50/70' : ''}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => setShowReferenceAssets((prev) => !prev)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setShowReferenceAssets((prev) => !prev);
+              }
+            }}
+          >
+            <p className="text-xs uppercase tracking-wide text-slate-500">Uploaded references</p>
+            <div className="mt-2 flex items-start gap-2 text-sm text-slate-700">
+              <Mic className="mt-0.5 h-4 w-4 text-indigo-500" />
+              <div>
+                <p className="font-semibold text-slate-900">Voice upload</p>
+                <p className="text-xs text-slate-500">{video.targetVoice}</p>
+              </div>
+            </div>
+            <div className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-indigo-600">
+              {showReferenceAssets ? 'Hide voice & image' : 'View voice & image'}
+              <ChevronDown className={`h-3.5 w-3.5 transition ${showReferenceAssets ? 'rotate-180' : ''}`} />
+            </div>
+            {showReferenceAssets && (
+              <div className="mt-4 space-y-3">
+                <div className="flex items-start gap-2 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600">
+                  <Mic className="h-4 w-4 text-indigo-500" />
+                  <div>
+                    <p className="font-semibold text-slate-900">Voice upload</p>
+                    <p className="text-xs text-slate-500">{video.targetVoice}</p>
+                    {video.targetVoiceNotes ? (
+                      <p className="text-xs text-slate-500">{video.targetVoiceNotes}</p>
+                    ) : (
+                      <p className="text-xs text-slate-500">Uploaded voice clone</p>
+                    )}
+                  </div>
+                </div>
+                <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+                  {video.targetImage ? (
+                    <Image
+                      src={video.targetImage}
+                      alt={video.targetImageAlt ?? `${video.title} reference image`}
+                      width={320}
+                      height={180}
+                      className="h-32 w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-32 items-center justify-center bg-slate-100 text-slate-400">
+                      <ImageIcon className="h-8 w-8" />
+                    </div>
+                  )}
+                  <p className="px-3 py-2 text-xs text-slate-500">
+                    {video.targetImageAlt ?? 'Reference image for styling'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

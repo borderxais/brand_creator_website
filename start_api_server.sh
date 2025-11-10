@@ -11,15 +11,27 @@ UVICORN_PORT="${UVICORN_PORT:-5000}"
 UVICORN_RELOAD="${UVICORN_RELOAD:-true}"
 ENV_FILE="${ENV_FILE:-}"
 APP_MODULE="${APP_MODULE:-main.main:app}"
+CONDA_ENV_NAME="${CONDA_ENV_NAME:-web}"
 
 if [[ ! -d "$API_DIR" ]]; then
   echo "Error: expected API directory at $API_DIR" >&2
   exit 1
 fi
 
-if ! command -v "$UVICORN_BIN" >/dev/null 2>&1; then
-  echo "Error: uvicorn not found. Activate your environment or install requirements." >&2
-  exit 1
+if [[ -n "$CONDA_ENV_NAME" ]]; then
+  if ! command -v conda >/dev/null 2>&1; then
+    echo "Error: conda not found but CONDA_ENV_NAME is set to '$CONDA_ENV_NAME'." >&2
+    exit 1
+  fi
+  if ! conda run -n "$CONDA_ENV_NAME" --no-capture-output which "$UVICORN_BIN" >/dev/null 2>&1; then
+    echo "Error: $UVICORN_BIN not found in conda environment '$CONDA_ENV_NAME'." >&2
+    exit 1
+  fi
+else
+  if ! command -v "$UVICORN_BIN" >/dev/null 2>&1; then
+    echo "Error: $UVICORN_BIN not found. Activate your environment or install requirements." >&2
+    exit 1
+  fi
 fi
 
 UVICORN_ARGS=("$APP_MODULE" --host "$UVICORN_HOST" --port "$UVICORN_PORT")
@@ -39,4 +51,8 @@ cd "$API_DIR"
 
 echo "Starting backend server with ${UVICORN_BIN} ${APP_MODULE} on ${UVICORN_HOST}:${UVICORN_PORT}"
 
-exec "$UVICORN_BIN" "${UVICORN_ARGS[@]}"
+if [[ -n "$CONDA_ENV_NAME" ]]; then
+  exec conda run -n "$CONDA_ENV_NAME" --no-capture-output "$UVICORN_BIN" "${UVICORN_ARGS[@]}"
+else
+  exec "$UVICORN_BIN" "${UVICORN_ARGS[@]}"
+fi
