@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from .config.settings import settings
-    from .routes import campaigns, claims, health, upload, contact, entertainment, pear, tiktokverify， ai_video, career
+    from .routes import campaigns, claims, health, upload, contact, entertainment, pear, tiktokverify,ai_video, career
     logger.info("Successfully imported all modules")
 except ImportError as e:
     logger.error(f"Import error: {e}")
