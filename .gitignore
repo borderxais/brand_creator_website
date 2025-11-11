@@ -50,3 +50,5 @@ prisma/temp.prisma
 *.pyc
 
 venv
+
+backend/app.yaml
