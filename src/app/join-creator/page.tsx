@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowRight, CheckCircle } from 'lucide-react';
 
@@ -17,7 +17,7 @@ interface FormData {
   termsAccepted: boolean;
 }
 
-export default function JoinAsCreator() {
+function JoinAsCreatorForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
@@ -404,5 +404,13 @@ export default function JoinAsCreator() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function JoinAsCreator() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <JoinAsCreatorForm />
+    </Suspense>
   );
 }

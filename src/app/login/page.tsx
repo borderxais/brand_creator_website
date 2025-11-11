@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { loginAttemptsLimiter } from "@/lib/rate-limiter";
 import { getSession } from "next-auth/react";
 
-export default function Login() {
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -275,4 +275,12 @@ function SearchParamsHandler() {
   }
 
   return null;
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
+  );
 }

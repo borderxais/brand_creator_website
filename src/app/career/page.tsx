@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { X } from 'lucide-react';
@@ -45,7 +45,7 @@ const positions: Position[] = [
   }
 ]
 
-export default function CareerPage() {
+function CareerPageContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -560,4 +560,12 @@ export default function CareerPage() {
       )}
     </div>
   )
+}
+
+export default function CareerPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <CareerPageContent />
+    </Suspense>
+  );
 }
