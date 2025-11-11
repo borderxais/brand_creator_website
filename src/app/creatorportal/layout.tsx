@@ -4,7 +4,18 @@ import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, Image, DollarSign, Share2, MessageSquare, Settings, LogOut, Menu, ChevronDown, Users, CheckCircle, PlayCircle } from 'lucide-react';
+import {
+  LayoutDashboard,
+  DollarSign,
+  MessageSquare,
+  Settings,
+  LogOut,
+  Menu,
+  ChevronDown,
+  Users,
+  CheckCircle,
+  PlayCircle,
+} from 'lucide-react';
 import Loading from '@/components/ui/Loading';
 import '@/styles/portals.css';
 
@@ -38,7 +49,8 @@ export default function CreatorPortalLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [showDesktopDropdown, setShowDesktopDropdown] = useState(false);
+  const [showMobileDropdown, setShowMobileDropdown] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -52,117 +64,207 @@ export default function CreatorPortalLayout({
     return <Loading />;
   }
 
+  const renderNavLinks = ({
+    onNavigate,
+    variant = 'default',
+  }: {
+    onNavigate?: () => void;
+    variant?: 'sidebar' | 'default';
+  } = {}) =>
+    navigationItems.map((item) => {
+      const isActive = pathname === item.href;
+      const variantClasses =
+        variant === 'sidebar'
+          ? isActive
+            ? 'bg-white/15 text-white'
+            : 'text-indigo-100 hover:bg-white/10 hover:text-white'
+          : isActive
+            ? 'bg-indigo-50 text-indigo-700'
+            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900';
+      const iconColor =
+        variant === 'sidebar'
+          ? isActive
+            ? 'text-white'
+            : 'text-indigo-200'
+          : isActive
+            ? 'text-indigo-600'
+            : 'text-slate-400';
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          onClick={onNavigate}
+          className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${variantClasses}`}
+        >
+          <item.icon className={`h-4 w-4 ${iconColor}`} />
+          {item.name}
+        </Link>
+      );
+    });
+
+  const renderSystemLinks = ({
+    onNavigate,
+    variant = 'default',
+  }: {
+    onNavigate?: () => void;
+    variant?: 'sidebar' | 'default';
+  } = {}) =>
+    systemItems.map((item) =>
+      item.onClick ? (
+        <button
+          key={item.name}
+          onClick={item.onClick}
+          className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
+            variant === 'sidebar'
+              ? 'text-indigo-100 hover:bg-white/10 hover:text-white'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          }`}
+        >
+          <item.icon
+            className={`h-4 w-4 ${variant === 'sidebar' ? 'text-indigo-200' : 'text-slate-400'}`}
+          />
+          {item.name}
+        </button>
+      ) : (
+        <Link
+          key={item.href}
+          href={item.href!}
+          onClick={onNavigate}
+          className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
+            variant === 'sidebar'
+              ? 'text-indigo-100 hover:bg-white/10 hover:text-white'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          }`}
+        >
+          <item.icon
+            className={`h-4 w-4 ${variant === 'sidebar' ? 'text-indigo-200' : 'text-slate-400'}`}
+          />
+          {item.name}
+        </Link>
+      ),
+    );
+
   return (
-    <div className="creator-portal min-h-screen">
-      <nav className="nav-container bg-white shadow-sm pt-4 w-full">
-        <div className="nav-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center">
-            {/* Logo */}
-            <Link href="/" className="portal-logo">
-              <img
-                src="/logo.jpg"
-                alt="BorderX Logo"
-                className="w-6 h-6"
-              />
-              <span className="text-xl font-bold text-gray-600 whitespace-nowrap">BorderX<br />CreatorHub</span>
-            </Link>
+    <div className="flex min-h-screen bg-slate-50">
+      {/* Desktop sidebar */}
+      <aside className="hidden w-72 flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-indigo-900 text-white lg:flex">
+        <Link href="/" className="flex items-center gap-3 px-6 py-8">
+          <img src="/logo.jpg" alt="BorderX Logo" className="h-10 w-10 rounded-2xl border border-white/20" />
+          <div>
+            <p className="text-lg font-semibold">BorderX</p>
+            <p className="text-xs uppercase tracking-[0.4em] text-white/60">CreatorHub</p>
+          </div>
+        </Link>
+        <div className="flex-1 space-y-6 px-4 py-4">
+          <div>
+            <p className="px-3 text-xs font-semibold uppercase tracking-[0.4em] text-white/40">Workspace</p>
+            <div className="mt-4 space-y-1">{renderNavLinks({ variant: 'sidebar' })}</div>
+          </div>
+        </div>
+      </aside>
 
-            {/* Desktop Navigation */}
-            <div className="nav-links ml-8">
-              {navigationItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`nav-link flex items-center ${pathname === item.href ? 'active' : ''}`}
-                >
-                  <item.icon className="h-5 w-5 mr-2 text-gray-600" />
-                  <span className="nav-text">{item.name}</span>
-                </Link>
-              ))}
-            </div>
-
-            {/* Mobile Menu Button */}
+      {/* Content column */}
+      <div className="flex min-h-screen flex-1 flex-col">
+        {/* Desktop header */}
+        <header className="hidden items-center justify-between border-b border-slate-200 bg-white px-10 py-5 lg:flex">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Creator workspace</p>
+            <h1 className="text-xl font-semibold text-slate-900">BorderX CreatorHub</h1>
+          </div>
+          <div className="relative">
             <button
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="ml-auto p-2 text-gray-600 hover:text-gray-900 block lg:hidden"
+              onClick={() => setShowDesktopDropdown((prev) => !prev)}
+              className="flex items-center gap-3 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"
             >
-              <Menu className="h-6 w-6" />
-            </button>
-
-            {/* User Profile */}
-            <div className="ml-2">
-              <div className="relative">
-                <button
-                  onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-                >
-                  {session?.user?.image && (
-                    <img
-                      src={session.user.image}
-                      alt={session.user.name || ''}
-                      className="h-8 w-8 rounded-full ring-2 ring-blue-100"
-                    />
-                  )}
-                  <span className="text-sm font-medium text-gray-700">
-                    {session?.user?.name || 'User'}
-                  </span>
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
-                </button>
-
-                {/* User Dropdown Menu */}
-                {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-1 z-50 border border-gray-100">
-                    {systemItems.map((item) =>
-                      item.onClick ? (
-                        <button
-                          key={item.name}
-                          onClick={item.onClick}
-                          className="text-gray-700 hover:bg-gray-100 hover:text-gray-900 group flex items-center px-4 py-2 text-sm w-full"
-                        >
-                          <item.icon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
-                          {item.name}
-                        </button>
-                      ) : (
-                        <Link
-                          href={item.href!}
-                          key={item.href}
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          <item.icon className="h-4 w-4 mr-2 text-gray-500" />
-                          {item.name}
-                        </Link>
-                      )
-                    )}
-                  </div>
-                )}
+              {session?.user?.image ? (
+                <img src={session.user.image} alt={session.user.name || ''} className="h-8 w-8 rounded-full" />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
+                  {session?.user?.name?.[0] ?? 'C'}
+                </div>
+              )}
+              <div className="text-left">
+                <p className="text-sm font-semibold text-slate-900">{session?.user?.name ?? 'Creator'}</p>
+                <p className="text-xs text-slate-500">{session?.user?.email}</p>
               </div>
-            </div>
-
-            {/* Mobile Navigation Menu */}
-            {showMobileMenu && (
-              <div className={`mobile-menu py-2 lg:hidden ${showMobileMenu ? 'show' : ''}`}>
-                {navigationItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`nav-link flex items-center ${pathname === item.href ? 'active' : ''}`}
-                    onClick={() => setShowMobileMenu(false)}
-                  >
-                    <item.icon className="h-5 w-5 mr-2 text-gray-600" />
-                    <span className="nav-text">{item.name}</span>
-                  </Link>
-                ))}
+              <ChevronDown className="h-4 w-4 text-slate-500" />
+            </button>
+            {showDesktopDropdown && (
+              <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
+                {renderSystemLinks({ onNavigate: () => setShowDesktopDropdown(false) })}
               </div>
             )}
           </div>
-        </div>
-      </nav>
+        </header>
 
-      <main className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {children}
-        </div>
-      </main>
+        {/* Mobile header */}
+        <header className="relative flex items-center justify-between border-b border-slate-200 bg-white px-4 py-4 lg:hidden">
+          <Link href="/" className="flex items-center gap-2">
+            <img src="/logo.jpg" alt="BorderX Logo" className="h-8 w-8 rounded-lg" />
+            <span className="text-base font-semibold text-slate-900">CreatorHub</span>
+          </Link>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <button
+                onClick={() => setShowMobileDropdown((prev) => !prev)}
+                className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700"
+              >
+                {session?.user?.image ? (
+                  <img src={session.user.image} alt={session.user.name || ''} className="h-7 w-7 rounded-full" />
+                ) : (
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
+                    {session?.user?.name?.[0] ?? 'C'}
+                  </div>
+                )}
+                <ChevronDown className="h-4 w-4 text-slate-500" />
+              </button>
+              {showMobileDropdown && (
+                <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg">
+                  {renderSystemLinks({ onNavigate: () => setShowMobileDropdown(false) })}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setShowMobileMenu(true)}
+              className="rounded-full border border-slate-200 p-2 text-slate-600"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
+        </header>
+
+        {/* Mobile slide-out navigation */}
+        {showMobileMenu && (
+          <>
+            <div
+              className="fixed inset-0 z-40 bg-slate-900/40"
+              onClick={() => setShowMobileMenu(false)}
+            />
+            <div className="fixed inset-y-0 left-0 z-50 w-72 overflow-y-auto border-r border-slate-200 bg-white p-6 shadow-2xl">
+              <div className="flex items-center justify-between">
+                <p className="text-lg font-semibold text-slate-900">Menu</p>
+                <button
+                  onClick={() => setShowMobileMenu(false)}
+                  className="rounded-full border border-slate-200 p-1 text-slate-500"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="mt-6 space-y-1">
+                {renderNavLinks({ onNavigate: () => setShowMobileMenu(false) })}
+              </div>
+              <div className="mt-6 border-t border-slate-200 pt-6">
+                <p className="px-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Account</p>
+                <div className="mt-3 space-y-1">
+                  {renderSystemLinks({ onNavigate: () => setShowMobileMenu(false) })}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10">{children}</main>
+      </div>
     </div>
   );
 }

@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import List, Optional
 
-from fastapi import APIRouter, File, Form, UploadFile
+from fastapi import APIRouter, File, Form, Query, UploadFile
 
-from ..models.ai_video import AiVideoGenerateResponse
+from ..models.ai_video import AiVideoGenerateResponse, AiVideoLibraryItem
 from ..services.ai_video_service import AiVideoService
 
 router = APIRouter(prefix="/ai-videos", tags=["ai-videos"])
@@ -28,3 +28,12 @@ async def create_ai_video_request(
         voice_sample=voice_sample,
         image=reference_image,
     )
+
+
+@router.get("/library", response_model=List[AiVideoLibraryItem])
+async def list_ai_videos(creator_id: Optional[str] = Query(None, description="Filter by creator ID")):
+    """
+    Fetch generated AI videos for the creator portal grid.
+    """
+
+    return await AiVideoService.get_video_library(creator_id=creator_id)

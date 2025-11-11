@@ -1,12 +1,13 @@
 import logging
 import uuid
-from typing import Optional, Set
+import json
+from typing import List, Optional, Set
 
 from fastapi import HTTPException, UploadFile
 
 from ..config.settings import settings
 from ..database.connection import supabase
-from ..models.ai_video import AiVideoGenerateResponse
+from ..models.ai_video import AiVideoGenerateResponse, AiVideoLibraryItem
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 class AiVideoService:
     """Service layer responsible for storing AI video generation requests."""
 
-    BUCKET_NAME = "aivideo"
+    BUCKET_NAME = "aivideogenerated"
     MAX_FILE_BYTES = 25 * 1024 * 1024  # 25 MB
 
     IMAGE_MIME_TYPES: Set[str] = {"image/jpeg", "image/png", "image/webp"}
@@ -105,6 +106,46 @@ class AiVideoService:
             status="queued",
             message="AI video request queued successfully",
         )
+
+    @classmethod
+    async def get_video_library(cls, creator_id: Optional[str] = None) -> List[AiVideoLibraryItem]:
+        client = cls._require_supabase()
+        query = client.table("AiVideo").select("*").order("generated_time", desc=True)
+        if creator_id:
+            query = query.eq("creator_id", creator_id)
+
+        query_url = f"{settings.SUPABASE_URL.rstrip('/')}/rest/v1/AiVideo?select=*&order=generated_time.desc"
+        if creator_id:
+            query_url = f"{query_url}&creator_id=eq.{creator_id}"
+        logger.info("Supabase AiVideo query: %s", query_url)
+
+        try:
+            response = query.execute()
+        except Exception as exc:
+            logger.error("Failed to fetch AiVideos: %s", exc)
+            raise HTTPException(status_code=500, detail="Failed to load AI videos")
+
+        records: List[AiVideoLibraryItem] = []
+        for row in response.data or []:
+            try:
+                video_url = cls._resolve_video_url(client, row)
+                if not video_url:
+                    logger.warning("Skipping AiVideos row %s due to missing video URL", row.get("id"))
+                    continue
+
+                tags = cls._deserialize_tags(row.get("tag"))
+                record = AiVideoLibraryItem(
+                    id=row.get("id"),
+                    creator_id=row.get("creator_id"),
+                    generated_time=row.get("generated_time") or row.get("created_at"),
+                    video_url=video_url,
+                    tags=tags,
+                    created_at=row.get("created_at"),
+                )
+                records.append(record)
+            except Exception as parse_exc:
+                logger.warning("Skipping AiVideos row due to parse error: %s", parse_exc)
+        return records
 
     @classmethod
     def _require_supabase(cls):
@@ -206,3 +247,42 @@ class AiVideoService:
                     status_code=500,
                     detail=f"Unable to upload {asset_label.replace('-', ' ')} asset to storage",
                 )
+
+    @staticmethod
+    def _deserialize_tags(raw_value: Optional[str]) -> List[str]:
+        if not raw_value:
+            return []
+        try:
+            parsed = json.loads(raw_value)
+            if isinstance(parsed, list):
+                return [str(tag) for tag in parsed]
+        except json.JSONDecodeError:
+            pass
+        return [segment.strip() for segment in raw_value.split(",") if segment.strip()]
+
+    @classmethod
+    def _generate_signed_url(cls, client, path: str, expires_in: int = 300) -> Optional[str]:
+        if not path:
+            return None
+        try:
+            result = client.storage.from_(cls.BUCKET_NAME).create_signed_url(path, expires_in)
+            if isinstance(result, dict):
+                return result.get("signedURL") or result.get("signed_url")
+            if isinstance(result, str):
+                return result
+            return None
+        except Exception as exc:
+            logger.error("Failed to generate signed URL for %s: %s", path, exc)
+            return None
+
+    @classmethod
+    def _resolve_video_url(cls, client, row: dict) -> Optional[str]:
+        direct_url = row.get("video_url") or row.get("videoUrl")
+        if direct_url:
+            return direct_url
+
+        video_path = row.get("video") or row.get("video_path") or row.get("videoKey")
+        if video_path:
+            return cls._generate_signed_url(client, video_path)
+
+        return None

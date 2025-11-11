@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -12,3 +12,12 @@ class AiVideoGenerateResponse(BaseModel):
     storage_path: str
     status: str
     message: str
+
+
+class AiVideoLibraryItem(BaseModel):
+    id: str
+    creator_id: str
+    generated_time: str
+    video_url: str
+    tags: List[str]
+    created_at: Optional[str] = None

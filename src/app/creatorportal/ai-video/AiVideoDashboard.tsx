@@ -1,30 +1,19 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pause, Play, PlayCircle, RefreshCw, Sparkles, Upload, Video, X } from 'lucide-react';
 
-export type VideoStatus = 'generating' | 'ready' | 'queued' | 'expired';
+export type VideoStatus = 'ready' | 'expired';
 
 export type AiVideoRecord = {
   id: string;
-  title: string;
-  brand: string;
-  createdAt: string;
-  duration: string;
-  format: '9:16' | '16:9' | '1:1';
-  status: VideoStatus;
+  creatorId: string;
+  generatedAt: string;
   expiresAt: string;
   videoUrl?: string;
-  thumbnail?: string;
-  campaign?: string;
-  promptPreview: string;
-  fullPrompt: string;
-  targetVoice: string;
-  targetVoiceNotes?: string;
-  targetImage?: string;
-  targetImageAlt?: string;
+  tags: string[];
+  status: VideoStatus;
 };
 
 interface DashboardProps {
@@ -51,6 +40,11 @@ type VideoPreviewCardProps = {
   onPreview: (video: AiVideoRecord) => void;
 };
 
+const statusTokens: Record<VideoStatus, { label: string; tone: string }> = {
+  ready: { label: 'Ready to download', tone: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
+  expired: { label: 'Expired', tone: 'bg-slate-100 text-slate-500 ring-slate-200' },
+};
+
 function VideoPreviewCard({
   video,
   selected,
@@ -62,28 +56,38 @@ function VideoPreviewCard({
     video.status === 'expired'
       ? 'Expired'
       : downloadWindowFormatter.format(new Date(video.expiresAt));
+  const statusToken = statusTokens[video.status];
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-sm font-semibold text-slate-900">{video.title}</p>
+    <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span
+          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ${statusToken.tone}`}
+        >
+          {statusToken.label}
+        </span>
+        <div className="flex flex-wrap gap-2">
+          {video.tags.length ? (
+            video.tags.map((tag) => (
+              <span
+                key={`${video.id}-${tag}`}
+                className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500"
+              >
+                #{tag}
+              </span>
+            ))
+          ) : (
+            <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-300">Untagged</span>
+          )}
+        </div>
+      </div>
 
       <div className="relative aspect-[9/16] w-full overflow-hidden rounded-xl bg-slate-900">
-        {video.thumbnail ? (
-          <Image
-            src={video.thumbnail}
-            alt={video.title}
-            fill
-            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-            className="object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-white/50">
-            <Video className="h-10 w-10" />
-          </div>
-        )}
-
+        <div className="flex h-full w-full items-center justify-center text-white/50">
+          <Video className="h-10 w-10" />
+        </div>
         <div className="absolute inset-0 flex items-center justify-center bg-slate-900/60">
-          {canSelect ? (
+          {canSelect && video.videoUrl ? (
             <button
               type="button"
               onClick={() => onPreview(video)}
@@ -94,8 +98,17 @@ function VideoPreviewCard({
             </button>
           ) : (
             <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-1 text-xs font-semibold text-slate-600">
-              <RefreshCw className="h-3.5 w-3.5 animate-spin text-indigo-500" />
-              {video.status === 'expired' ? 'Expired' : 'Preparing'}
+              {video.status === 'expired' ? (
+                <>
+                  <X className="h-3.5 w-3.5 text-rose-500" />
+                  Expired
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin text-indigo-500" />
+                  Preparing
+                </>
+              )}
             </span>
           )}
         </div>
@@ -105,7 +118,7 @@ function VideoPreviewCard({
         <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
           <p className="text-xs uppercase tracking-wide text-slate-500">Generated</p>
           <p className="mt-1 text-sm font-semibold text-slate-900">
-            {generatedFormatter.format(new Date(video.createdAt))}
+            {generatedFormatter.format(new Date(video.generatedAt))}
           </p>
         </div>
         <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
@@ -144,6 +157,7 @@ type PreviewModalProps = {
 function PreviewModal({ video, onClose }: PreviewModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
+  const statusToken = statusTokens[video.status];
 
   useEffect(() => {
     const el = videoRef.current;
@@ -169,10 +183,28 @@ function PreviewModal({ video, onClose }: PreviewModalProps) {
       <div className="absolute inset-0 bg-slate-900/80" onClick={onClose} />
       <div className="relative z-10 w-full max-w-2xl rounded-3xl bg-white p-5 shadow-2xl">
         <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Previewing</p>
-            <h3 className="text-xl font-semibold text-slate-900">{video.title}</h3>
-            <p className="text-sm text-slate-500">{video.brand}</p>
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Video tags</p>
+            <div className="flex flex-wrap gap-2">
+              {video.tags.length ? (
+                video.tags.map((tag) => (
+                  <span key={`${video.id}-modal-tag-${tag}`} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">
+                    #{tag}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-300">Untagged</span>
+              )}
+            </div>
+            <span
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ${statusToken.tone}`}
+            >
+              {statusToken.label}
+            </span>
+            <div className="text-sm text-slate-500">
+              <p>Generated {generatedFormatter.format(new Date(video.generatedAt))}</p>
+              <p>Download window ends {downloadWindowFormatter.format(new Date(video.expiresAt))}</p>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -186,7 +218,6 @@ function PreviewModal({ video, onClose }: PreviewModalProps) {
           <video
             ref={videoRef}
             src={video.videoUrl}
-            poster={video.thumbnail}
             playsInline
             className="aspect-[9/16] w-full max-h-[65vh] object-contain"
           />
@@ -242,8 +273,8 @@ export default function AiVideoDashboard({ videos }: DashboardProps) {
 
     setIsUploading(true);
     setTimeout(() => {
-      const titles = selectedReadyVideos.map((video) => video.title).join(', ');
-      setUploadMessage(`Uploaded to TikTok: ${titles}`);
+      const selectionSummary = selectedReadyVideos.map((video) => video.id).join(', ');
+      setUploadMessage(`Uploaded to TikTok: ${selectionSummary}`);
       setIsUploading(false);
     }, 600);
   };
@@ -288,25 +319,31 @@ export default function AiVideoDashboard({ videos }: DashboardProps) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {videos.map((video) => {
-          const canSelect = video.status === 'ready' && Boolean(video.videoUrl);
-          return (
-            <VideoPreviewCard
-              key={video.id}
-              video={video}
-              selected={selectedVideoIds.includes(video.id)}
-              canSelect={canSelect}
-              onToggleSelect={toggleSelect}
-              onPreview={(record) => {
-                if (record.videoUrl) {
-                  setPreview(record);
-                }
-              }}
-            />
-          );
-        })}
-      </div>
+      {videos.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white/60 p-10 text-center text-sm text-slate-500">
+          No AI videos yet. Generate a new brief to see your clips here.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {videos.map((video) => {
+            const canSelect = video.status === 'ready' && Boolean(video.videoUrl);
+            return (
+              <VideoPreviewCard
+                key={video.id}
+                video={video}
+                selected={selectedVideoIds.includes(video.id)}
+                canSelect={canSelect}
+                onToggleSelect={toggleSelect}
+                onPreview={(record) => {
+                  if (record.videoUrl) {
+                    setPreview(record);
+                  }
+                }}
+              />
+            );
+          })}
+        </div>
+      )}
 
       <div className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-500 p-6 text-white shadow-xl">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
