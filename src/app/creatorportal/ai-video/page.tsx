@@ -16,6 +16,7 @@ type AiVideoLibraryItem = {
   generated_time?: string;
   created_at?: string;
   video?: string;
+  video_url?: string;
   tag?: string[] | string;
   tags?: string[];
 };
@@ -60,6 +61,7 @@ function mapToRecord(item: AiVideoLibraryItem): AiVideoRecord {
   const generatedAt = item.generated_time ?? item.created_at ?? new Date().toISOString();
   const expiresAt = new Date(new Date(generatedAt).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
   const status: VideoStatus = new Date(expiresAt).getTime() < Date.now() ? 'expired' : 'ready';
+  const videoUrl = item.video_url ?? item.video;
   const tags = Array.isArray(item.tags)
     ? item.tags
     : Array.isArray(item.tag)
@@ -73,7 +75,7 @@ function mapToRecord(item: AiVideoLibraryItem): AiVideoRecord {
     creatorId: item.creator_id,
     generatedAt,
     expiresAt,
-    videoUrl: item.video,
+    videoUrl,
     tags,
     status,
   };
