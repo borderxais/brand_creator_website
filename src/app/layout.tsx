@@ -41,7 +41,7 @@ export default function RootLayout({
                     <h3 className="text-sm font-semibold text-gray-600 tracking-wider uppercase">Creators</h3>
                     <ul className="mt-4 space-y-4">
                       <li><Link href="/join-creator" className="text-gray-500 hover:text-gray-900">Join as Creator</Link></li>
-                      <li><Link href="/success" className="text-gray-500 hover:text-gray-900">Success Stories</Link></li>
+                      <li><Link href="/career" className="text-gray-500 hover:text-gray-900">Join Us</Link></li>
                     </ul>
                   </div>
                   <div>
