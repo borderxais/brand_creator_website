@@ -24,8 +24,8 @@ contact_app = FastAPI(title="Contact API", version="1.0.0")
 contact_app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://borderx.net",
-        "https://www.borderx.net", 
+        "https://cricher.ai",
+        "https://www.cricher.ai", 
         "http://localhost:3000",  # For local development
         "http://127.0.0.1:3000"   # Alternative localhost
     ],
@@ -238,7 +238,7 @@ def create_user_confirmation_email(contact_data: ContactFormData) -> str:
                     <strong>Other ways to reach us:</strong><br>
                     📧 Support: info@borderxmedia.com<br>
                     📧 Business Inquiries: sam@borderxmedia.com<br>
-                    🌐 Website: https://borderx.net
+                    🌐 Website: https://cricher.ai
                 </div>
                 
                 <p>In the meantime, feel free to explore our platform and discover the exciting opportunities available for creators and brands!</p>

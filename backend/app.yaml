@@ -1,9 +1,14 @@
 runtime: python311
-
 service: brand-creator-website-campaigns-api
+instance_class: F2
+
+handlers:
+  - url: /_ah/warmup
+    script: auto
+    login: admin
 
 # Use uvicorn as the ASGI server for FastAPI
-entrypoint: uvicorn main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 65
+entrypoint: uvicorn app.main.main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 65
 
 env_variables:
   # API Configuration
@@ -45,22 +50,21 @@ automatic_scaling:
 resources:
   cpu: 1
   memory_gb: 2
-  disk_size_gb: 10
+  disk_size_gb: 20
+
+# Add warmup handler
+inbound_services:
+  - warmup
+
 
 # Health check configuration with more reasonable timeouts
-readiness_check:
-  path: "/_ah/health"
-  check_interval_sec: 10
-  timeout_sec: 10
-  failure_threshold: 3
-  success_threshold: 2
-
-liveness_check:
-  path: "/_ah/health"
-  check_interval_sec: 30
-  timeout_sec: 10
-  failure_threshold: 4
-  success_threshold: 2
+health_check:
+  enable_health_check: True
+  check_interval_sec: 5
+  timeout_sec: 4
+  healthy_threshold: 2
+  unhealthy_threshold: 2
+  restart_threshold: 3
 
 # Add network settings for better performance
 network:

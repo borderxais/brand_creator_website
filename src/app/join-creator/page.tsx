@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowRight, CheckCircle } from 'lucide-react';
 
 interface FormData {
@@ -17,8 +17,9 @@ interface FormData {
   termsAccepted: boolean;
 }
 
-export default function JoinAsCreator() {
+function JoinAsCreatorForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState<FormData>({
@@ -143,8 +144,19 @@ export default function JoinAsCreator() {
         }
 
         console.log('Registration successful:', data);
-        // Redirect to login with success message
-        router.push('/login?registered=true');
+        
+        // Check if there's a redirect URL from career application
+        const redirectUrl = searchParams?.get('redirect');
+        const fromApply = searchParams?.get('from');
+        const positionId = searchParams?.get('position');
+        
+        if (redirectUrl && fromApply === 'apply' && positionId) {
+          // Redirect back to career page with parameters to open modal
+          router.push(`${redirectUrl}?from=apply&position=${positionId}`);
+        } else {
+          // Default redirect to login with success message
+          router.push('/login?registered=true');
+        }
       } catch (error) {
         console.error('Error:', error);
         setError(error instanceof Error ? error.message : 'Registration failed');
@@ -392,5 +404,13 @@ export default function JoinAsCreator() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function JoinAsCreator() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <JoinAsCreatorForm />
+    </Suspense>
   );
 }

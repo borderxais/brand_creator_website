@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const PYTHON_API_URL = process.env.CAMPAIGNS_API_URL || 'http://localhost:5000';
+const PYTHON_API_URL = process.env.CAMPAIGNS_API_URL || 'http://0.0.0.0:5000';
 
 export async function GET(request: NextRequest) {
   try {

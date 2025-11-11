@@ -48,3 +48,5 @@ next-env.d.ts
 prisma/temp.prisma
 
 *.pyc
+
+venv
