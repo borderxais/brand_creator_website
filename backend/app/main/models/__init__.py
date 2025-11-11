@@ -2,6 +2,7 @@
 Data models for Campaign API
 """
 
+from .ai_video import AiVideoGenerateResponse
 from .campaign import Campaign, CampaignCreate
 from .claim import CampaignClaimCreate, CampaignClaimResponse
 from .upload import UploadResponse
@@ -10,14 +11,15 @@ from .entertainment_live import EntertainmentLive, EntertainmentLiveCreate, Ente
 from .tiktokverify import TikTokVerification, TikTokVerificationCreate, TikTokVerificationResponse
 
 __all__ = [
-    "Campaign", 
-    "CampaignCreate", 
-    "CampaignClaimCreate", 
+    "AiVideoGenerateResponse",
+    "Campaign",
+    "CampaignCreate",
+    "CampaignClaimCreate",
     "CampaignClaimResponse",
     "UploadResponse",
     "ContactFormData",
     "ContactResponse",
     "EntertainmentLive",
-    "EntertainmentLiveCreate", 
-    "EntertainmentLiveResponse"
+    "EntertainmentLiveCreate",
+    "EntertainmentLiveResponse",
 ]
