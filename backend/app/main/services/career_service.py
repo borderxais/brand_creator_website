@@ -18,7 +18,7 @@ class CareerService:
     
     # Email configuration
     ADMIN_EMAIL = "sam@borderxai.com"
-    HR_EMAIL = "carrie@borderxai.com"
+    HR_EMAIL = "info@borderxmedia.com"
     
     @staticmethod
     async def send_email(to_email: str, subject: str, html_content: str, from_email: str = None) -> bool:
