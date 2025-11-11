@@ -19,17 +19,26 @@ export default function Login() {
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [rateLimitTime, setRateLimitTime] = useState(0);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
 
   useEffect(() => {
     if (status === "authenticated" && session?.user?.role) {
-      if (session.user.role === "BRAND") {
+      // Check if there's a redirect URL from career application
+      const redirectUrl = searchParams?.get('redirect');
+      const fromApply = searchParams?.get('from');
+      const positionId = searchParams?.get('position');
+      
+      if (redirectUrl && fromApply === 'apply' && positionId && session.user.role === "CREATOR") {
+        // Redirect back to career page with parameters to open modal
+        router.push(`${redirectUrl}?from=apply&position=${positionId}`);
+      } else if (session.user.role === "BRAND") {
         router.push("/brandportal/dashboard");
       } else if (session.user.role === "CREATOR") {
         router.push("/creatorportal/dashboard");
       }
     }
-  }, [status, session, router]);
+  }, [status, session, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +90,15 @@ export default function Login() {
         const session = await getSession();
         console.log('Session after login:', session);
 
-        if (session?.user?.role === "BRAND") {
+        // Check if there's a redirect URL from career application
+        const redirectUrl = searchParams?.get('redirect');
+        const fromApply = searchParams?.get('from');
+        const positionId = searchParams?.get('position');
+        
+        if (redirectUrl && fromApply === 'apply' && positionId && session?.user?.role === "CREATOR") {
+          // Redirect back to career page with parameters to open modal
+          router.push(`${redirectUrl}?from=apply&position=${positionId}`);
+        } else if (session?.user?.role === "BRAND") {
           router.push("/brandportal/dashboard");
         } else if (session?.user?.role === "CREATOR") {
           router.push("/creatorportal/dashboard");

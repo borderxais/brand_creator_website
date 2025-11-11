@@ -16,6 +16,7 @@ const navigationItems = [
   //{ name: 'Posts', href: '/creatorportal/posts', icon: Image },
   { name: 'TikTok Verify', href: '/creatorportal/tiktok-verify', icon: CheckCircle },
   { name: 'AI Video', href: '/creatorportal/ai-video', icon: PlayCircle },
+  { name: 'Join Us', href: '/career', icon: Users },
   //{ name: 'Social Media', href: '/creatorportal/social', icon: Share2 },
   //{ name: 'Earnings', href: '/creatorportal/earnings', icon: DollarSign },
 ];
@@ -83,13 +84,13 @@ export default function CreatorPortalLayout({
             {/* Mobile Menu Button */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="ml-4 p-2 text-gray-600 hover:text-gray-900 block lg:hidden"
+              className="ml-auto p-2 text-gray-600 hover:text-gray-900 block lg:hidden"
             >
               <Menu className="h-6 w-6" />
             </button>
 
             {/* User Profile */}
-            <div className="ml-auto">
+            <div className="ml-2">
               <div className="relative">
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
