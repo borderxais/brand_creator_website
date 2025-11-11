@@ -17,6 +17,7 @@ type AiVideoLibraryItem = {
   created_at?: string;
   video?: string;
   video_url?: string;
+  thumbnail_url?: string;
   tag?: string[] | string;
   tags?: string[];
 };
@@ -76,6 +77,7 @@ function mapToRecord(item: AiVideoLibraryItem): AiVideoRecord {
     generatedAt,
     expiresAt,
     videoUrl,
+    thumbnailUrl: item.thumbnail_url,
     tags,
     status,
   };

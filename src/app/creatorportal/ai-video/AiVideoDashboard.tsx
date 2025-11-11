@@ -12,6 +12,7 @@ export type AiVideoRecord = {
   generatedAt: string;
   expiresAt: string;
   videoUrl?: string;
+  thumbnailUrl?: string | null;
   tags: string[];
   status: VideoStatus;
 };
@@ -83,9 +84,18 @@ function VideoPreviewCard({
       </div>
 
       <div className="relative aspect-[9/16] w-full overflow-hidden rounded-xl bg-slate-900">
-        <div className="flex h-full w-full items-center justify-center text-white/50">
-          <Video className="h-10 w-10" />
-        </div>
+        {video.thumbnailUrl ? (
+          <img
+            src={video.thumbnailUrl}
+            alt={`Thumbnail for video ${video.id}`}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-white/50">
+            <Video className="h-10 w-10" />
+          </div>
+        )}
         <div className="absolute inset-0 flex items-center justify-center bg-slate-900/60">
           {canSelect && video.videoUrl ? (
             <button

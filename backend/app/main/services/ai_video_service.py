@@ -134,6 +134,7 @@ class AiVideoService:
                     continue
 
                 tags = cls._deserialize_tags(row.get("tag"))
+                thumbnail_url = cls._resolve_thumbnail_url(client, row)
                 record = AiVideoLibraryItem(
                     id=row.get("id"),
                     creator_id=row.get("creator_id"),
@@ -141,6 +142,7 @@ class AiVideoService:
                     video_url=video_url,
                     tags=tags,
                     created_at=row.get("created_at"),
+                    thumbnail_url=thumbnail_url,
                 )
                 records.append(record)
             except Exception as parse_exc:
@@ -286,3 +288,14 @@ class AiVideoService:
             return cls._generate_signed_url(client, video_path)
 
         return None
+
+    @classmethod
+    def _resolve_thumbnail_url(cls, client, row: dict) -> Optional[str]:
+        raw_value = row.get("thumbnail_url") or row.get("thumbnailUrl") or row.get("thumbnail")
+        if not raw_value:
+            return None
+
+        if isinstance(raw_value, str) and raw_value.startswith(("http://", "https://")):
+            return raw_value
+
+        return cls._generate_signed_url(client, raw_value)

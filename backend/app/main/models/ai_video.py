@@ -21,3 +21,4 @@ class AiVideoLibraryItem(BaseModel):
     video_url: str
     tags: List[str]
     created_at: Optional[str] = None
+    thumbnail_url: Optional[str] = None
