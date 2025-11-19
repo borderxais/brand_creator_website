@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const TOKEN_ENDPOINT = "https://open.tiktokapis.com/v2/oauth/token/";
+const STATE_COOKIE_NAME = "tiktok_oauth_state";
 
 const appBaseUrl =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://cricher.ai";
@@ -17,30 +18,38 @@ const redirectUri =
   `${appBaseUrl}/api/auth/tiktok/callback`;
 
 export async function GET(request: NextRequest) {
+  const redirectWithError = (message: string) =>
+    NextResponse.redirect(
+      `${errorRedirectUrl}?provider=tiktok&error=${encodeURIComponent(message)}`
+    );
+
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
   const state = url.searchParams.get("state") ?? undefined;
+  const storedState = request.cookies.get(STATE_COOKIE_NAME)?.value;
+
+  if (!storedState) {
+    return redirectWithError("missing_state");
+  }
+
+  if (!state || state !== storedState) {
+    return redirectWithError("state_mismatch");
+  }
 
   if (error) {
-    return NextResponse.redirect(
-      `${errorRedirectUrl}?error=${encodeURIComponent(error)}`
-    );
+    return redirectWithError(error);
   }
 
   if (!code) {
-    return NextResponse.redirect(
-      `${errorRedirectUrl}?error=missing_code`
-    );
+    return redirectWithError("missing_code");
   }
 
   const clientKey = process.env.TIKTOK_CLIENT_KEY;
   const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
 
   if (!clientKey || !clientSecret) {
-    return NextResponse.redirect(
-      `${errorRedirectUrl}?error=server_configuration`
-    );
+    return redirectWithError("server_configuration");
   }
 
   try {
@@ -67,11 +76,7 @@ export async function GET(request: NextRequest) {
         payload.message ||
         "token_exchange_failed";
 
-      return NextResponse.redirect(
-        `${errorRedirectUrl}?error=${encodeURIComponent(
-          errorDescription
-        )}`
-      );
+      return redirectWithError(errorDescription);
     }
 
     const response = NextResponse.redirect(
@@ -120,12 +125,15 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    response.cookies.set(STATE_COOKIE_NAME, "", {
+      maxAge: 0,
+      path: "/",
+    });
+
     return response;
   } catch (err) {
-    return NextResponse.redirect(
-      `${errorRedirectUrl}?error=${encodeURIComponent(
-        err instanceof Error ? err.message : "unknown_error"
-      )}`
+    return redirectWithError(
+      err instanceof Error ? err.message : "unknown_error"
     );
   }
 }
