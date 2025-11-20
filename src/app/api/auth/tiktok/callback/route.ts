@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const TOKEN_ENDPOINT = "https://open.tiktokapis.com/v2/oauth/token/";
 const STATE_COOKIE_NAME = "tiktok_oauth_state";
+const CODE_VERIFIER_COOKIE_NAME = "tiktok_code_verifier";
 
 const appBaseUrl =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://cricher.ai";
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
   const error = url.searchParams.get("error");
   const state = url.searchParams.get("state") ?? undefined;
   const storedState = request.cookies.get(STATE_COOKIE_NAME)?.value;
+  const codeVerifier = request.cookies.get(CODE_VERIFIER_COOKIE_NAME)?.value;
 
   if (!storedState) {
     return redirectWithError("missing_state");
@@ -43,6 +45,10 @@ export async function GET(request: NextRequest) {
 
   if (!code) {
     return redirectWithError("missing_code");
+  }
+
+  if (!codeVerifier) {
+    return redirectWithError("missing_code_verifier");
   }
 
   const clientKey = process.env.TIKTOK_CLIENT_KEY;
@@ -64,6 +70,7 @@ export async function GET(request: NextRequest) {
         code,
         grant_type: "authorization_code",
         redirect_uri: redirectUri,
+        code_verifier: codeVerifier,
       }),
       cache: "no-store",
     });
@@ -126,6 +133,10 @@ export async function GET(request: NextRequest) {
     }
 
     response.cookies.set(STATE_COOKIE_NAME, "", {
+      maxAge: 0,
+      path: "/",
+    });
+    response.cookies.set(CODE_VERIFIER_COOKIE_NAME, "", {
       maxAge: 0,
       path: "/",
     });

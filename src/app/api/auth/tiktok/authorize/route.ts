@@ -1,7 +1,10 @@
+import { Buffer } from "node:buffer";
+import { createHash, randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 
-const AUTH_ENDPOINT = "https://www.tiktok.com/v2/auth/authorize/";
+const AUTH_ENDPOINT = "https://www.tiktok.com/v2/auth/authorize";
 const STATE_COOKIE_NAME = "tiktok_oauth_state";
+const CODE_VERIFIER_COOKIE_NAME = "tiktok_code_verifier";
 
 const defaultScopes =
   "user.info.basic,user.info.stats,video.list,video.upload,video.publish";
@@ -21,11 +24,24 @@ const scopes =
 const stateMaxAge = 5 * 60; // 5 minutes
 
 function generateState() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID().replace(/-/g, "");
-  }
+  return randomBytes(16).toString("hex");
+}
 
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+function base64UrlEncode(buffer: ArrayBuffer) {
+  return Buffer.from(buffer)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+function generateCodeVerifier() {
+  return base64UrlEncode(randomBytes(32));
+}
+
+function generateCodeChallenge(verifier: string) {
+  const hash = createHash("sha256").update(verifier).digest();
+  return base64UrlEncode(hash);
 }
 
 export async function GET() {
@@ -39,6 +55,8 @@ export async function GET() {
   }
 
   const state = generateState();
+  const codeVerifier = generateCodeVerifier();
+  const codeChallenge = generateCodeChallenge(codeVerifier);
 
   const params = new URLSearchParams({
     client_key: clientKey,
@@ -46,11 +64,21 @@ export async function GET() {
     response_type: "code",
     redirect_uri: redirectUri,
     state,
+    code_challenge: codeChallenge,
+    code_challenge_method: "S256",
   });
 
   const response = NextResponse.redirect(`${AUTH_ENDPOINT}?${params}`);
 
   response.cookies.set(STATE_COOKIE_NAME, state, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: stateMaxAge,
+    path: "/",
+  });
+
+  response.cookies.set(CODE_VERIFIER_COOKIE_NAME, codeVerifier, {
     httpOnly: true,
     secure: true,
     sameSite: "lax",
