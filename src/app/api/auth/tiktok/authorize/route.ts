@@ -27,8 +27,8 @@ function generateState() {
   return randomBytes(16).toString("hex");
 }
 
-function base64UrlEncode(buffer: ArrayBuffer) {
-  return Buffer.from(buffer)
+function base64UrlEncode(buffer: Buffer) {
+  return buffer
     .toString("base64")
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
@@ -36,7 +36,7 @@ function base64UrlEncode(buffer: ArrayBuffer) {
 }
 
 function generateCodeVerifier() {
-  return base64UrlEncode(randomBytes(32));
+  return randomBytes(32).toString("hex");
 }
 
 function generateCodeChallenge(verifier: string) {
