@@ -59,19 +59,21 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const params = new URLSearchParams({
+      client_key: clientKey,
+      client_secret: clientSecret,
+      code,
+      grant_type: "authorization_code",
+      redirect_uri: redirectUri,
+      code_verifier: codeVerifier,
+    });
+
     const tokenResponse = await fetch(TOKEN_ENDPOINT, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: JSON.stringify({
-        client_key: clientKey,
-        client_secret: clientSecret,
-        code,
-        grant_type: "authorization_code",
-        redirect_uri: redirectUri,
-        code_verifier: codeVerifier,
-      }),
+      body: params.toString(),
       cache: "no-store",
     });
 
