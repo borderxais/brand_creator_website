@@ -1,14 +1,11 @@
-// This is your Prisma schema file
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  
-  // Enable connection pooling
-  relationMode = "prisma"
-}
-
 generator client {
   provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Account {
@@ -25,8 +22,6 @@ model Account {
   id_token          String?
   session_state     String?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@unique([provider, providerAccountId])
 }
 
@@ -35,25 +30,20 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id                  String    @id @default(cuid())
-  name                String?
-  email               String?   @unique
-  emailVerified       DateTime?
-  password            String?
-  image               String?
-  role                String    @default("CREATOR")
-  creatorHandleName   String?   @unique @map("creator_handle_name")
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  
-  accounts      Account[]
-  sessions      Session[]
-  creator       CreatorProfile?
-  brand         BrandProfile?
+  id                String    @id @default(cuid())
+  name              String?
+  email             String?   @unique
+  emailVerified     DateTime?
+  password          String?
+  image             String?
+  role              String    @default("CREATOR")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  creatorHandleName String    @map("creator_handle_name")
+  tiktokAccount     TikTokAccount?
 }
 
 model VerificationToken {
@@ -65,177 +55,410 @@ model VerificationToken {
 }
 
 model Platform {
-  id              String    @id @default(cuid())
-  name            String    @unique
-  displayName     String
-  description     String?
-  iconUrl         String?
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  creatorPlatforms CreatorPlatform[]
+  id          String   @id @default(cuid())
+  name        String   @unique
+  displayName String
+  description String?
+  iconUrl     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model CreatorProfile {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  bio             String?
-  location        String?
-  website         String?
-  categories      String    @default("[]") // JSON string of categories
-  followers       Int       @default(0)
-  engagementRate  Float     @default(0)
-  
-  // Platform connections
-  platforms       CreatorPlatform[]
-  
-  // Portfolio
-  portfolioItems  PortfolioItem[]
-  
-  // Posts
-  posts          Post[]
-  
-  // Products
-  products       Product[]
-  
-  // Campaign Applications
-  applications   Application[]
-  
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id             String           @id @default(cuid())
+  userId         String           @unique
+  bio            String?
+  location       String?
+  website        String?
+  categories     String           @default("[]")
+  followers      Int              @default(0)
+  engagementRate Float            @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  phone          String?
+  platforms      String?
+  profile_image  String?
+  campaignclaims campaignclaims[]
 }
 
 model CreatorPlatform {
-  id              String    @id @default(cuid())
-  creatorId       String
-  platformId      String
-  handle          String?
-  followers       Int       @default(0)
-  engagementRate  Float     @default(0)
-  isVerified      Boolean   @default(false)
-  lastUpdated     DateTime  @default(now())
-  
-  creator         CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  platform        Platform       @relation(fields: [platformId], references: [id], onDelete: Cascade)
-  
+  id             String   @id @default(cuid())
+  creatorId      String
+  platformId     String
+  handle         String?
+  followers      Int      @default(0)
+  engagementRate Float    @default(0)
+  isVerified     Boolean  @default(false)
+  lastUpdated    DateTime @default(now())
+
   @@unique([creatorId, platformId])
 }
 
-
 model BrandProfile {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  companyName     String
-  industry        String
-  description     String?
-  website         String?
-  location        String?
-  
-  // Products
-  products        Product[]
-  
-  // Campaign
-  campaigns       Campaign[]
-  
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id          String      @id @default(cuid())
+  userId      String      @unique
+  companyName String
+  industry    String
+  description String?
+  website     String?
+  location    String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  campaigns   campaigns[]
 }
 
 model PortfolioItem {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   creatorId   String
   title       String
   description String?
   imageUrl    String?
   link        String?
-  
-  creator     CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Post {
-  id              String    @id @default(cuid())
-  creatorId       String
-  title           String
-  content         String
-  published       Boolean   @default(false)
-  imageUrl        String?
-  
-  creator         CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id        String   @id @default(cuid())
+  creatorId String
+  title     String
+  content   String
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  imageUrl  String?
 }
 
 model Product {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   creatorId   String?
   brandId     String?
   name        String
   description String?
   price       Float?
   imageUrl    String?
-  
-  creator     CreatorProfile? @relation(fields: [creatorId], references: [id])
-  brand       BrandProfile?   @relation(fields: [brandId], references: [id])
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-}
-
-model Campaign {
-  id          String    @id @default(cuid())
-  brandId     String
-  title       String
-  description String
-  budget      Float
-  requirements String?
-  startDate   DateTime
-  endDate     DateTime
-  status      String    @default("DRAFT") // DRAFT, ACTIVE, COMPLETED, CANCELLED
-  categories  String    @default("[]") // JSON string of categories
-  deliverables String   @default("[]") // JSON string of deliverables
-  platformIds String[]  // Array of platform IDs
-  
-  brand       BrandProfile    @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  applications Application[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Application {
-  id          String    @id @default(cuid())
-  campaignId  String
-  creatorId   String
-  status      String    @default("PENDING")
-  proposal    String?
-  
-  campaign    Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  creator     CreatorProfile  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id         String   @id @default(cuid())
+  campaignId String
+  creatorId  String
+  status     String   @default("PENDING")
+  proposal   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
-
-// Model for TikTok creator data - this becomes our main creator model
 model FindCreator {
-  id                  String    @id @default(cuid())
-  created_at          DateTime @default(now())
-  creator_handle_name String   @unique
+  id                  String   @unique @default(cuid())
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  creator_handle_name String
   display_name        String?
   bio                 String?
   content_label_name  String?
-  industry_label_name String?
-  follower_count      Int?
-  creator_id          String?  // Changed from numeric type to String to properly handle TikTok's large IDs
-  creator_price       Int?
+  follower_count      Decimal? @db.Decimal
+  creator_id          String?
+  creator_price       Decimal? @db.Decimal
   currency            String?
-  following_count     Int?
-  like_count          Int?
-  median_views        Int?
-  profile_image       String?
-  videos_count        Int?
-  engagement_rate     Float?
+  following_count     Decimal? @db.Decimal
+  like_count          Decimal? @db.Decimal
+  median_views        Decimal? @db.Decimal
+  videos_count        Decimal? @db.Decimal
+  industry_label_name String?
+  profile_image       String?  @db.VarChar
+  engagement_rate     Decimal? @db.Decimal
+
+  @@id([id, creator_handle_name])
+}
+
+model TikTokAccount {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  tiktokOpenId     String   @unique
+  accessToken      String
+  refreshToken     String
+  scope            String
+  expiresAt        DateTime
+  refreshExpiresAt DateTime
+  handle           String?
+  displayName      String?
+  avatarUrl        String?
+  followerCount    Int?
+  engagementRate   Float?
+  lastSyncedAt     DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model AiVideo {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  creator_id     String?
+  generated_time DateTime? @db.Timestamptz(6)
+  video          String?
+  tag            String?
+  thumbnail_url  String?
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model AiVideoRequest {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  creator_id   String?
+  voice_sample String?  @db.VarChar
+  prompt       String?  @db.VarChar
+  image        String?  @db.VarChar
+  tag          String?  @db.VarChar
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Contact {
+  id         Int       @id(map: "contact_pkey") @default(autoincrement())
+  name       String
+  email      String
+  subject    String
+  message    String
+  status     String?   @default("new")
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model avocadata {
+  last_updated                       String
+  job_title_last_updated             DateTime? @db.Timestamptz(6)
+  company_last_updated               DateTime? @db.Timestamptz(6)
+  last_name                          String?
+  direct_number_1                    String?
+  mobile_phone_1                     String?
+  personal_address                   String?
+  personal_city                      String?
+  personal_phone_1                   String?
+  personal_state                     String?
+  personal_zip                       String?
+  personal_zip4                      String?
+  social_connections                 String?
+  age_range                          String?
+  children                           String?
+  gender                             String?
+  homeowner                          String?
+  married                            String?
+  net_worth                          String?
+  income_range                       String?
+  business_email_1                   String?
+  business_email_validation_status_1 String?
+  business_email_last_seen_1         String?
+  personal_email_1                   String?
+  additional_personal_emails_1       String?
+  personal_email_validation_status_1 String?
+  personal_email_last_seen_1         String?
+  sha256_personal_email_1            String?
+  sha256_business_email_1            String?
+  company_address                    String?
+  company_description                String?
+  company_domain                     String?
+  company_employee_count             String?
+  company_linkedin_url               String?
+  company_name                       String?
+  company_phone_1                    String?
+  company_revenue                    String?
+  company_sic                        String?
+  company_naics                      String?
+  company_city                       String?
+  company_state                      String?
+  company_zip                        String?
+  company_industry                   String?
+  department                         String?
+  job_title                          String?
+  linkedin_url                       String?
+  professional_address               String?
+  professional_address_2             String?
+  professional_city                  String?
+  professional_state                 String?
+  professional_zip                   String?
+  professional_zip4                  String?
+  seniority_level                    String?
+  skiptrace_match_by                 String?
+  skiptrace_address                  String?
+  skiptrace_city                     String?
+  skiptrace_state                    String?
+  skiptrace_zip                      String?
+  skiptrace_landline_numbers_1       String?
+  first_name                         String?
+  skiptrace_name                     String?
+  skiptrace_credit_rating            String?
+  skiptrace_exact_age                String?
+  skiptrace_ethnic_code              String?
+  skiptrace_language_code            String?
+  skiptrace_b2b_match_by             String?
+  skiptrace_b2b_address              String?
+  skiptrace_b2b_landline_phone_1     String?
+  skiptrace_b2b_source               String?
+  skiptrace_b2b_wireless_phone_1     String?
+  dnc                                String?
+  skiptrace_b2b_website              String?
+  skiptrace_wireless_numbers_1       String?
+  skiptrace_ip                       String?
+  skiptrace_dnc                      String?
+  hash_filter                        String?
+  hash                               String?
+  id                                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model avocadata_application {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  user_id        String?
+  number_of_rows String?
+  received_email String?
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model campaignclaims {
+  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaign_id      String?         @db.Uuid
+  creator_id       String?
+  status           String          @default("pending")
+  sample_text      String?
+  sample_video_url String?
+  created_at       DateTime        @default(now()) @db.Timestamptz(6)
+  campaigns        campaigns?      @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+  CreatorProfile   CreatorProfile? @relation(fields: [creator_id], references: [id], onDelete: Cascade)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model campaigns {
+  id                                       String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  brand_id                                 String?
+  title                                    String
+  brief                                    String?
+  requirements                             String?
+  budget_range                             String?
+  commission                               String?
+  platform                                 String?
+  deadline                                 DateTime?        @db.Date
+  max_creators                             Int?             @default(10)
+  is_open                                  Boolean?         @default(true)
+  created_at                               DateTime?        @default(now()) @db.Timestamptz(6)
+  budget_unit                              String?
+  sample_video_url                         String?
+  industry_category                        String?
+  primary_promotion_objectives             String?
+  ad_placement                             String?
+  campaign_execution_mode                  String?
+  creator_profile_preferences_gender       String?
+  creator_profile_preference_ethnicity     String?
+  creator_profile_preference_content_niche String?
+  preferred_creator_location               String?
+  language_requirement_for_creators        String?
+  creator_tier_requirement                 String?
+  send_to_creator                          String?
+  approved_by_brand                        String?
+  kpi_reference_target                     String?
+  prohibited_content_warnings              String?
+  product_photo                            String?
+  posting_requirements                     String?
+  script_required                          String?
+  product_highlight                        String?
+  product_price                            String?
+  product_sold_number                      String?
+  paid_promotion_type                      String?
+  video_buyout_budget_range                String?
+  base_fee_budget_range                    String?
+  follower_requirement                     String?
+  order_requirement                        String?
+  product_name                             String?
+  updated_at                               DateTime?        @db.Timestamptz(6)
+  campaignclaims                           campaignclaims[]
+  BrandProfile                             BrandProfile?    @relation(fields: [brand_id], references: [id], onDelete: Cascade)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model creator_test {
+  Nickname              String?
+  Unique_Id             String? @map("Unique Id")
+  Region                String?
+  Main_product_category String? @map("Main product category")
+  Contact_Email         String? @map("Contact Email")
+  Followers             BigInt?
+  New_followers_30day_  BigInt? @map("New followers(30day)")
+  Likes_Followers       Float?  @map("Likes/Followers")
+  Videos                BigInt?
+  Video_GMV             String? @map("Video GMV")
+  Average_View          Float?  @map("Average View")
+  ER_Rate               String? @map("ER Rate")
+
+  @@ignore
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model entertainment_live {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at            DateTime  @default(now()) @db.Timestamptz(6)
+  task_title            String?
+  brand_id              String?
+  campaign_objective    String?
+  platform              String?
+  task_start_at         DateTime? @db.Timestamptz(6)
+  task_end_at           DateTime? @db.Timestamptz(6)
+  follower_min          String?
+  follower_max          String?
+  niche_tags            String?
+  region_priority       String?
+  content_quality_floor String?
+  deliverables          String?
+  mandatory_elements    String?
+  creative_guidelines   String?
+  prohibited_elements   String?
+  reward_model          String?
+  fixed_reward          String?
+  tiered_table          String?
+  cps_rate              String?
+  kpi_baseline          String?
+  updated_at            DateTime? @db.Timestamptz(6)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model influencer_verifications {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  passport_name         String
+  real_name             String
+  id_type               String
+  gender                String
+  nationality           String
+  stage_name            String?
+  id_number             String    @unique
+  date_of_birth         DateTime  @db.Date
+  account_intro         String
+  overseas_platform_url String
+  follower_count        Int
+  other_platforms       String?
+  agent_email           String
+  id_front_path         String
+  handheld_id_path      String
+  backend_ss_path       String
+  authorization_path    String
+  identity_video_path   String?
+  created_at            DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pear_brand {
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  store_name  String?
+  store_link  String?
+  store_intro String?
+  store_logo  String?
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 }
