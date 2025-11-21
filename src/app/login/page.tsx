@@ -13,7 +13,6 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isTikTokLoading, setIsTikTokLoading] = useState(false);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [showResendButton, setShowResendButton] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
@@ -235,42 +234,6 @@ function LoginForm() {
               </button>
             </div>
 
-            <div className="relative mt-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-2 text-gray-500">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsTikTokLoading(true);
-                  window.location.href = "/api/auth/tiktok/authorize";
-                }}
-                disabled={isTikTokLoading}
-                className={`w-full flex items-center justify-center gap-2 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ${isTikTokLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5 text-black"
-                  fill="currentColor"
-                >
-                  <path d="M16.5 3a4.5 4.5 0 0 0 4.5 4.5V8a8 8 0 0 1-5-1.67V15a5.5 5.5 0 1 1-5.5-5.5c.17 0 .34 0 .5.02V6.01c-.17-.01-.33-.01-.5-.01A9 9 0 1 0 21 15.5V9.5h-1a3.5 3.5 0 0 1-3.5-3.5V3h-1Z" />
-                </svg>
-                {isTikTokLoading ? "Redirecting..." : "Login with TikTok"}
-              </button>
-              <p className="mt-2 text-xs text-gray-500 text-center">
-                Requires TikTok approval; you’ll choose permissions on TikTok.
-              </p>
-            </div>
 
             {showResendButton && (
               <div className="mt-4">

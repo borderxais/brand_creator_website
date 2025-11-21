@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { getServerSession } from 'next-auth';
 import AiVideoDashboard, { AiVideoRecord, VideoStatus } from './AiVideoDashboard';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export const metadata: Metadata = {
   title: 'AI Video Library | BorderX CreatorHub',
@@ -23,38 +24,46 @@ type AiVideoLibraryItem = {
 };
 
 export default async function AiVideoPage() {
-  const videos = await fetchAiVideos();
-  return <AiVideoDashboard videos={videos} />;
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id ?? null;
+
+  const [videos, tiktokAccount] = await Promise.all([
+    fetchAiVideos(userId),
+    userId
+      ? prisma.tikTokAccount.findUnique({
+          where: { userId },
+        })
+      : Promise.resolve(null),
+  ]);
+
+  return <AiVideoDashboard videos={videos} hasTikTokBinding={Boolean(tiktokAccount)} />;
 }
 
-async function fetchAiVideos(): Promise<AiVideoRecord[]> {
+async function fetchAiVideos(userId: string | null): Promise<AiVideoRecord[]> {
   try {
-    const session = await getServerSession(authOptions);
-    const creatorId = session?.user?.id;
-
     const baseUrl = PYTHON_API_BASE;
     const url = new URL('/ai-videos/library', baseUrl);
-    if (creatorId) {
-      url.searchParams.set('creator_id', creatorId);
-  }
+    if (userId) {
+      url.searchParams.set('creator_id', userId);
+    }
 
-  const response = await fetch(url.toString(), { cache: 'no-store' });
-  if (response.status === 404) {
-    return [];
+    const response = await fetch(url.toString(), { cache: 'no-store' });
+    if (response.status === 404) {
+      return [];
     }
     if (!response.ok) {
       console.error('Failed to fetch AI videos', await response.text());
       return [];
     }
 
-  const responseBody = await response.clone().text();
-  console.log('AI video library response body', responseBody);
-  const payload: AiVideoLibraryItem[] = await response.json();
-  console.log('AI video library payload', payload);
-  return payload.map(mapToRecord);
-} catch (error) {
-  console.error('Unable to load AI videos', error);
-  return [];
+    const responseBody = await response.clone().text();
+    console.log('AI video library response body', responseBody);
+    const payload: AiVideoLibraryItem[] = await response.json();
+    console.log('AI video library payload', payload);
+    return payload.map(mapToRecord);
+  } catch (error) {
+    console.error('Unable to load AI videos', error);
+    return [];
   }
 }
 

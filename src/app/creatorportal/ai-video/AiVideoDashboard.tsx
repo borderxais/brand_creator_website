@@ -19,6 +19,7 @@ export type AiVideoRecord = {
 
 interface DashboardProps {
   videos: AiVideoRecord[];
+  hasTikTokBinding: boolean;
 }
 
 const generatedFormatter = new Intl.DateTimeFormat(undefined, {
@@ -253,11 +254,12 @@ function PreviewModal({ video, onClose }: PreviewModalProps) {
   );
 }
 
-export default function AiVideoDashboard({ videos }: DashboardProps) {
+export default function AiVideoDashboard({ videos, hasTikTokBinding }: DashboardProps) {
   const [preview, setPreview] = useState<AiVideoRecord | null>(null);
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isRedirectingToTikTok, setIsRedirectingToTikTok] = useState(false);
 
   const readyVideoIds = useMemo(
     () => videos.filter((video) => video.status === 'ready' && video.videoUrl).map((video) => video.id),
@@ -289,6 +291,11 @@ export default function AiVideoDashboard({ videos }: DashboardProps) {
     }, 600);
   };
 
+  const redirectToTikTokAuth = () => {
+    setIsRedirectingToTikTok(true);
+    window.location.href = "/api/auth/tiktok/authorize";
+  };
+
   return (
     <div className="space-y-8 py-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -311,21 +318,38 @@ export default function AiVideoDashboard({ videos }: DashboardProps) {
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-center gap-4">
-          <button
-            type="button"
-            onClick={handleUpload}
-            className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60"
-            disabled={isUploading}
-          >
-            <Upload className="h-4 w-4" />
-            {isUploading ? 'Uploading…' : 'Upload selected to TikTok'}
-          </button>
+          {hasTikTokBinding ? (
+            <button
+              type="button"
+              onClick={handleUpload}
+              className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60"
+              disabled={isUploading}
+            >
+              <Upload className="h-4 w-4" />
+              {isUploading ? 'Uploading…' : 'Upload selected to TikTok'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={redirectToTikTokAuth}
+              className="inline-flex items-center gap-2 rounded-full border border-dashed border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-400 hover:text-indigo-600"
+              disabled={isRedirectingToTikTok}
+            >
+              <Upload className="h-4 w-4" />
+              {isRedirectingToTikTok ? 'Redirecting…' : 'Connect TikTok to upload'}
+            </button>
+          )}
           <p className="text-sm text-slate-600">
             {selectedVideoIds.length ? `${selectedVideoIds.length} selected` : 'No videos selected'}
           </p>
         </div>
-        {uploadMessage && (
+        {uploadMessage && hasTikTokBinding && (
           <p className="mt-3 text-sm font-medium text-slate-600">{uploadMessage}</p>
+        )}
+        {!hasTikTokBinding && (
+          <p className="mt-3 text-sm text-slate-600">
+            Connect your TikTok account to enable direct uploads and keep campaign deliverables in sync.
+          </p>
         )}
       </div>
 
