@@ -20,12 +20,22 @@ export async function GET(request: Request) {
     // Get the user and ensure they are a brand
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      include: { brand: true }
+      select: { id: true, role: true },
     });
-    console.log('User:', { id: user?.id, email: user?.email, role: user?.role, hasBrand: !!user?.brand });
+    console.log('User:', { id: user?.id, email: session.user.email, role: user?.role });
 
-    if (!user?.brand || user.role !== 'BRAND') {
-      console.log('Not a brand:', { role: user?.role, hasBrand: !!user?.brand });
+    if (!user || user.role !== 'BRAND') {
+      console.log('Not a brand:', { role: user?.role });
+      return NextResponse.json({ error: 'Unauthorized - Brand access only' }, { status: 403 });
+    }
+
+    const brandProfile = await prisma.brandProfile.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    });
+
+    if (!brandProfile) {
+      console.log('Brand profile not found for user:', user.id);
       return NextResponse.json({ error: 'Unauthorized - Brand access only' }, { status: 403 });
     }
 
@@ -37,7 +47,7 @@ export async function GET(request: Request) {
     const endDate = searchParams.get('end_date');
 
     // Build the Python API URL with query parameters using brand profile ID directly
-    let pythonApiUrl = `${PYTHON_API_URL}/campaigns/brand-campaigns/${user.brand.id}`;  // Updated path
+    let pythonApiUrl = `${PYTHON_API_URL}/campaigns/brand-campaigns/${brandProfile.id}`;  // Updated path
     const queryParams = new URLSearchParams();
     
     if (isOpen) queryParams.append('is_open', isOpen);
@@ -95,11 +105,20 @@ export async function POST(request: Request) {
     // Get the user and ensure they are a brand
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      include: { brand: true }
+      select: { id: true, role: true },
     });
 
-    if (!user?.brand || user.role !== 'BRAND') {
+    if (!user || user.role !== 'BRAND') {
       return NextResponse.json({ error: 'Unauthorized - Brand access only' }, { status: 403 });
+    }
+
+    const brandProfile = await prisma.brandProfile.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    });
+
+    if (!brandProfile) {
+      return NextResponse.json({ error: 'Brand profile not found' }, { status: 403 });
     }
 
     // Check if this is a multipart/form-data request
@@ -111,7 +130,7 @@ export async function POST(request: Request) {
       
       // Extract and prepare campaign data with all new fields
       const campaignData: any = {
-        brand_id: session.user.id,
+        brand_id: brandProfile.id,
         title: formData.get('title') as string,
         brief: formData.get('brief') as string,
         requirements: formData.get('requirements') as string,
