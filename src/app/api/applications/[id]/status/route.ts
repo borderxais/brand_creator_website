@@ -29,11 +29,20 @@ export async function PATCH(request: Request) {
     // Get the user and ensure they are a brand
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      include: { brand: true }
+      select: { id: true, role: true },
     });
 
-    if (!user?.brand || user.role !== 'BRAND') {
+    if (!user || user.role !== 'BRAND') {
       return NextResponse.json({ error: 'Unauthorized - Brand access only' }, { status: 403 });
+    }
+
+    const brandProfile = await prisma.brandProfile.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    });
+
+    if (!brandProfile) {
+      return NextResponse.json({ error: 'Brand profile not found' }, { status: 403 });
     }
 
     // Parse the request body to get the status
@@ -55,7 +64,7 @@ export async function PATCH(request: Request) {
       },
       body: JSON.stringify({ 
         status,
-        brand_id: user.brand.id
+        brand_id: brandProfile.id
       }),
     });
     
