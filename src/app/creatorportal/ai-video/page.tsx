@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { getServerSession } from 'next-auth';
-import AiVideoDashboard, { AiVideoRecord, VideoStatus } from './AiVideoDashboard';
+import AiVideoDashboard, { AiVideoRecord, TikTokBindingInfo, VideoStatus } from './AiVideoDashboard';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
@@ -36,7 +36,15 @@ export default async function AiVideoPage() {
       : Promise.resolve(null),
   ]);
 
-  return <AiVideoDashboard videos={videos} hasTikTokBinding={Boolean(tiktokAccount)} />;
+  const tikTokBinding: TikTokBindingInfo | null = tiktokAccount
+    ? {
+        displayName: tiktokAccount.display_name ?? undefined,
+        handle: tiktokAccount.handle ?? undefined,
+        openId: tiktokAccount.tiktok_open_id,
+      }
+    : null;
+
+  return <AiVideoDashboard videos={videos} tikTokBinding={tikTokBinding} />;
 }
 
 async function fetchAiVideos(userId: string | null): Promise<AiVideoRecord[]> {
