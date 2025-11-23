@@ -133,8 +133,8 @@ export async function GET(request: NextRequest) {
           access_token: payload.access_token ?? "",
           refresh_token: payload.refresh_token ?? "",
           scope: payload.scope ?? "",
-          expires_at: expiresAt,
-          refresh_expires_at: refreshExpiresAt,
+          expires_at: expiresAt ?? new Date(now),
+          refresh_expires_at: refreshExpiresAt ?? new Date(now),
           updated_at: new Date(),
         },
         create: {
