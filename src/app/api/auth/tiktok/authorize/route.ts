@@ -7,7 +7,7 @@ const STATE_COOKIE_NAME = "tiktok_oauth_state";
 const CODE_VERIFIER_COOKIE_NAME = "tiktok_code_verifier";
 
 const defaultScopes =
-  "user.info.basic,user.info.profile,user.info.stats,video.list,video.upload,video.publish";
+  "user.info.basic,user.info.stats,video.list,video.upload,video.publish";
 
 const appBaseUrl =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://cricher.ai";
