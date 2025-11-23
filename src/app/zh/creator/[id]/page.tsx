@@ -37,8 +37,8 @@ async function getCreatorProfile(id: string) {
             displayName: 'TikTok',
             iconUrl: '/icons/tiktok.svg'
           },
-          followers: creator.follower_count || 0,
-          engagementRate: creator.engagement_rate || 0,
+          followers: Number(creator.follower_count) || 0,
+          engagementRate: Number(creator.engagement_rate) || 0,
           handle: `@${creator.creator_handle_name}`
         }
       ],
@@ -47,14 +47,14 @@ async function getCreatorProfile(id: string) {
       creator_handle_name: creator.creator_handle_name,
       creator_id: creator.creator_id,
       industry_label_name: creator.industry_label_name,
-      follower_count: creator.follower_count,
-      following_count: creator.following_count,
-      like_count: creator.like_count,
-      videos_count: creator.videos_count,
-      engagement_rate: creator.engagement_rate,
-      median_views: creator.median_views,
+      follower_count: Number(creator.follower_count) || 0,
+      following_count: Number(creator.following_count) || 0,
+      like_count: Number(creator.like_count) || 0,
+      videos_count: Number(creator.videos_count) || 0,
+      engagement_rate: Number(creator.engagement_rate) || 0,
+      median_views: Number(creator.median_views) || 0,
       content_label_name: creator.content_label_name,
-      creator_price: creator.creator_price,
+      creator_price: Number(creator.creator_price) || 0,
       currency: creator.currency
     };
   } catch (error) {
@@ -116,8 +116,13 @@ export default async function CreatorProfileChinese(props: { params: Promise<{ i
     const categories = parseCategories(creator.categories);
     
     // Calculate metrics from real data only
-    const totalFollowers = creator.platforms.reduce((sum: number, cp) => sum + (cp.followers || 0), 0);
-    const averageEngagementRate = creator.platforms[0]?.engagementRate || 0;
+    const totalFollowers = creator.platforms.reduce((sum: number, cp) => {
+      const followers = typeof cp.followers === 'number' ? cp.followers : Number(cp.followers) || 0;
+      return sum + followers;
+    }, 0);
+    const averageEngagementRate = typeof creator.platforms[0]?.engagementRate === 'number'
+      ? creator.platforms[0]?.engagementRate
+      : Number(creator.platforms[0]?.engagementRate) || 0;
 
     // Create social links from real data
     const socialLinks = creator.platforms.reduce((acc, cp) => {
@@ -291,8 +296,8 @@ export default async function CreatorProfileChinese(props: { params: Promise<{ i
                             {cp.platform.displayName}
                           </h3>
                           <div className="text-sm text-gray-500">
-                            <p>{new Intl.NumberFormat().format(cp.followers)} 粉丝</p>
-                            <p>{cp.engagementRate.toFixed(1)}% 互动率</p>
+                            <p>{new Intl.NumberFormat().format(Number(cp.followers) || 0)} 粉丝</p>
+                            <p>{(typeof cp.engagementRate === 'number' ? cp.engagementRate : Number(cp.engagementRate) || 0).toFixed(1)}% 互动率</p>
                             {cp.handle && <p className="text-gray-400">{cp.handle}</p>}
                           </div>
                         </div>
@@ -335,33 +340,33 @@ export default async function CreatorProfileChinese(props: { params: Promise<{ i
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">粉丝数</p>
-                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(creator?.follower_count || 0)}</p>
+                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(Number(creator?.follower_count) || 0)}</p>
                     </div>
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">关注数</p>
-                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(creator?.following_count || 0)}</p>
+                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(Number(creator?.following_count) || 0)}</p>
                     </div>
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">总点赞数</p>
-                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(creator?.like_count || 0)}</p>
+                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(Number(creator?.like_count) || 0)}</p>
                     </div>
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">视频数</p>
-                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(creator?.videos_count || 0)}</p>
+                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(Number(creator?.videos_count) || 0)}</p>
                     </div>
                   </div>
                   
                   {/* Audience Chart */}
                   <ClientAudienceChartWrapper 
-                    followerCount={creator?.follower_count || 0}
-                    followingCount={creator?.following_count || 0}
-                    likeCount={creator?.like_count || 0}
-                    videosCount={creator?.videos_count || 0}
+                    followerCount={Number(creator?.follower_count) || 0}
+                    followingCount={Number(creator?.following_count) || 0}
+                    likeCount={Number(creator?.like_count) || 0}
+                    videosCount={Number(creator?.videos_count) || 0}
                   />
                   
                   <div className="mt-4 p-3 bg-blue-50 rounded-md">
                     <p className="text-sm text-blue-800">
-                      <span className="font-semibold">受众洞察:</span> 拥有 {new Intl.NumberFormat().format(creator?.follower_count || 0)} 粉丝和 {new Intl.NumberFormat().format(creator?.like_count || 0)} 点赞数，该创作者在其领域内建立了可观的受众基础。
+                      <span className="font-semibold">受众洞察:</span> 拥有 {new Intl.NumberFormat().format(Number(creator?.follower_count) || 0)} 粉丝和 {new Intl.NumberFormat().format(Number(creator?.like_count) || 0)} 点赞数，该创作者在其领域内建立了可观的受众基础。
                     </p>
                   </div>
                 </div>
@@ -374,11 +379,11 @@ export default async function CreatorProfileChinese(props: { params: Promise<{ i
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">互动率</p>
-                      <p className="text-xl font-bold text-gray-900">{(creator?.engagement_rate || 0).toFixed(2)}%</p>
+                      <p className="text-xl font-bold text-gray-900">{(Number(creator?.engagement_rate) || 0).toFixed(2)}%</p>
                     </div>
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">中位数观看量</p>
-                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(creator?.median_views || 0)}</p>
+                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(Number(creator?.median_views) || 0)}</p>
                     </div>
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">内容类别</p>
@@ -388,20 +393,20 @@ export default async function CreatorProfileChinese(props: { params: Promise<{ i
                   
                   {/* Performance Chart */}
                   <ClientPerformanceChartWrapper 
-                    engagementRate={creator?.engagement_rate || 0}
-                    medianViews={creator?.median_views || 0}
+                    engagementRate={Number(creator?.engagement_rate) || 0}
+                    medianViews={Number(creator?.median_views) || 0}
                     contentCategory={creator?.content_label_name || ''}
                   />
                   
                   <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-3 bg-green-50 rounded-md">
                       <p className="text-sm text-green-800">
-                        <span className="font-semibold">互动分析:</span> 该创作者的 {(creator?.engagement_rate || 0).toFixed(2)}% 互动率 {creator?.engagement_rate && creator.engagement_rate > 2.7 ? '高于' : '低于'} 平台平均值 2.7%。
+                        <span className="font-semibold">互动分析:</span> 该创作者的 {(Number(creator?.engagement_rate) || 0).toFixed(2)}% 互动率 {creator?.engagement_rate && Number(creator.engagement_rate) > 2.7 ? '高于' : '低于'} 平台平均值 2.7%。
                       </p>
                     </div>
                     <div className="p-3 bg-teal-50 rounded-md">
                       <p className="text-sm text-teal-800">
-                        <span className="font-semibold">观看表现:</span> 拥有 {new Intl.NumberFormat().format(creator?.median_views || 0)} 中位数观看量，该创作者每个帖子都能稳定地触达大量受众。
+                        <span className="font-semibold">观看表现:</span> 拥有 {new Intl.NumberFormat().format(Number(creator?.median_views) || 0)} 中位数观看量，该创作者每个帖子都能稳定地触达大量受众。
                       </p>
                     </div>
                   </div>
@@ -423,7 +428,7 @@ export default async function CreatorProfileChinese(props: { params: Promise<{ i
                         <p className="text-sm font-medium text-gray-500">创作者报价</p>
                         <p className="text-2xl font-bold text-gray-900">
                           {creator?.creator_price 
-                            ? `${creator.currency || '￥'}${new Intl.NumberFormat().format(creator.creator_price)}`
+                            ? `${creator.currency || '￥'}${new Intl.NumberFormat().format(Number(creator.creator_price) || 0)}`
                             : '联系获取报价'}
                         </p>
                       </div>

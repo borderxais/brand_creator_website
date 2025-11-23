@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       }
       
       // Check if handle name is already taken
-      const existingHandleName = await prisma.user.findUnique({
+      const existingHandleName = await prisma.user.findFirst({
         where: { creatorHandleName }
       });
       

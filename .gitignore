@@ -52,3 +52,6 @@ prisma/temp.prisma
 venv
 
 backend/app.yaml
+
+# Artifacts
+AGENTS.md

@@ -23,22 +23,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Get the creator's complete profile
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: {
-        creator: {
-          include: {
-            platforms: {
-              include: {
-                platform: true
-              }
-            }
-          }
-        }
-      }
+    const creatorProfile = await prisma.creatorProfile.findUnique({
+      where: { userId: session.user.id },
     });
 
-    if (!user || !user.creator) {
+    if (!creatorProfile) {
       return NextResponse.json(
         { error: 'Creator profile not found' },
         { status: 404 }
@@ -48,10 +37,43 @@ export async function GET(request: NextRequest) {
     // Parse categories from JSON string
     let categories = [];
     try {
-      categories = JSON.parse(user.creator.categories || '[]');
+      categories = JSON.parse(creatorProfile.categories || '[]');
     } catch (e) {
-      console.warn('Failed to parse categories:', user.creator.categories);
+      console.warn('Failed to parse categories:', creatorProfile.categories);
       categories = [];
+    }
+
+    // Fetch linked platforms separately
+    const creatorPlatforms = await prisma.creatorPlatform.findMany({
+      where: { creatorId: creatorProfile.id },
+    });
+
+    const platformIds = creatorPlatforms
+      .map(cp => cp.platformId)
+      .filter((id): id is string => Boolean(id));
+
+    const platforms = platformIds.length
+      ? await prisma.platform.findMany({
+          where: { id: { in: platformIds } },
+        })
+      : [];
+
+    const platformMap = platforms.reduce<Record<string, (typeof platforms)[number]>>((acc, p) => {
+      acc[p.id] = p;
+      return acc;
+    }, {});
+
+    // Fetch basic user info
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, name: true, email: true, creatorHandleName: true, role: true },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
     }
 
     // Format the response
@@ -64,24 +86,27 @@ export async function GET(request: NextRequest) {
         role: user.role
       },
       profile: {
-        id: user.creator.id,
-        bio: user.creator.bio,
-        location: user.creator.location,
-        website: user.creator.website,
-        followers: user.creator.followers,
-        engagementRate: user.creator.engagementRate,
+        id: creatorProfile.id,
+        bio: creatorProfile.bio,
+        location: creatorProfile.location,
+        website: creatorProfile.website,
+        followers: creatorProfile.followers,
+        engagementRate: creatorProfile.engagementRate,
         categories: categories
       },
-      platforms: user.creator.platforms.map(cp => ({
+      platforms: creatorPlatforms.map(cp => {
+        const platformInfo = cp.platformId ? platformMap[cp.platformId] : undefined;
+        return {
         id: cp.id,
-        platformName: cp.platform.name,
-        platformDisplayName: cp.platform.displayName,
+        platformName: platformInfo?.name || '',
+        platformDisplayName: platformInfo?.displayName || '',
         handle: cp.handle,
         followers: cp.followers,
         engagementRate: cp.engagementRate,
         isVerified: cp.isVerified,
         lastUpdated: cp.lastUpdated
-      }))
+        };
+      })
     };
 
     return NextResponse.json(profileData);

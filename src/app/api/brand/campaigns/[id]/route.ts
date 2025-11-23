@@ -22,7 +22,7 @@ export async function GET(
     const brandId = session.user.id;
 
     // Use the same URL structure as the working route
-    const response = await fetch(`${PYTHON_API_URL}/campaigns/brand-campaigns/${brandId}/campaign/${campaignId}`, {
+    const response = await fetch(`${PYTHON_API_URL}/campaigns/brand/${brandId}/campaign/${campaignId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -82,17 +82,36 @@ export async function PUT(
     const brandId = session.user.id;
     const body = await request.json();
 
+    const followerRequirement = body.follower_requirement || body.followerRequirement;
+    const orderRequirement = body.order_requirement || body.orderRequirement;
+    const combinedTier =
+      body.creator_tier_requirement && (body.creator_tier_requirement as any[]).length
+        ? body.creator_tier_requirement
+        : (followerRequirement || orderRequirement)
+          ? [[followerRequirement, orderRequirement].filter(Boolean).join('; ')]
+          : undefined;
+
+    const {
+      follower_requirement: _formFollowerRequirement,
+      followerRequirement: _followerRequirement,
+      order_requirement: _formOrderRequirement,
+      orderRequirement: _orderRequirement,
+      ...rest
+    } = body;
+    const sanitizedBody = {
+      ...rest,
+      brand_id: brandId,
+      ...(combinedTier !== undefined ? { creator_tier_requirement: combinedTier } : {})
+    };
+
     console.log('Updating campaign:', campaignId, 'for brand:', brandId);
 
-    const response = await fetch(`${PYTHON_API_URL}/campaigns/brand-campaigns/${brandId}/campaign/${campaignId}`, {
+    const response = await fetch(`${PYTHON_API_URL}/campaigns/brand/${brandId}/campaign/${campaignId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        ...body,
-        brand_id: brandId
-      }),
+      body: JSON.stringify(sanitizedBody),
       signal: AbortSignal.timeout(10000) // 10 second timeout for updates
     });
 
@@ -147,7 +166,7 @@ export async function DELETE(
 
     console.log('Deleting campaign:', campaignId, 'for brand:', brandId);
 
-    const response = await fetch(`${PYTHON_API_URL}/campaigns/brand-campaigns/${brandId}/campaign/${campaignId}`, {
+    const response = await fetch(`${PYTHON_API_URL}/campaigns/brand/${brandId}/campaign/${campaignId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

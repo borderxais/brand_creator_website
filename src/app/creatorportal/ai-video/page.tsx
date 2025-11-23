@@ -31,7 +31,7 @@ export default async function AiVideoPage() {
     fetchAiVideos(userId),
     userId
       ? prisma.tikTokAccount.findUnique({
-          where: { userId },
+          where: { user_id: userId },
         })
       : Promise.resolve(null),
   ]);

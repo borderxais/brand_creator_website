@@ -434,7 +434,7 @@ export default function NewCampaign() {
                     name="industry_category"
                     value={formData.industry_category}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     required
                   >
                     <option value="">Select an industry</option>
@@ -453,7 +453,7 @@ export default function NewCampaign() {
                     name="platform"
                     value={formData.platform}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     <option value="">Select a platform</option>
                     {platforms.map((platform) => (
@@ -1194,7 +1194,7 @@ export default function NewCampaign() {
                     name="language_requirement_for_creators"
                     value={formData.language_requirement_for_creators}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     <option value="english">English</option>
                     <option value="spanish">Spanish</option>
@@ -1218,7 +1218,7 @@ export default function NewCampaign() {
                         name="follower_requirement"
                         value={formData.follower_requirement}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
                       >
                         {followerRequirements.map(option => (
                           <option key={option.value} value={option.value}>
@@ -1237,7 +1237,7 @@ export default function NewCampaign() {
                         name="order_requirement"
                         value={formData.order_requirement}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
                       >
                         {orderRequirements.map(option => (
                           <option key={option.value} value={option.value}>

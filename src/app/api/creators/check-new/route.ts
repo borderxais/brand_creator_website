@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const usersWithHandles = await prisma.user.findMany({
       where: {
         creatorHandleName: {
-          not: null
+          not: ''
         }
       },
       select: {

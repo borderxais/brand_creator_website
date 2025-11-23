@@ -14,17 +14,26 @@ export async function POST(request: Request) {
     // Get the user and ensure they are a creator
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      include: { creator: true }
+      select: { id: true, role: true }
     });
 
-    if (!user?.creator || user.role !== 'CREATOR') {
+    if (!user || user.role !== 'CREATOR') {
+      return NextResponse.json({ error: 'Unauthorized - Creator access only' }, { status: 403 });
+    }
+
+    const creatorProfile = await prisma.creatorProfile.findUnique({
+      where: { userId: user.id },
+      select: { id: true }
+    });
+
+    if (!creatorProfile) {
       return NextResponse.json({ error: 'Unauthorized - Creator access only' }, { status: 403 });
     }
 
     const { campaignId } = await request.json();
 
     // Check if campaign exists
-    const campaign = await prisma.campaign.findUnique({
+    const campaign = await prisma.campaigns.findUnique({
       where: { id: campaignId }
     });
 
@@ -36,7 +45,7 @@ export async function POST(request: Request) {
     const existingApplication = await prisma.application.findFirst({
       where: {
         campaignId,
-        creatorId: user.creator.id
+        creatorId: creatorProfile.id
       }
     });
 
@@ -48,7 +57,7 @@ export async function POST(request: Request) {
     const application = await prisma.application.create({
       data: {
         campaignId,
-        creatorId: user.creator.id,
+        creatorId: creatorProfile.id,
         status: 'PENDING'
       }
     });

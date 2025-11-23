@@ -41,19 +41,20 @@ export async function GET(request: Request) {
 
     // Extract any query parameters from the request
     const { searchParams } = new URL(request.url);
-    const isOpen = searchParams.get('is_open');
     const search = searchParams.get('search');
-    const startDate = searchParams.get('start_date');
-    const endDate = searchParams.get('end_date');
+    // Normalize filters to what the Python API expects while tolerating camelCase from the UI
+    const startDate = searchParams.get('start_date') || searchParams.get('startDate');
+    const endDate = searchParams.get('end_date') || searchParams.get('endDate');
+    const status = searchParams.get('status');
 
     // Build the Python API URL with query parameters using brand profile ID directly
-    let pythonApiUrl = `${PYTHON_API_URL}/campaigns/brand-campaigns/${brandProfile.id}`;  // Updated path
+    let pythonApiUrl = `${PYTHON_API_URL}/campaigns/brand/${brandProfile.id}`;
     const queryParams = new URLSearchParams();
     
-    if (isOpen) queryParams.append('is_open', isOpen);
     if (search) queryParams.append('search', search);
     if (startDate) queryParams.append('start_date', startDate);
     if (endDate) queryParams.append('end_date', endDate);
+    if (status) queryParams.append('status', status);
     
     if (queryParams.toString()) {
       pythonApiUrl += `?${queryParams.toString()}`;
@@ -162,6 +163,8 @@ export async function POST(request: Request) {
         paid_promotion_type: formData.get('paid_promotion_type') as string,
         video_buyout_budget_range: formData.get('video_buyout_budget_range') as string,
         base_fee_budget_range: formData.get('base_fee_budget_range') as string,
+        follower_requirement: formData.get('follower_requirement') as string,
+        order_requirement: formData.get('order_requirement') as string,
       };
       
       // Handle array fields that come as JSON strings
@@ -185,6 +188,27 @@ export async function POST(request: Request) {
           }
         }
       });
+
+      // Map tier selections into the field the Python API accepts and strip unsupported extras
+      const followerRequirement = campaignData.follower_requirement as string | null;
+      const orderRequirement = campaignData.order_requirement as string | null;
+      const combinedTier =
+        (Array.isArray(campaignData.creator_tier_requirement) && campaignData.creator_tier_requirement.length > 0)
+          ? campaignData.creator_tier_requirement
+          : (followerRequirement || orderRequirement)
+            ? [[followerRequirement, orderRequirement].filter(Boolean).join('; ')]
+            : undefined;
+
+      const {
+        follower_requirement: _followerRequirement,
+        order_requirement: _orderRequirement,
+        ...pythonPayload
+      } = campaignData;
+      if (combinedTier !== undefined) {
+        pythonPayload.creator_tier_requirement = combinedTier;
+      } else {
+        delete pythonPayload.creator_tier_requirement;
+      }
       
       console.log('Campaign data with new fields:', {
         script_required: campaignData.script_required,
@@ -198,7 +222,7 @@ export async function POST(request: Request) {
       });
       
       // Forward the request to the Python API
-      const pythonApiUrl = `${PYTHON_API_URL}/campaigns/brand-campaigns/${user.brand.id}/add_campaign`;  // Updated path
+      const pythonApiUrl = `${PYTHON_API_URL}/campaigns/brand/${user.id}/add`;
       
       console.log('Creating campaign via Python API:', pythonApiUrl);
       
@@ -207,7 +231,7 @@ export async function POST(request: Request) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(campaignData),
+        body: JSON.stringify(pythonPayload),
       });
 
       if (!response.ok) {
@@ -229,7 +253,8 @@ export async function POST(request: Request) {
       // Ensure all new fields are included
       const campaignData = {
         ...data,
-        brand_id: user.brand.id,
+        brand_id: brandProfile.id,
+        budget_unit: data.budget_unit || data.budgetUnit,
         // Ensure new fields have defaults if not provided
         script_required: data.script_required || 'no',
         product_name: data.product_name || '',
@@ -239,10 +264,32 @@ export async function POST(request: Request) {
         paid_promotion_type: data.paid_promotion_type || 'commission_based',
         video_buyout_budget_range: data.video_buyout_budget_range || '',
         base_fee_budget_range: data.base_fee_budget_range || '',
+        product_photo: data.product_photo || data.product_photo_url || data.productPhotoUrl || '',
       };
 
+      // Normalize tier requirements for the Python API and drop unsupported extras
+      const followerRequirement = data.follower_requirement || data.followerRequirement || '';
+      const orderRequirement = data.order_requirement || data.orderRequirement || '';
+      const combinedTier =
+        campaignData.creator_tier_requirement && (campaignData.creator_tier_requirement as any[]).length
+          ? campaignData.creator_tier_requirement
+          : (followerRequirement || orderRequirement)
+            ? [[followerRequirement, orderRequirement].filter(Boolean).join('; ')]
+            : undefined;
+
+      const {
+        follower_requirement: _formFollowerRequirement,
+        followerRequirement: _followerRequirement,
+        order_requirement: _formOrderRequirement,
+        orderRequirement: _orderRequirement,
+        ...pythonPayload
+      } = {
+        ...campaignData,
+        creator_tier_requirement: combinedTier ?? campaignData.creator_tier_requirement
+      };
+      
       // Forward the request to the Python API
-      const pythonApiUrl = `${PYTHON_API_URL}/campaigns/brand-campaigns/${user.brand.id}/add_campaign`;
+      const pythonApiUrl = `${PYTHON_API_URL}/campaigns/brand/${user.id}/add`;
       
       console.log('Creating campaign via Python API (JSON):', pythonApiUrl);
       
@@ -251,7 +298,7 @@ export async function POST(request: Request) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(campaignData),
+        body: JSON.stringify(pythonPayload),
       });
 
       if (!response.ok) {

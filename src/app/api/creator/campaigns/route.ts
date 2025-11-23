@@ -17,88 +17,85 @@ export async function GET(request: Request) {
     // Get the user and ensure they are a creator
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      include: { 
-        creator: true,
-        brand: true
-      }
+      select: { id: true, role: true },
     });
-    console.log('User:', { id: user?.id, email: user?.email, role: user?.role, hasCreator: !!user?.creator });
 
-    if (!user?.creator || user.role !== 'CREATOR') {
-      console.log('Not a creator:', { role: user?.role, hasCreator: !!user?.creator });
+    if (!user || user.role !== 'CREATOR') {
+      console.log('Not a creator:', { role: user?.role });
       return NextResponse.json({ error: 'Unauthorized - Creator access only' }, { status: 403 });
     }
 
-    // Get campaigns the creator has applied to
-    const currentCampaigns = await prisma.campaign.findMany({
-      where: {
-        applications: {
-          some: {
-            creatorId: user.creator.id
-          }
-        }
-      },
-      include: {
-        brand: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                image: true
-              }
-            }
-          }
-        },
-        applications: {
-          where: {
-            creatorId: user.creator.id
-          },
-          select: {
-            status: true,
-            createdAt: true
-          }
-        }
-      }
+    const creatorProfile = await prisma.creatorProfile.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
     });
+
+    if (!creatorProfile) {
+      console.log('Creator profile not found for user');
+      return NextResponse.json({ error: 'Unauthorized - Creator access only' }, { status: 403 });
+    }
+
+    // Fetch claim records (acts like applications)
+    const claims = await prisma.campaignclaims.findMany({
+      where: { creator_id: creatorProfile.id },
+      include: {
+        campaigns: {
+          include: {
+            BrandProfile: {
+              select: {
+                id: true,
+                companyName: true,
+                industry: true,
+                website: true,
+                description: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Extract campaign IDs creator already applied to
+    const appliedCampaignIds = claims
+      .map(claim => claim.campaign_id)
+      .filter((id): id is string => Boolean(id));
+
+    // Get campaigns the creator has applied to
+    const currentCampaigns = claims
+      .map(claim => {
+        if (!claim.campaigns) return null;
+        return {
+          ...claim.campaigns,
+          applicationStatus: claim.status,
+          appliedAt: claim.created_at,
+        };
+      })
+      .filter((campaign): campaign is NonNullable<typeof campaign> => campaign !== null);
     console.log('Current campaigns:', currentCampaigns.length);
 
-    // Get available campaigns
-    const availableCampaigns = await prisma.campaign.findMany({
+    // Get available campaigns (open and not already applied)
+    const availableCampaigns = await prisma.campaigns.findMany({
       where: {
-        status: 'ACTIVE',
-        NOT: {
-          applications: {
-            some: {
-              creatorId: user.creator.id
-            }
-          }
-        }
+        is_open: true,
+        NOT: { id: { in: appliedCampaignIds } },
       },
       include: {
-        brand: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                image: true
-              }
-            }
-          }
-        }
-      }
+        BrandProfile: {
+          select: {
+            id: true,
+            companyName: true,
+            industry: true,
+            website: true,
+            description: true,
+          },
+        },
+      },
     });
     console.log('Available campaigns:', availableCampaigns.length);
 
-    // Transform campaigns to include application status
-    const transformedCurrentCampaigns = currentCampaigns.map(campaign => ({
-      ...campaign,
-      applicationStatus: campaign.applications[0]?.status || 'PENDING',
-      appliedAt: campaign.applications[0]?.createdAt
-    }));
-
     return NextResponse.json({
-      currentCampaigns: transformedCurrentCampaigns,
-      availableCampaigns
+      currentCampaigns,
+      availableCampaigns,
     });
   } catch (error) {
     console.error('Error fetching creator campaigns:', error);

@@ -145,7 +145,7 @@ export async function saveCreatorData(creatorData: TikTokCreatorResponse["data"]
     console.log(JSON.stringify(minimalData, null, 2));
     
     // Try finding the creator first
-    const existingCreator = await prisma.findCreator.findUnique({
+    const existingCreator = await prisma.findCreator.findFirst({
       where: { creator_handle_name: handleName }
     });
     
@@ -183,7 +183,7 @@ export async function saveCreatorData(creatorData: TikTokCreatorResponse["data"]
       const handleName = safeText(creatorData.handle_name) || '';
       const displayName = safeText(creatorData.display_name) || handleName;
       
-      const existingMinimal = await prisma.findCreator.findUnique({
+      const existingMinimal = await prisma.findCreator.findFirst({
         where: { creator_handle_name: handleName }
       });
       
@@ -199,7 +199,7 @@ export async function saveCreatorData(creatorData: TikTokCreatorResponse["data"]
         console.log("Created minimal record for:", handleName);
       }
       
-      return await prisma.findCreator.findUnique({
+      return await prisma.findCreator.findFirst({
         where: { creator_handle_name: handleName }
       });
     } catch (fallbackError) {
