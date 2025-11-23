@@ -128,7 +128,7 @@ async function buildTikTokBinding(account: TikTokAccountRecord): Promise<TikTokB
     where: { user_id: account.user_id },
     data: {
       display_name: profile.displayName ?? account.display_name,
-      handle: profile.username ?? account.handle,
+      handle: profile.displayName ?? profile.username ?? account.handle,
       avatar_url: profile.avatarUrl ?? account.avatar_url,
       follower_count: profile.followerCount ?? account.follower_count,
       last_synced_at: new Date(),
@@ -137,7 +137,7 @@ async function buildTikTokBinding(account: TikTokAccountRecord): Promise<TikTokB
 
   return {
     displayName: profile.displayName ?? existing.displayName,
-    handle: profile.username ?? existing.handle,
+    handle: profile.displayName ?? profile.username ?? existing.handle,
     openId: existing.openId,
   };
 }
@@ -146,15 +146,11 @@ async function fetchTikTokProfile(accessToken?: string): Promise<TikTokUserProfi
   if (!accessToken) return null;
 
   try {
-    const response = await fetch("https://open.tiktokapis.com/v2/user/info/", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        fields: ["open_id", "display_name", "avatar_url", "username", "follower_count"],
-      }),
+    const requestedFields = ["open_id", "avatar_url", "display_name", "follower_count"];
+    const url = `https://open.tiktokapis.com/v2/user/info/?fields=${requestedFields.join(",")}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",
     });
 
@@ -163,6 +159,8 @@ async function fetchTikTokProfile(accessToken?: string): Promise<TikTokUserProfi
       console.error("Failed to fetch TikTok user info on dashboard render", {
         status: response.status,
         body,
+        url,
+        requestedFields,
       });
       return null;
     }

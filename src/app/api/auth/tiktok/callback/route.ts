@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      const profile = await fetchTikTokProfile(payload.access_token ?? "");
+      const profile = await fetchTikTokProfile(payload.access_token ?? "", payload.scope);
       console.log("TikTok profile fetch result", {
         hasAccessToken: Boolean(payload.access_token),
         profile,
@@ -157,8 +157,8 @@ export async function GET(request: NextRequest) {
         await prisma.tikTokAccount.update({
           where: { user_id: session.user.id },
           data: {
-            handle: profile.username ?? profile.openId ?? null,
-            display_name: profile.displayName ?? null,
+            handle: profile.displayName ?? profile.openId ?? null,
+            display_name: profile.displayName ?? profile.openId ?? null,
             avatar_url: profile.avatarUrl ?? null,
             follower_count: profile.followerCount ?? null,
             last_synced_at: new Date(),
@@ -237,42 +237,80 @@ type TikTokUserProfile = {
   openId?: string;
   displayName?: string;
   avatarUrl?: string;
-  username?: string;
   followerCount?: number;
 };
 
-async function fetchTikTokProfile(accessToken?: string): Promise<TikTokUserProfile | null> {
+async function fetchTikTokProfile(accessToken?: string, tokenScope?: string | null): Promise<TikTokUserProfile | null> {
   if (!accessToken) {
     console.error("TikTok profile fetch skipped: missing access token");
     return null;
   }
 
   try {
-    const response = await fetch("https://open.tiktokapis.com/v2/user/info/", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        fields: [
-          "open_id",
-          "display_name",
-          "avatar_url",
-          "username",
-          "follower_count",
-        ],
-      }),
+    const scopeSet = new Set(
+      (tokenScope ?? "")
+        .split(/[,\s]+/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+    );
+
+    // Keep the request minimal to avoid scope errors; these fields are supported by user.info.basic/profile + stats.
+    const requestedFields = ["open_id", "avatar_url", "display_name", "follower_count"];
+
+    const apiBase = process.env.TIKTOK_API_BASE_URL?.replace(/\/$/, "") || "https://open.tiktokapis.com";
+    const getUrl = `${apiBase}/v2/user/info/?fields=${requestedFields.join(",")}`;
+    const response = await fetch(getUrl, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",
     });
 
     const body = await response.json().catch(() => null);
 
     if (!response.ok) {
-      console.error("Failed to fetch TikTok user info", {
+      console.error("Failed to fetch TikTok user info (GET)", {
         status: response.status,
         body,
+        scope: tokenScope,
+        requestedFields,
+        tokenPreview: accessToken.slice(0, 12) + "...",
+        url: getUrl,
       });
+      // Fallback to POST if GET rejected
+      try {
+        const postUrl = `${apiBase}/v2/user/info/`;
+        const altRes = await fetch(postUrl, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ fields: requestedFields }),
+          cache: "no-store",
+        });
+        const altBody = await altRes.json().catch(() => null);
+        if (!altRes.ok) {
+          console.error("TikTok user info fallback POST failed", {
+            status: altRes.status,
+            body: altBody,
+            url: postUrl,
+            scope: tokenScope,
+          });
+          return null;
+        }
+        const altUser = altBody?.data?.user ?? altBody?.data ?? null;
+        if (!altUser) {
+          return null;
+        }
+        return {
+          openId: altUser.open_id ?? altUser.openId,
+          displayName: altUser.display_name ?? altUser.displayName,
+          avatarUrl: altUser.avatar_url ?? altUser.avatarUrl,
+          followerCount: altUser.follower_count ?? altUser.followerCount,
+        };
+      } catch (fallbackError) {
+        console.error("TikTok user info fallback POST error", fallbackError);
+      }
       return null;
     }
 
@@ -289,7 +327,6 @@ async function fetchTikTokProfile(accessToken?: string): Promise<TikTokUserProfi
       openId: user.open_id ?? user.openId,
       displayName: user.display_name ?? user.displayName,
       avatarUrl: user.avatar_url ?? user.avatarUrl,
-      username: user.username ?? user.handle ?? user.open_id,
       followerCount: user.follower_count ?? user.followerCount,
     };
   } catch (error) {
