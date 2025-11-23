@@ -23,6 +23,8 @@ type AiVideoLibraryItem = {
   tags?: string[];
 };
 
+type TikTokAccountRecord = Awaited<ReturnType<typeof prisma.tikTokAccount.findUnique>>;
+
 export default async function AiVideoPage() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id ?? null;
@@ -36,13 +38,7 @@ export default async function AiVideoPage() {
       : Promise.resolve(null),
   ]);
 
-  const tikTokBinding: TikTokBindingInfo | null = tiktokAccount
-    ? {
-        displayName: tiktokAccount.display_name ?? undefined,
-        handle: tiktokAccount.handle ?? undefined,
-        openId: tiktokAccount.tiktok_open_id,
-      }
-    : null;
+  const tikTokBinding = await buildTikTokBinding(tiktokAccount);
 
   return <AiVideoDashboard videos={videos} tikTokBinding={tikTokBinding} />;
 }
@@ -98,4 +94,91 @@ function mapToRecord(item: AiVideoLibraryItem): AiVideoRecord {
     tags,
     status,
   };
+}
+
+type TikTokUserProfile = {
+  displayName?: string;
+  avatarUrl?: string;
+  username?: string;
+  openId?: string;
+  followerCount?: number;
+};
+
+async function buildTikTokBinding(account: TikTokAccountRecord): Promise<TikTokBindingInfo | null> {
+  if (!account) {
+    return null;
+  }
+
+  const existing: TikTokBindingInfo = {
+    displayName: account.display_name ?? undefined,
+    handle: account.handle ?? undefined,
+    openId: account.tiktok_open_id,
+  };
+
+  if (existing.displayName || existing.handle) {
+    return existing;
+  }
+
+  const profile = await fetchTikTokProfile(account.access_token);
+  if (!profile) {
+    return existing;
+  }
+
+  await prisma.tikTokAccount.update({
+    where: { user_id: account.user_id },
+    data: {
+      display_name: profile.displayName ?? account.display_name,
+      handle: profile.username ?? account.handle,
+      avatar_url: profile.avatarUrl ?? account.avatar_url,
+      follower_count: profile.followerCount ?? account.follower_count,
+      last_synced_at: new Date(),
+    },
+  });
+
+  return {
+    displayName: profile.displayName ?? existing.displayName,
+    handle: profile.username ?? existing.handle,
+    openId: existing.openId,
+  };
+}
+
+async function fetchTikTokProfile(accessToken?: string): Promise<TikTokUserProfile | null> {
+  if (!accessToken) return null;
+
+  try {
+    const response = await fetch("https://open.tiktokapis.com/v2/user/info/", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fields: ["open_id", "display_name", "avatar_url", "username", "follower_count"],
+      }),
+      cache: "no-store",
+    });
+
+    const body = await response.json().catch(() => null);
+    if (!response.ok) {
+      console.error("Failed to fetch TikTok user info on dashboard render", {
+        status: response.status,
+        body,
+      });
+      return null;
+    }
+
+    const user = body?.data?.user ?? body?.data ?? null;
+    if (!user) return null;
+
+    return {
+      displayName: user.display_name ?? user.displayName,
+      avatarUrl: user.avatar_url ?? user.avatarUrl,
+      username: user.username ?? user.handle ?? user.open_id,
+      openId: user.open_id ?? user.openId,
+      followerCount: user.follower_count ?? user.followerCount,
+    };
+  } catch (error) {
+    console.error("Error fetching TikTok profile on dashboard render", error);
+    return null;
+  }
 }
