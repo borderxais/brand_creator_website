@@ -78,6 +78,11 @@ export async function GET(request: NextRequest) {
     });
 
     const payload = await tokenResponse.json();
+    console.log("TikTok OAuth token exchange response", {
+      status: tokenResponse.status,
+      ok: tokenResponse.ok,
+      payload,
+    });
 
     if (!tokenResponse.ok || payload.error) {
       const errorDescription =
