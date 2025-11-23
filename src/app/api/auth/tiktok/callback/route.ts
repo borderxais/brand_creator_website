@@ -149,6 +149,10 @@ export async function GET(request: NextRequest) {
       });
 
       const profile = await fetchTikTokProfile(payload.access_token ?? "");
+      console.log("TikTok profile fetch result", {
+        hasAccessToken: Boolean(payload.access_token),
+        profile,
+      });
       if (profile) {
         await prisma.tikTokAccount.update({
           where: { user_id: session.user.id },
@@ -239,6 +243,7 @@ type TikTokUserProfile = {
 
 async function fetchTikTokProfile(accessToken?: string): Promise<TikTokUserProfile | null> {
   if (!accessToken) {
+    console.error("TikTok profile fetch skipped: missing access token");
     return null;
   }
 
