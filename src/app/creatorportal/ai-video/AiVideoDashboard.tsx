@@ -26,6 +26,7 @@ export type TikTokBindingInfo = {
   displayName?: string;
   handle?: string;
   openId?: string;
+  avatarUrl?: string | null;
 };
 
 const generatedFormatter = new Intl.DateTimeFormat(undefined, {
@@ -328,9 +329,20 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">TikTok binding</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">TikTok account status</p>
             {hasTikTokBinding ? (
               <div className="flex items-center gap-2 text-sm font-semibold text-emerald-700">
+                {tikTokBinding?.avatarUrl ? (
+                  <img
+                    src={tikTokBinding.avatarUrl}
+                    alt={tikTokName || 'TikTok account avatar'}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                    {tikTokName?.[0]?.toUpperCase() ?? 'T'}
+                  </span>
+                )}
                 <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
                 Connected {tikTokName ? `as ${tikTokName}` : ''}
               </div>
@@ -348,40 +360,31 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
               className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700"
               disabled={isRedirectingToTikTok}
             >
-              <Upload className="h-4 w-4" />
               {isRedirectingToTikTok ? 'Redirecting…' : 'Connect TikTok'}
             </button>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-4">
-          {hasTikTokBinding ? (
-            <button
-              type="button"
-              onClick={handleUpload}
-              className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60"
-              disabled={isUploading}
-            >
-              <Upload className="h-4 w-4" />
-              {isUploading ? 'Uploading…' : 'Upload selected to TikTok'}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={redirectToTikTokAuth}
-              className="inline-flex items-center gap-2 rounded-full border border-dashed border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-400 hover:text-indigo-600"
-              disabled={isRedirectingToTikTok}
-            >
-              <Upload className="h-4 w-4" />
-              {isRedirectingToTikTok ? 'Redirecting…' : 'Connect TikTok to upload'}
-            </button>
-          )}
-          <p className="text-sm text-slate-600">
-            {selectedVideoIds.length ? `${selectedVideoIds.length} selected` : 'No videos selected'}
-          </p>
-        </div>
-        {uploadMessage && hasTikTokBinding && (
-          <p className="mt-3 text-sm font-medium text-slate-600">{uploadMessage}</p>
+        {hasTikTokBinding && (
+          <>
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                onClick={handleUpload}
+                className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60"
+                disabled={isUploading}
+              >
+                <Upload className="h-4 w-4" />
+                {isUploading ? 'Uploading…' : 'Upload selected to TikTok'}
+              </button>
+              <p className="text-sm text-slate-600">
+                {selectedVideoIds.length ? `${selectedVideoIds.length} selected` : 'No videos selected'}
+              </p>
+            </div>
+            {uploadMessage && (
+              <p className="mt-3 text-sm font-medium text-slate-600">{uploadMessage}</p>
+            )}
+          </>
         )}
         {!hasTikTokBinding && (
           <p className="mt-3 text-sm text-slate-600">

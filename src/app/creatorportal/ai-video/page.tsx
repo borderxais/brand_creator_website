@@ -113,6 +113,7 @@ async function buildTikTokBinding(account: TikTokAccountRecord): Promise<TikTokB
     displayName: account.display_name ?? undefined,
     handle: account.handle ?? undefined,
     openId: account.tiktok_open_id,
+    avatarUrl: account.avatar_url,
   };
 
   if (existing.displayName || existing.handle) {
@@ -137,8 +138,9 @@ async function buildTikTokBinding(account: TikTokAccountRecord): Promise<TikTokB
 
   return {
     displayName: profile.displayName ?? existing.displayName,
-    handle: profile.displayName ?? profile.username ?? existing.handle,
+    handle: profile.username ?? profile.displayName ?? existing.handle,
     openId: existing.openId,
+    avatarUrl: profile.avatarUrl ?? existing.avatarUrl,
   };
 }
 
