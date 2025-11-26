@@ -20,6 +20,7 @@ export type AiVideoRecord = {
 interface DashboardProps {
   videos: AiVideoRecord[];
   tikTokBinding: TikTokBindingInfo | null;
+  uploadEndpoint: string;
 }
 
 export type TikTokBindingInfo = {
@@ -27,6 +28,7 @@ export type TikTokBindingInfo = {
   handle?: string;
   openId?: string;
   avatarUrl?: string | null;
+  accessToken?: string;
 };
 
 const generatedFormatter = new Intl.DateTimeFormat(undefined, {
@@ -261,10 +263,11 @@ function PreviewModal({ video, onClose }: PreviewModalProps) {
   );
 }
 
-export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardProps) {
+export default function AiVideoDashboard({ videos, tikTokBinding, uploadEndpoint }: DashboardProps) {
   const [preview, setPreview] = useState<AiVideoRecord | null>(null);
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [uploadStatuses, setUploadStatuses] = useState<Record<string, 'uploading' | 'success' | 'error'>>({});
   const [isUploading, setIsUploading] = useState(false);
   const [isRedirectingToTikTok, setIsRedirectingToTikTok] = useState(false);
 
@@ -280,9 +283,9 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
     setUploadMessage(null);
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     const selectedReadyVideos = videos.filter(
-      (video) => selectedVideoIds.includes(video.id) && readyVideoIds.includes(video.id),
+      (video) => selectedVideoIds.includes(video.id) && readyVideoIds.includes(video.id) && video.videoUrl,
     );
 
     if (!selectedReadyVideos.length) {
@@ -290,12 +293,83 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
       return;
     }
 
+    if (!tikTokBinding?.accessToken) {
+      setUploadMessage('TikTok account is connected but missing an access token. Please reconnect TikTok.');
+      return;
+    }
+
     setIsUploading(true);
-    setTimeout(() => {
-      const selectionSummary = selectedReadyVideos.map((video) => video.id).join(', ');
-      setUploadMessage(`Uploaded to TikTok: ${selectionSummary}`);
+    setUploadMessage(null);
+    setUploadStatuses(
+      selectedReadyVideos.reduce(
+        (acc, video) => ({ ...acc, [video.id]: 'uploading' as const }),
+        {},
+      ),
+    );
+
+    try {
+      const response = await fetch(uploadEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          access_token: tikTokBinding.accessToken,
+          videos: selectedReadyVideos.map((video) => ({
+            id: video.id,
+            videoUrl: video.videoUrl,
+            title: video.tags?.[0] ? `AI video - ${video.tags[0]}` : 'AI video upload',
+          })),
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setUploadMessage(payload.error || 'TikTok upload failed.');
+        setUploadStatuses(
+          selectedReadyVideos.reduce(
+            (acc, video) => ({ ...acc, [video.id]: 'error' as const }),
+            {},
+          ),
+        );
+        return;
+      }
+
+      const results = Array.isArray(payload.results) ? payload.results : [];
+      const nextStatuses: Record<string, 'uploading' | 'success' | 'error'> = {};
+
+      results.forEach((result: any) => {
+        const status = result.status === 'ok' ? 'success' : 'error';
+        if (result.id) {
+          nextStatuses[result.id] = status;
+        }
+      });
+
+      setUploadStatuses((prev) => ({ ...prev, ...nextStatuses }));
+
+      const successes = results.filter((r: any) => r.status === 'ok').map((r: any) => r.id);
+      const failures = results.filter((r: any) => r.status !== 'ok').map((r: any) => r.id);
+
+      if (successes.length && !failures.length) {
+        setUploadMessage(`Uploaded to TikTok: ${successes.join(', ')}`);
+      } else if (successes.length && failures.length) {
+        setUploadMessage(
+          `Uploaded: ${successes.join(', ')}. Failed: ${failures.join(', ')}. See console for details.`,
+        );
+      } else {
+        setUploadMessage('Upload failed for all selected videos.');
+      }
+    } catch (error) {
+      console.error('TikTok upload error', error);
+      setUploadMessage('Unexpected error uploading to TikTok.');
+      setUploadStatuses(
+        selectedReadyVideos.reduce(
+          (acc, video) => ({ ...acc, [video.id]: 'error' as const }),
+          {},
+        ),
+      );
+    } finally {
       setIsUploading(false);
-    }, 600);
+    }
   };
 
   const redirectToTikTokAuth = () => {
@@ -383,6 +457,15 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
             </div>
             {uploadMessage && (
               <p className="mt-3 text-sm font-medium text-slate-600">{uploadMessage}</p>
+            )}
+            {Boolean(Object.keys(uploadStatuses).length) && (
+              <div className="mt-3 space-y-1 text-sm text-slate-600">
+                {Object.entries(uploadStatuses).map(([videoId, status]) => (
+                  <p key={videoId}>
+                    <span className="font-semibold">{videoId}</span>: {status === 'uploading' ? 'Uploading…' : status === 'success' ? 'Uploaded' : 'Failed'}
+                  </p>
+                ))}
+              </div>
             )}
           </>
         )}

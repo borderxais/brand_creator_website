@@ -40,7 +40,9 @@ export default async function AiVideoPage() {
 
   const tikTokBinding = await buildTikTokBinding(tiktokAccount);
 
-  return <AiVideoDashboard videos={videos} tikTokBinding={tikTokBinding} />;
+  const uploadEndpoint = `${PYTHON_API_BASE}/tiktok/upload-ai-video`;
+
+  return <AiVideoDashboard videos={videos} tikTokBinding={tikTokBinding} uploadEndpoint={uploadEndpoint} />;
 }
 
 async function fetchAiVideos(userId: string | null): Promise<AiVideoRecord[]> {
@@ -114,6 +116,7 @@ async function buildTikTokBinding(account: TikTokAccountRecord): Promise<TikTokB
     handle: account.handle ?? undefined,
     openId: account.tiktok_open_id,
     avatarUrl: account.avatar_url,
+    accessToken: account.access_token,
   };
 
   if (existing.displayName || existing.handle) {
@@ -141,6 +144,7 @@ async function buildTikTokBinding(account: TikTokAccountRecord): Promise<TikTokB
     handle: profile.username ?? profile.displayName ?? existing.handle,
     openId: existing.openId,
     avatarUrl: profile.avatarUrl ?? existing.avatarUrl,
+    accessToken: existing.accessToken,
   };
 }
 

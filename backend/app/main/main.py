@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from .config.settings import settings
-    from .routes import campaigns, claims, health, upload, contact, entertainment, pear, tiktokverify,ai_video, career
+    from .routes import campaigns, claims, health, upload, contact, entertainment, pear, tiktokverify, ai_video, career, tiktok_upload
     logger.info("Successfully imported all modules")
 except ImportError as e:
     logger.error(f"Import error: {e}")
@@ -55,6 +55,7 @@ try:
     app.include_router(campaigns.router, prefix="/campaigns", tags=["campaigns"])
     app.include_router(upload.router, tags=["upload"])
     app.include_router(ai_video.router, tags=["ai-videos"])
+    app.include_router(tiktok_upload.router, tags=["tiktok"])
     app.include_router(contact.router, prefix="/contact", tags=["contact"])
     app.include_router(claims.router, tags=["claims"])
     app.include_router(entertainment.router, prefix="/entertainment-live", tags=["entertainment-live"])

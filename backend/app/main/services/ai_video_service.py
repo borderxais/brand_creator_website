@@ -267,7 +267,9 @@ class AiVideoService:
         if not path:
             return None
         try:
-            result = client.storage.from_(cls.BUCKET_NAME).create_signed_url(path, expires_in)
+            # Extend signed URL lifetime to roughly one month for easier downloads from the portal.
+            long_lived_expiry = 60 * 60 * 24 * 30
+            result = client.storage.from_(cls.BUCKET_NAME).create_signed_url(path, expires_in or long_lived_expiry)
             if isinstance(result, dict):
                 return result.get("signedURL") or result.get("signed_url")
             if isinstance(result, str):
