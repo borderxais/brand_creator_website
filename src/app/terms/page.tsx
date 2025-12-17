@@ -13,85 +13,116 @@ export default function TermsPage() {
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <div className="px-6 py-8 prose prose-purple max-w-none text-gray-900">
               <p>
-                These Terms of Service (&quot;Terms&quot;) govern your access to and use of the
-                Cricher AI website, app, and related services (collectively, the &quot;Cricher AI
-                Platform&quot;). By using Cricher AI, you agree to these Terms.
+                These Terms of Service (&quot;Terms&quot;) govern your access to and use of the Cricher AI website,
+                app, and related services (the &quot;Cricher AI Platform&quot;). By using the Cricher AI Platform you
+                agree to these Terms.
               </p>
 
-              <h2>1. Acceptance of Terms</h2>
-              <p>
-                By accessing and using the Cricher AI Platform, you accept and agree to be bound by
-                these Terms and all applicable policies referenced here.
-              </p>
-
-              <h2>2. User Accounts</h2>
-              <p>
-                To use certain features of Cricher AI, you must register for an account. You agree to:
-              </p>
+              <h2>1. Eligibility and Accounts</h2>
               <ul>
-                <li>Provide accurate account information</li>
-                <li>Maintain the security of your account</li>
-                <li>Promptly update any changes to your account information</li>
-                <li>Accept responsibility for all activities that occur under your account</li>
+                <li>You must be at least 18 and have authority to bind any entity you represent.</li>
+                <li>You will provide accurate information and keep your account credentials secure.</li>
+                <li>You are responsible for all activity under your account.</li>
               </ul>
 
-              <h2>3. Creator Terms</h2>
-              <p>
-                As a creator on Cricher AI, you agree to:
-              </p>
+              <h2>2. Acceptable Use</h2>
               <ul>
-                <li>Provide authentic and original content</li>
-                <li>Maintain professional relationships with brands</li>
-                <li>Complete agreed-upon deliverables within specified timeframes</li>
-                <li>Comply with all applicable laws and regulations</li>
-                <li>Disclose sponsored content appropriately</li>
+                <li>Do not misrepresent your identity or submit false, misleading, or infringing content.</li>
+                <li>Do not harass, abuse, or interfere with other users or the Cricher AI Platform.</li>
+                <li>Do not attempt to bypass fees, security controls, or rate limits.</li>
+                <li>Use the Cricher AI Platform only as permitted by law and these Terms.</li>
               </ul>
 
-              <h2>4. Brand Terms</h2>
-              <p>
-                As a brand on Cricher AI, you agree to:
-              </p>
+              <h2>3. Creator Obligations</h2>
               <ul>
-                <li>Provide accurate campaign information</li>
-                <li>Pay creators as agreed and on time</li>
-                <li>Respect creators' creative freedom within agreed-upon guidelines</li>
-                <li>Maintain professional relationships with creators</li>
+                <li>Provide authentic content and comply with applicable advertising and disclosure rules.</li>
+                <li>Deliver agreed work on time and in line with campaign requirements.</li>
+                <li>Maintain professional conduct with brands and other users.</li>
               </ul>
 
-              <h2>5. Intellectual Property</h2>
-              <p>
-                Users retain their intellectual property rights but grant us a license to use,
-                reproduce, and display content posted on the Cricher AI Platform for the purpose of
-                providing and promoting our services.
-              </p>
-
-              <h2>6. Prohibited Activities</h2>
-              <p>
-                The following activities are prohibited:
-              </p>
+              <h2>4. Brand Obligations</h2>
               <ul>
-                <li>Posting false or misleading content</li>
-                <li>Harassing or intimidating other users</li>
-                <li>Attempting to circumvent platform fees</li>
-                <li>Using the platform for illegal activities</li>
+                <li>Provide accurate campaign details, budgets, and timelines.</li>
+                <li>Pay creators as agreed and respect creative parameters.</li>
+                <li>Maintain professional conduct with creators and other users.</li>
               </ul>
 
-              <h2>7. Termination</h2>
+              <h2>5. Fees and Payments</h2>
               <p>
-                We reserve the right to terminate or suspend accounts that violate these Terms or
-                for any other reason at our discretion.
+                Fees, payment schedules, and any applicable platform charges are communicated within the Cricher AI
+                Platform or in separate agreements. You are responsible for any applicable taxes.
               </p>
 
-              <h2>8. Changes to Terms</h2>
+              <h2>6. Intellectual Property</h2>
+              <ul>
+                <li>You retain ownership of your content.</li>
+                <li>
+                  You grant Cricher AI a non-exclusive, worldwide, royalty-free license to host, use, reproduce, and
+                  display your content as needed to operate and promote the Cricher AI Platform.
+                </li>
+                <li>You must have rights to any content you upload or submit.</li>
+              </ul>
+
+              <h2>7. Confidentiality</h2>
               <p>
-                We may modify these Terms at any time. Continued use of the Cricher AI Platform
-                after changes constitutes acceptance of the new terms.
+                You will not disclose confidential information obtained through the Cricher AI Platform, including
+                campaign details and non-public business information, except as required to perform agreed services or
+                as permitted by law.
               </p>
 
-              <h2>9. Contact Information</h2>
+              <h2>8. Third-Party Services</h2>
               <p>
-                For questions about these Terms or Cricher AI, please contact us at:
-                support@cricher.ai
+                The Cricher AI Platform may link to or integrate with third-party services. Cricher AI is not
+                responsible for those services, and your use is governed by their terms and policies.
+              </p>
+
+              <h2>9. Disclaimers</h2>
+              <p>
+                The Cricher AI Platform is provided &quot;as is&quot; and &quot;as available.&quot; To the fullest
+                extent permitted by law, Cricher AI disclaims warranties of merchantability, fitness for a particular
+                purpose, non-infringement, and uninterrupted or error-free service.
+              </p>
+
+              <h2>10. Limitation of Liability</h2>
+              <p>
+                To the fullest extent permitted by law, Cricher AI will not be liable for indirect, incidental,
+                consequential, special, or punitive damages, or for lost profits, revenues, data, or goodwill. Cricher
+                AI&apos;s aggregate liability arising out of or relating to the Cricher AI Platform will not exceed the
+                greater of (a) the amounts paid or payable by you to Cricher AI in the three months before the claim, or
+                (b) USD $100.
+              </p>
+
+              <h2>11. Indemnity</h2>
+              <p>
+                You will indemnify and hold harmless Cricher AI from claims, losses, and expenses (including reasonable
+                attorneys&apos; fees) arising out of your content, your use of the Cricher AI Platform, or your breach
+                of these Terms.
+              </p>
+
+              <h2>12. Term and Termination</h2>
+              <p>
+                We may suspend or terminate access to the Cricher AI Platform at any time if we believe you have
+                violated these Terms, applicable law, or risk harm to the Platform or users. You may stop using the
+                Cricher AI Platform at any time. Sections that by their nature should survive termination will do so,
+                including Intellectual Property, Confidentiality, Disclaimers, Limitation of Liability, and Indemnity.
+              </p>
+
+              <h2>13. Changes to these Terms</h2>
+              <p>
+                We may update these Terms from time to time. We will post the revised Terms with a new effective date.
+                Continued use of the Cricher AI Platform after changes means you accept the updated Terms.
+              </p>
+
+              <h2>14. Governing Law</h2>
+              <p>
+                These Terms are governed by the laws of the State of Delaware, USA, without regard to conflict of law
+                principles. Any disputes will be resolved in the state or federal courts located in Delaware, and you
+                consent to their jurisdiction.
+              </p>
+
+              <h2>15. Contact</h2>
+              <p>
+                Questions about these Terms or the Cricher AI Platform: support@cricher.ai
               </p>
             </div>
           </div>
