@@ -59,7 +59,8 @@ async def _init_tiktok_publish(
     payload = {
         "post_info": {
             "title": (title or "AI video")[:150],
-            "privacy_level": "SELF_ONLY",
+            # TikTok privacy options: PUBLIC_TO_EVERYONE | MUTUAL_FOLLOW_FRIENDS | FOLLOWER_OF_CREATOR | SELF_ONLY
+            "privacy_level": "PUBLIC_TO_EVERYONE",
             "brand_content_toggle": brand_content_toggle,
             "brand_organic_toggle": brand_organic_toggle,
         },
