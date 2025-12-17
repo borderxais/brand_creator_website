@@ -149,9 +149,9 @@ export default function CreatorPortalLayout({
       {/* Desktop sidebar */}
       <aside className="hidden w-72 flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-indigo-900 text-white lg:flex">
         <Link href="/" className="flex items-center gap-3 px-6 py-8">
-          <img src="/logo.jpg" alt="BorderX Logo" className="h-10 w-10 rounded-2xl border border-white/20" />
+          <img src="/logo.jpg" alt="Cricher AI Logo" className="h-10 w-10 rounded-2xl border border-white/20" />
           <div>
-            <p className="text-lg font-semibold">BorderX</p>
+            <p className="text-lg font-semibold">Cricher AI</p>
             <p className="text-xs uppercase tracking-[0.4em] text-white/60">CreatorHub</p>
           </div>
         </Link>
@@ -169,7 +169,7 @@ export default function CreatorPortalLayout({
         <header className="hidden items-center justify-between border-b border-slate-200 bg-white px-10 py-5 lg:flex">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Creator workspace</p>
-            <h1 className="text-xl font-semibold text-slate-900">BorderX CreatorHub</h1>
+            <h1 className="text-xl font-semibold text-slate-900">Cricher AI CreatorHub</h1>
           </div>
           <div className="relative">
             <button
@@ -200,7 +200,7 @@ export default function CreatorPortalLayout({
         {/* Mobile header */}
         <header className="relative flex items-center justify-between border-b border-slate-200 bg-white px-4 py-4 lg:hidden">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.jpg" alt="BorderX Logo" className="h-8 w-8 rounded-lg" />
+            <img src="/logo.jpg" alt="Cricher AI Logo" className="h-8 w-8 rounded-lg" />
             <span className="text-base font-semibold text-slate-900">CreatorHub</span>
           </Link>
           <div className="flex items-center gap-3">

@@ -1,5 +1,6 @@
 import logging
 from typing import List, Optional
+import math
 
 import httpx
 from fastapi import APIRouter, HTTPException
@@ -18,6 +19,8 @@ class UploadVideo(BaseModel):
     video_url: Optional[HttpUrl] = Field(None, alias="videoUrl")
     video_path: Optional[str] = Field(None, alias="videoPath")
     title: Optional[str] = None
+    brand_content_toggle: Optional[bool] = Field(None, alias="brandContent")
+    brand_organic_toggle: Optional[bool] = Field(None, alias="brandOrganic")
 
     model_config = {
         "populate_by_name": True,
@@ -30,14 +33,42 @@ class UploadRequest(BaseModel):
     access_token: str
     videos: List[UploadVideo]
 
+class PublishStatusRequest(BaseModel):
+    access_token: str
+    publish_ids: List[str] = Field(default_factory=list)
 
-async def _init_tiktok_publish(client: httpx.AsyncClient, access_token: str, title: Optional[str]):
+
+def _required_brand_flags(video: UploadVideo):
+    # Defaults to organic posts unless explicitly overridden
+    return (
+        False if video.brand_content_toggle is None else video.brand_content_toggle,
+        True if video.brand_organic_toggle is None else video.brand_organic_toggle,
+    )
+
+
+async def _init_tiktok_publish(
+    client: httpx.AsyncClient,
+    access_token: str,
+    title: Optional[str],
+    video_size: int,
+    chunk_size: int,
+    total_chunk_count: int,
+    video: UploadVideo,
+):
+    brand_content_toggle, brand_organic_toggle = _required_brand_flags(video)
     payload = {
         "post_info": {
             "title": (title or "AI video")[:150],
-            "privacy_level": "PUBLIC_TO_EVERYONE",
+            "privacy_level": "SELF_ONLY",
+            "brand_content_toggle": brand_content_toggle,
+            "brand_organic_toggle": brand_organic_toggle,
         },
-        "source_info": {"source": "FILE_UPLOAD"},
+        "source_info": {
+            "source": "FILE_UPLOAD",
+            "video_size": video_size,
+            "chunk_size": chunk_size,
+            "total_chunk_count": total_chunk_count,
+        },
     }
     resp = await client.post(
         "https://open.tiktokapis.com/v2/post/publish/video/init/",
@@ -73,7 +104,40 @@ async def _signed_supabase_url(path: str) -> str:
         raise HTTPException(status_code=500, detail="Failed to sign Supabase path")
 
 
-async def _stream_upload(upload_url: str, source_url: str) -> None:
+async def _fetch_video_size(client: httpx.AsyncClient, source_url: str) -> int:
+    """Fetch content length without downloading the full object."""
+    try:
+        head_resp = await client.head(source_url, follow_redirects=True)
+        content_length = head_resp.headers.get("Content-Length")
+        if content_length and content_length.isdigit():
+            size = int(content_length)
+            if size > 0:
+                return size
+    except Exception as exc:
+        logger.warning("HEAD request failed when fetching video size: %s", exc)
+
+    # Fallback to range request to extract size from Content-Range
+    try:
+        range_resp = await client.get(
+            source_url,
+            headers={"Range": "bytes=0-0"},
+            follow_redirects=True,
+        )
+        content_range = range_resp.headers.get("Content-Range")
+        if content_range and "/" in content_range:
+            try:
+                size = int(content_range.rsplit("/", 1)[-1])
+                if size > 0:
+                    return size
+            except ValueError:
+                pass
+    except Exception as exc:
+        logger.error("Range request failed when fetching video size: %s", exc)
+
+    raise HTTPException(status_code=502, detail="Unable to determine video size")
+
+
+async def _stream_upload(upload_url: str, source_url: str, video_size: int) -> None:
     async with httpx.AsyncClient(timeout=None) as client:
         async with client.stream("GET", source_url) as src:
             if src.status_code != 200:
@@ -89,7 +153,11 @@ async def _stream_upload(upload_url: str, source_url: str) -> None:
 
             put_resp = await client.put(
                 upload_url,
-                headers={"Content-Type": "video/mp4"},
+                headers={
+                    "Content-Type": "video/mp4",
+                    "Content-Length": str(video_size),
+                    "Content-Range": f"bytes 0-{video_size - 1}/{video_size}",
+                },
                 content=src.aiter_bytes(),
             )
 
@@ -104,9 +172,9 @@ async def _stream_upload(upload_url: str, source_url: str) -> None:
                 )
 
 
-async def _complete_publish(client: httpx.AsyncClient, access_token: str, publish_id: str):
+async def _fetch_publish_status(client: httpx.AsyncClient, access_token: str, publish_id: str):
     resp = await client.post(
-        "https://open.tiktokapis.com/v2/post/publish/complete/",
+        "https://open.tiktokapis.com/v2/post/publish/status/fetch/",
         headers={"Authorization": f"Bearer {access_token}"},
         json={"publish_id": publish_id},
         timeout=30,
@@ -115,7 +183,7 @@ async def _complete_publish(client: httpx.AsyncClient, access_token: str, publis
     if not resp.is_success:
         raise HTTPException(
             status_code=502,
-            detail={"message": "TikTok publish completion failed", "payload": data},
+            detail={"message": "TikTok publish status fetch failed", "payload": data},
         )
     return data
 
@@ -129,8 +197,6 @@ async def upload_ai_video(body: UploadRequest):
     async with httpx.AsyncClient(timeout=30) as client:
         for video in body.videos:
             try:
-                upload_url, publish_id = await _init_tiktok_publish(client, body.access_token, video.title)
-
                 source_url: Optional[str] = None
                 if video.video_url:
                     source_url = str(video.video_url)
@@ -140,14 +206,56 @@ async def upload_ai_video(body: UploadRequest):
                 if not source_url:
                     raise HTTPException(status_code=400, detail="Missing video_url or video_path")
 
-                await _stream_upload(upload_url, source_url)
-                complete_payload = await _complete_publish(client, body.access_token, publish_id)
+                video_size = await _fetch_video_size(client, source_url)
+                # Single-chunk upload to TikTok; chunk size equals the video size
+                chunk_size = video_size
+                total_chunk_count = max(1, math.ceil(video_size / chunk_size))
 
-                results.append({"id": video.id, "status": "ok", "publish_id": publish_id, "result": complete_payload})
+                upload_url, publish_id = await _init_tiktok_publish(
+                    client,
+                    body.access_token,
+                    video.title,
+                    video_size,
+                    chunk_size,
+                    total_chunk_count,
+                    video,
+                )
+
+                await _stream_upload(upload_url, source_url, video_size)
+                publish_status = await _fetch_publish_status(client, body.access_token, publish_id)
+
+                results.append(
+                    {
+                        "id": video.id,
+                        "status": "ok",
+                        "publish_id": publish_id,
+                        "publish_status": publish_status,
+                    }
+                )
             except HTTPException as exc:
                 results.append({"id": video.id, "status": "error", "error": exc.detail})
             except Exception as exc:  # pragma: no cover - unexpected
                 logger.error("Unexpected TikTok upload error: %s", exc)
                 results.append({"id": video.id, "status": "error", "error": "Unexpected server error"})
+
+    return {"results": results}
+
+
+@router.post("/publish-status")
+async def publish_status(body: PublishStatusRequest):
+    if not body.publish_ids:
+        raise HTTPException(status_code=400, detail="No publish_ids provided")
+
+    results = []
+    async with httpx.AsyncClient(timeout=30) as client:
+        for publish_id in body.publish_ids:
+            try:
+                status_payload = await _fetch_publish_status(client, body.access_token, publish_id)
+                results.append({"publish_id": publish_id, "status": "ok", "payload": status_payload})
+            except HTTPException as exc:
+                results.append({"publish_id": publish_id, "status": "error", "error": exc.detail})
+            except Exception as exc:  # pragma: no cover
+                logger.error("Unexpected publish status error: %s", exc)
+                results.append({"publish_id": publish_id, "status": "error", "error": "Unexpected server error"})
 
     return {"results": results}

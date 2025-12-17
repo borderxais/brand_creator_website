@@ -53,10 +53,10 @@ export default function BrandPortalLayout({
             <Link href="/" className="portal-logo">
               <img
                 src="/logo.jpg"
-                alt="BorderX Logo"
+                alt="Cricher AI Logo"
                 className="w-6 h-6"
               />
-              <span className="text-xl font-bold text-gray-600 whitespace-nowrap">BorderX<br />BrandHub</span>
+              <span className="text-xl font-bold text-gray-600 whitespace-nowrap">Cricher AI<br />BrandHub</span>
             </Link>
 
             {/* Desktop Navigation */}

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pause, Play, PlayCircle, RefreshCw, Sparkles, Upload, Video, X } from 'lucide-react';
+import { CheckCircle, Info, Pause, Play, PlayCircle, RefreshCw, Sparkles, Upload, Video, X } from 'lucide-react';
 
 export type VideoStatus = 'ready' | 'expired';
 
@@ -21,6 +21,7 @@ interface DashboardProps {
   videos: AiVideoRecord[];
   tikTokBinding: TikTokBindingInfo | null;
   uploadEndpoint: string;
+  statusEndpoint: string;
 }
 
 export type TikTokBindingInfo = {
@@ -263,13 +264,19 @@ function PreviewModal({ video, onClose }: PreviewModalProps) {
   );
 }
 
-export default function AiVideoDashboard({ videos, tikTokBinding, uploadEndpoint }: DashboardProps) {
+export default function AiVideoDashboard({ videos, tikTokBinding, uploadEndpoint, statusEndpoint }: DashboardProps) {
   const [preview, setPreview] = useState<AiVideoRecord | null>(null);
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
-  const [uploadStatuses, setUploadStatuses] = useState<Record<string, 'uploading' | 'success' | 'error'>>({});
+  const [uploadStatuses, setUploadStatuses] = useState<
+    Record<string, 'uploading' | 'checking' | 'success' | 'error'>
+  >({});
+  const [uploadStatusDetails, setUploadStatusDetails] = useState<Record<string, string>>({});
+  const [publishIds, setPublishIds] = useState<Record<string, string>>({});
   const [isUploading, setIsUploading] = useState(false);
   const [isRedirectingToTikTok, setIsRedirectingToTikTok] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const readyVideoIds = useMemo(
     () => videos.filter((video) => video.status === 'ready' && video.videoUrl).map((video) => video.id),
@@ -300,6 +307,8 @@ export default function AiVideoDashboard({ videos, tikTokBinding, uploadEndpoint
 
     setIsUploading(true);
     setUploadMessage(null);
+    setUploadStatusDetails({});
+    setPublishIds({});
     setUploadStatuses(
       selectedReadyVideos.reduce(
         (acc, video) => ({ ...acc, [video.id]: 'uploading' as const }),
@@ -335,26 +344,61 @@ export default function AiVideoDashboard({ videos, tikTokBinding, uploadEndpoint
       }
 
       const results = Array.isArray(payload.results) ? payload.results : [];
-      const nextStatuses: Record<string, 'uploading' | 'success' | 'error'> = {};
+      const nextStatuses: Record<string, 'uploading' | 'checking' | 'success' | 'error'> = {};
+      const nextDetails: Record<string, string> = {};
+      const nextPublishIds: Record<string, string> = {};
 
       results.forEach((result: any) => {
-        const status = result.status === 'ok' ? 'success' : 'error';
-        if (result.id) {
-          nextStatuses[result.id] = status;
+        if (!result?.id) return;
+        if (result.status !== 'ok') {
+          nextStatuses[result.id] = 'error';
+          nextDetails[result.id] = result.error?.message || 'Upload failed';
+          return;
+        }
+
+        if (result.publish_id) {
+          nextPublishIds[result.id] = result.publish_id;
+        }
+        const publishStatus = result.publish_status?.data?.status;
+        if (typeof publishStatus === 'string') {
+          const normalized = publishStatus.toUpperCase();
+          if (normalized === 'SUCCESS' || normalized === 'PUBLISHED' || normalized === 'COMPLETED') {
+            nextStatuses[result.id] = 'success';
+          } else if (normalized === 'FAILED') {
+            nextStatuses[result.id] = 'error';
+          } else {
+            nextStatuses[result.id] = 'checking';
+          }
+          nextDetails[result.id] = publishStatus;
+        } else {
+          nextStatuses[result.id] = 'checking';
+          nextDetails[result.id] = 'Checking TikTok publish status';
         }
       });
 
       setUploadStatuses((prev) => ({ ...prev, ...nextStatuses }));
+      setUploadStatusDetails((prev) => ({ ...prev, ...nextDetails }));
+      setPublishIds((prev) => ({ ...prev, ...nextPublishIds }));
 
-      const successes = results.filter((r: any) => r.status === 'ok').map((r: any) => r.id);
-      const failures = results.filter((r: any) => r.status !== 'ok').map((r: any) => r.id);
+      const successes = Object.entries(nextStatuses)
+        .filter(([, status]) => status === 'success')
+        .map(([id]) => id);
+      const failures = Object.entries(nextStatuses)
+        .filter(([, status]) => status === 'error')
+        .map(([id]) => id);
+      const pending = Object.entries(nextStatuses)
+        .filter(([, status]) => status === 'checking' || status === 'uploading')
+        .map(([id]) => id);
 
       if (successes.length && !failures.length) {
         setUploadMessage(`Uploaded to TikTok: ${successes.join(', ')}`);
+        setToast('Your TikTok upload is live! 🎉');
       } else if (successes.length && failures.length) {
         setUploadMessage(
           `Uploaded: ${successes.join(', ')}. Failed: ${failures.join(', ')}. See console for details.`,
         );
+      } else if (pending.length && !successes.length && !failures.length) {
+        setUploadMessage('Upload started. Checking TikTok status…');
       } else {
         setUploadMessage('Upload failed for all selected videos.');
       }
@@ -371,6 +415,94 @@ export default function AiVideoDashboard({ videos, tikTokBinding, uploadEndpoint
       setIsUploading(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!tikTokBinding?.accessToken) return;
+    const pending = Object.entries(uploadStatuses)
+      .filter(([, status]) => status === 'checking')
+      .map(([videoId]) => ({ videoId, publishId: publishIds[videoId] }))
+      .filter((item) => Boolean(item.publishId));
+
+    if (!pending.length) {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+      return;
+    }
+
+    const poll = async () => {
+      try {
+        const publishIdList = pending.map((p) => p.publishId);
+        const response = await fetch(statusEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            access_token: tikTokBinding.accessToken,
+            publish_ids: publishIdList,
+          }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        const results = Array.isArray(payload.results) ? payload.results : [];
+
+        const nextStatuses: Record<string, 'checking' | 'success' | 'error'> = {};
+        const nextDetails: Record<string, string> = {};
+
+        results.forEach((result: any) => {
+          const publishId = result.publish_id;
+          if (!publishId) return;
+          const videoEntry = pending.find((p) => p.publishId === publishId);
+          if (!videoEntry) return;
+          const videoId = videoEntry.videoId;
+          if (result.status !== 'ok') {
+            nextStatuses[videoId] = 'error';
+            nextDetails[videoId] = result.error?.message || 'Status check failed';
+            return;
+          }
+          const status = result.payload?.data?.status;
+          const failReason = result.payload?.data?.fail_reason;
+          const normalized = typeof status === 'string' ? status.toUpperCase() : '';
+          if (normalized === 'PUBLISH_COMPLETE' || normalized === 'SUCCESS' || normalized === 'PUBLISHED') {
+            nextStatuses[videoId] = 'success';
+            nextDetails[videoId] = status;
+            setToast('Your TikTok upload is live! 🎉');
+          } else if (normalized === 'FAILED') {
+            nextStatuses[videoId] = 'error';
+            nextDetails[videoId] = failReason || 'Publish failed';
+          } else {
+            nextStatuses[videoId] = 'checking';
+            nextDetails[videoId] = status || 'Checking TikTok publish status';
+          }
+        });
+
+        if (Object.keys(nextStatuses).length) {
+          setUploadStatuses((prev) => ({ ...prev, ...nextStatuses }));
+          setUploadStatusDetails((prev) => ({ ...prev, ...nextDetails }));
+        }
+      } catch (error) {
+        console.error('Polling TikTok status failed', error);
+      }
+    };
+
+    if (!pollingRef.current) {
+      poll();
+      pollingRef.current = setInterval(poll, 5000);
+    }
+  }, [uploadStatuses, publishIds, tikTokBinding?.accessToken, statusEndpoint]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   const redirectToTikTokAuth = () => {
     setIsRedirectingToTikTok(true);
@@ -459,12 +591,44 @@ export default function AiVideoDashboard({ videos, tikTokBinding, uploadEndpoint
               <p className="mt-3 text-sm font-medium text-slate-600">{uploadMessage}</p>
             )}
             {Boolean(Object.keys(uploadStatuses).length) && (
-              <div className="mt-3 space-y-1 text-sm text-slate-600">
-                {Object.entries(uploadStatuses).map(([videoId, status]) => (
-                  <p key={videoId}>
-                    <span className="font-semibold">{videoId}</span>: {status === 'uploading' ? 'Uploading…' : status === 'success' ? 'Uploaded' : 'Failed'}
-                  </p>
-                ))}
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  <Info className="h-4 w-4 text-indigo-500" />
+                  Upload status
+                </div>
+                <div className="mt-2 space-y-2 text-sm text-slate-700">
+                  {Object.entries(uploadStatuses).map(([videoId, status]) => (
+                    <div
+                      key={videoId}
+                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        {status === 'uploading' || status === 'checking' ? (
+                          <span className="inline-flex h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-500" />
+                        ) : status === 'success' ? (
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <X className="h-4 w-4 text-rose-500" />
+                        )}
+                        <span className="font-semibold text-slate-900">{videoId}</span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">
+                          {status === 'uploading'
+                            ? 'Uploading…'
+                            : status === 'checking'
+                              ? 'Checking TikTok status…'
+                              : status === 'success'
+                                ? 'Published'
+                                : 'Failed'}
+                        </p>
+                        {uploadStatusDetails[videoId] ? (
+                          <p className="text-xs text-slate-500">{uploadStatusDetails[videoId]}</p>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </>
@@ -523,6 +687,15 @@ export default function AiVideoDashboard({ videos, tikTokBinding, uploadEndpoint
 
       {preview && preview.videoUrl && (
         <PreviewModal video={preview} onClose={() => setPreview(null)} />
+      )}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-white px-4 py-3 shadow-xl ring-1 ring-indigo-100">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <CheckCircle className="h-4 w-4 text-emerald-500" />
+            {toast}
+          </div>
+          <p className="mt-1 text-xs text-slate-500">Head to TikTok to view your post.</p>
+        </div>
       )}
     </div>
   );

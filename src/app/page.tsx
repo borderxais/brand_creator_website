@@ -72,7 +72,7 @@ export default function Home() {
               </span>
             </div>
             <h1 className="text-5xl tracking-tight font-extrabold sm:text-6xl md:text-7xl bg-gradient-to-r from-white via-purple-100 to-blue-100 bg-clip-text text-transparent">
-              Welcome to BorderX
+              Welcome to Cricher AI
             </h1>
             <p className="mt-8 max-w-2xl mx-auto text-xl text-gray-300 md:text-2xl leading-relaxed">
               Connect with top creators and brands. Build authentic partnerships that drive real results.
@@ -102,13 +102,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Why Creators Choose BorderX Section */}
+      {/* Why Creators Choose Cricher AI Section */}
       <div className="py-24 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
             <h2 className="text-base font-semibold text-purple-600 tracking-wide uppercase mb-4">For Creators</h2>
             <h3 className="text-4xl font-extrabold text-gray-900 sm:text-5xl mb-6">
-              Why creators choose BorderX
+              Why creators choose Cricher AI
             </h3>
             <p className="mt-4 max-w-3xl text-xl text-gray-600 mx-auto leading-relaxed">
               More campaigns, better pay, and real rewards — all in one platform.
@@ -315,7 +315,7 @@ export default function Home() {
               Everything you need to connect with creators
             </h3>
             <p className="mt-4 max-w-3xl text-xl text-gray-600 mx-auto leading-relaxed">
-              BorderX provides you with powerful tools to find the perfect creators for your brand campaigns.
+              Cricher AI provides you with powerful tools to find the perfect creators for your brand campaigns.
             </p>
           </div>
 
@@ -408,7 +408,7 @@ export default function Home() {
             Ready to find your perfect match?
           </h2>
           <p className="mt-6 max-w-3xl mx-auto text-xl text-purple-200 leading-relaxed">
-            Join thousands of successful creators and brands who have found their perfect partnerships on BorderX. 
+            Join thousands of successful creators and brands who have found their perfect partnerships on Cricher AI. 
             Start exploring our creator network today and unlock unlimited possibilities.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row gap-6 justify-center">

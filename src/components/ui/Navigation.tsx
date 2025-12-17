@@ -121,8 +121,8 @@ export default function Navigation() {
         <div className="flex justify-between h-16">
           <div className="flex-shrink-0 flex items-center">
             <Link href={isChinesePath ? '/zh' : '/'} className="flex items-center gap-3">
-              <img src="/logo.jpg" alt="BorderX Logo" className="w-6 h-6" />
-              <span className="text-2xl font-bold text-gray-600 whitespace-nowrap">BorderX</span>
+              <img src="/logo.jpg" alt="Cricher AI Logo" className="w-6 h-6" />
+              <span className="text-2xl font-bold text-gray-600 whitespace-nowrap">Cricher AI</span>
             </Link>
           </div>
 

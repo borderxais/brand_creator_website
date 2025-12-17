@@ -133,7 +133,7 @@ export default function HowItWorks() {
               </span>
             </div>
             <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-8 bg-gradient-to-r from-white via-purple-100 to-purple-100 bg-clip-text text-transparent animate-fade-in-up">
-              How BorderX Works
+              How Cricher AI Works
             </h1>
             <p className="text-xl md:text-2xl text-purple-100 max-w-3xl mx-auto mb-12 leading-relaxed animate-fade-in-up" style={{animationDelay: '0.2s'}}>
               A powerful platform connecting brands with creators for authentic collaborations that drive real results.
@@ -213,8 +213,8 @@ export default function HowItWorks() {
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed animate-fade-in-up" style={{animationDelay: '0.1s'}}>
               {activeTab === 'creator'
-                ? 'A visual guide to your path as a creator on BorderX - from signup to success'
-                : 'How your brand will thrive with BorderX creators'}
+                ? 'A visual guide to your path as a creator on Cricher AI - from signup to success'
+                : 'How your brand will thrive with Cricher AI creators'}
             </p>
           </div>
           
@@ -262,7 +262,7 @@ export default function HowItWorks() {
               </span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 animate-fade-in-up">
-              Why Choose BorderX?
+              Why Choose Cricher AI?
             </h2>
             <p className="text-xl text-purple-100 max-w-3xl mx-auto leading-relaxed animate-fade-in-up" style={{animationDelay: '0.1s'}}>
               {activeTab === 'creator'
@@ -309,7 +309,7 @@ export default function HowItWorks() {
             </h2>
             <p className="text-xl text-purple-100 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in-up" style={{animationDelay: '0.1s'}}>
               {activeTab === 'creator'
-                ? 'Join thousands of creators who are already earning through BorderX and building their dream careers.'
+                ? 'Join thousands of creators who are already earning through Cricher AI and building their dream careers.'
                 : 'Connect with our diverse network of talented creators today.'}
             </p>
             <div className="space-x-6 animate-fade-in-up" style={{animationDelay: '0.2s'}}>

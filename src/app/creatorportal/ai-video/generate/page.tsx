@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import GenerateVideoForm from './GenerateVideoForm';
 
 export const metadata: Metadata = {
-  title: 'Generate AI Video | BorderX CreatorHub',
+  title: 'Generate AI Video | Cricher AI CreatorHub',
   description:
     'Submit the assets and creative direction needed to spin up a fresh AI-generated advertising video.',
 };

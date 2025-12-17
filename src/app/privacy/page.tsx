@@ -3,7 +3,7 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">Privacy Policy</h1>
+          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">Cricher AI Privacy Policy</h1>
           <p className="mt-4 text-xl text-gray-600">
             Last updated: March 4, 2025
           </p>
@@ -14,29 +14,31 @@ export default function PrivacyPage() {
             <div className="px-6 py-8 prose prose-purple max-w-none">
               <h2>Introduction</h2>
               <p>
-                We take your privacy seriously. This policy describes what personal information we collect
-                and how we use it. This Privacy Policy applies to all services offered by our platform.
+                Cricher AI (&quot;Cricher AI,&quot; &quot;we,&quot; &quot;us,&quot; or
+                &quot;our&quot;) takes your privacy seriously. This policy describes what personal
+                information we collect through the Cricher AI website and app and how we use it.
+                This Privacy Policy applies to all services offered through the Cricher AI Platform.
               </p>
 
               <h2>Information We Collect</h2>
               <ul>
                 <li>
-                  <strong>Account Information:</strong> When you create an account, we collect your name,
-                  email address, and password.
+                  <strong>Account Information:</strong> When you create an account on Cricher AI, we
+                  collect your name, email address, and password.
                 </li>
                 <li>
                   <strong>Profile Information:</strong> Information you provide in your creator or brand
                   profile, including biography, location, and social media handles.
                 </li>
                 <li>
-                  <strong>Usage Data:</strong> Information about how you use our platform, including
+                  <strong>Usage Data:</strong> Information about how you use Cricher AI, including
                   interactions with other users and content engagement metrics.
                 </li>
               </ul>
 
               <h2>How We Use Your Information</h2>
               <p>
-                We use the information we collect to:
+                We use the information we collect through Cricher AI to:
               </p>
               <ul>
                 <li>Provide and improve our services</li>
@@ -48,7 +50,7 @@ export default function PrivacyPage() {
               <h2>Information Sharing</h2>
               <p>
                 We do not sell your personal information. We share your information only in the
-                following circumstances:
+                following circumstances related to operating Cricher AI:
               </p>
               <ul>
                 <li>With your consent</li>
@@ -77,8 +79,8 @@ export default function PrivacyPage() {
 
               <h2>Contact Us</h2>
               <p>
-                If you have any questions about this Privacy Policy, please contact us at:
-                privacy@example.com
+                If you have any questions about this Privacy Policy or how Cricher AI handles your
+                information, please contact us at: privacy@cricher.ai
               </p>
             </div>
           </div>

@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export const metadata: Metadata = {
-  title: 'AI Video Library | BorderX CreatorHub',
+  title: 'AI Video Library | Cricher AI CreatorHub',
   description: 'Review every AI-generated ad spot, track delivery status, and relaunch creative briefs in one place.',
 };
 
@@ -41,8 +41,16 @@ export default async function AiVideoPage() {
   const tikTokBinding = await buildTikTokBinding(tiktokAccount);
 
   const uploadEndpoint = `${PYTHON_API_BASE}/tiktok/upload-ai-video`;
+  const statusEndpoint = `${PYTHON_API_BASE}/tiktok/publish-status`;
 
-  return <AiVideoDashboard videos={videos} tikTokBinding={tikTokBinding} uploadEndpoint={uploadEndpoint} />;
+  return (
+    <AiVideoDashboard
+      videos={videos}
+      tikTokBinding={tikTokBinding}
+      uploadEndpoint={uploadEndpoint}
+      statusEndpoint={statusEndpoint}
+    />
+  );
 }
 
 async function fetchAiVideos(userId: string | null): Promise<AiVideoRecord[]> {

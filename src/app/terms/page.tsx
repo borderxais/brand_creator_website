@@ -3,7 +3,7 @@ export default function TermsPage() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">Terms of Service</h1>
+          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">Cricher AI Terms of Service</h1>
           <p className="mt-4 text-xl text-gray-600">
             Last updated: March 4, 2025
           </p>
@@ -12,15 +12,21 @@ export default function TermsPage() {
         <div className="mt-16">
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <div className="px-6 py-8 prose prose-purple max-w-none">
+              <p>
+                These Terms of Service (&quot;Terms&quot;) govern your access to and use of the
+                Cricher AI website, app, and related services (collectively, the &quot;Cricher AI
+                Platform&quot;). By using Cricher AI, you agree to these Terms.
+              </p>
+
               <h2>1. Acceptance of Terms</h2>
               <p>
-                By accessing and using this platform, you accept and agree to be bound by the terms
-                and provision of this agreement.
+                By accessing and using the Cricher AI Platform, you accept and agree to be bound by
+                these Terms and all applicable policies referenced here.
               </p>
 
               <h2>2. User Accounts</h2>
               <p>
-                To use certain features of the platform, you must register for an account. You agree to:
+                To use certain features of Cricher AI, you must register for an account. You agree to:
               </p>
               <ul>
                 <li>Provide accurate account information</li>
@@ -31,7 +37,7 @@ export default function TermsPage() {
 
               <h2>3. Creator Terms</h2>
               <p>
-                As a creator on our platform, you agree to:
+                As a creator on Cricher AI, you agree to:
               </p>
               <ul>
                 <li>Provide authentic and original content</li>
@@ -43,7 +49,7 @@ export default function TermsPage() {
 
               <h2>4. Brand Terms</h2>
               <p>
-                As a brand on our platform, you agree to:
+                As a brand on Cricher AI, you agree to:
               </p>
               <ul>
                 <li>Provide accurate campaign information</li>
@@ -55,8 +61,8 @@ export default function TermsPage() {
               <h2>5. Intellectual Property</h2>
               <p>
                 Users retain their intellectual property rights but grant us a license to use,
-                reproduce, and display content posted on our platform for the purpose of providing
-                and promoting our services.
+                reproduce, and display content posted on the Cricher AI Platform for the purpose of
+                providing and promoting our services.
               </p>
 
               <h2>6. Prohibited Activities</h2>
@@ -72,19 +78,20 @@ export default function TermsPage() {
 
               <h2>7. Termination</h2>
               <p>
-                We reserve the right to terminate or suspend accounts that violate these terms
-                or for any other reason at our discretion.
+                We reserve the right to terminate or suspend accounts that violate these Terms or
+                for any other reason at our discretion.
               </p>
 
               <h2>8. Changes to Terms</h2>
               <p>
-                We may modify these terms at any time. Continued use of the platform after changes
-                constitutes acceptance of the new terms.
+                We may modify these Terms at any time. Continued use of the Cricher AI Platform
+                after changes constitutes acceptance of the new terms.
               </p>
 
               <h2>9. Contact Information</h2>
               <p>
-                For questions about these terms, please contact us at: terms@example.com
+                For questions about these Terms or Cricher AI, please contact us at:
+                support@cricher.ai
               </p>
             </div>
           </div>

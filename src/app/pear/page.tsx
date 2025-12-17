@@ -305,7 +305,7 @@ export default function PearPage() {
               
               <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4">
                 Get Your Own Affiliate Link from 
-                <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"> BorderX.net</span>
+                <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"> Cricher.ai</span>
               </h2>
               
               <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
@@ -321,7 +321,7 @@ export default function PearPage() {
                   </div>
                 ) : isLoggedIn ? (
                   <a
-                    href="https://pear.us/borderx/invitation?invitationCode=akgy4a"
+                    href="https://pear.us/cricher-ai/invitation?invitationCode=akgy4a"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
