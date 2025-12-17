@@ -11,7 +11,7 @@ export default function PrivacyPage() {
 
         <div className="mt-16">
           <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="px-6 py-8 prose prose-purple max-w-none">
+            <div className="px-6 py-8 prose prose-purple max-w-none text-gray-900">
               <h2>Introduction</h2>
               <p>
                 Cricher AI (&quot;Cricher AI,&quot; &quot;we,&quot; &quot;us,&quot; or
