@@ -21,6 +21,10 @@ class UploadVideo(BaseModel):
     title: Optional[str] = None
     brand_content_toggle: Optional[bool] = Field(None, alias="brandContent")
     brand_organic_toggle: Optional[bool] = Field(None, alias="brandOrganic")
+    privacy_level: Optional[str] = Field(None, alias="privacyLevel")
+    disable_comment: Optional[bool] = Field(None, alias="disableComment")
+    disable_duet: Optional[bool] = Field(None, alias="disableDuet")
+    disable_stitch: Optional[bool] = Field(None, alias="disableStitch")
 
     model_config = {
         "populate_by_name": True,
@@ -56,13 +60,18 @@ async def _init_tiktok_publish(
     video: UploadVideo,
 ):
     brand_content_toggle, brand_organic_toggle = _required_brand_flags(video)
+    if not video.privacy_level:
+        raise HTTPException(status_code=400, detail="Missing privacy_level for TikTok upload")
     payload = {
         "post_info": {
             "title": (title or "AI video")[:150],
             # TikTok privacy options: PUBLIC_TO_EVERYONE | MUTUAL_FOLLOW_FRIENDS | FOLLOWER_OF_CREATOR | SELF_ONLY
-            "privacy_level": "PUBLIC_TO_EVERYONE",
+            "privacy_level": video.privacy_level,
             "brand_content_toggle": brand_content_toggle,
             "brand_organic_toggle": brand_organic_toggle,
+            "disable_comment": True if video.disable_comment is None else video.disable_comment,
+            "disable_duet": True if video.disable_duet is None else video.disable_duet,
+            "disable_stitch": True if video.disable_stitch is None else video.disable_stitch,
         },
         "source_info": {
             "source": "FILE_UPLOAD",

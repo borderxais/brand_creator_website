@@ -49,6 +49,25 @@ const durationFormatter = (value: number | null | undefined) => {
   return minutes ? `${minutes}m ${seconds}s` : `${seconds}s`;
 };
 
+const formatPrivacyLabel = (value: string) => {
+  switch (value) {
+    case 'PUBLIC_TO_EVERYONE':
+      return 'Public';
+    case 'MUTUAL_FOLLOW_FRIENDS':
+      return 'Friends (mutual follows)';
+    case 'FOLLOWER_OF_CREATOR':
+      return 'Followers';
+    case 'SELF_ONLY':
+      return 'Only me';
+    default:
+      return value
+        .toLowerCase()
+        .split('_')
+        .map((chunk) => (chunk ? `${chunk[0].toUpperCase()}${chunk.slice(1)}` : chunk))
+        .join(' ');
+  }
+};
+
 const statusBadge = (status?: UploadStatus) => {
   if (!status) return null;
   if (status === 'uploading' || status === 'checking') {
@@ -80,6 +99,15 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
   const [creatorInfoStatus, setCreatorInfoStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [creatorInfoMessage, setCreatorInfoMessage] = useState<string | null>(null);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [title, setTitle] = useState('');
+  const [privacyLevel, setPrivacyLevel] = useState('');
+  const [allowComment, setAllowComment] = useState(false);
+  const [allowDuet, setAllowDuet] = useState(false);
+  const [allowStitch, setAllowStitch] = useState(false);
+  const [commercialDisclosure, setCommercialDisclosure] = useState(false);
+  const [promoteSelf, setPromoteSelf] = useState(false);
+  const [promoteBrand, setPromoteBrand] = useState(false);
+  const [uploadConsent, setUploadConsent] = useState(false);
   const [uploadStatuses, setUploadStatuses] = useState<Record<string, UploadStatus>>({});
   const [uploadStatusDetails, setUploadStatusDetails] = useState<Record<string, string>>({});
   const [publishIds, setPublishIds] = useState<Record<string, string>>({});
@@ -94,9 +122,33 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
   const creatorNickname =
     creatorData?.creator_nickname || creatorData?.creator_username || tikTokBinding?.displayName;
   const maxDuration = creatorData?.max_video_post_duration_sec;
-  const commentSetting = creatorData ? (creatorData.comment_disabled ? 'Disabled' : 'Enabled') : 'Unknown';
-  const duetSetting = creatorData ? (creatorData.duet_disabled ? 'Disabled' : 'Enabled') : 'Unknown';
-  const stitchSetting = creatorData ? (creatorData.stitch_disabled ? 'Disabled' : 'Enabled') : 'Unknown';
+  const privacyOptions = creatorData?.privacy_level_options ?? [];
+  const disableCommentToggle = Boolean(creatorData?.comment_disabled);
+  const disableDuetToggle = Boolean(creatorData?.duet_disabled);
+  const disableStitchToggle = Boolean(creatorData?.stitch_disabled);
+  const primaryVideo = videos[0] ?? null;
+  const isPhotoPost = useMemo(() => {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    if (!primaryVideo?.videoUrl) return false;
+    const url = primaryVideo.videoUrl.toLowerCase();
+    return imageExtensions.some((ext) => url.includes(ext));
+  }, [primaryVideo]);
+  const privateOption = 'SELF_ONLY';
+  const brandedContentRequiresPublic = commercialDisclosure && promoteBrand;
+  const brandedContentBlocksPrivate = brandedContentRequiresPublic && privacyOptions.includes(privateOption);
+  const disclosureSelectionMissing = commercialDisclosure && !promoteSelf && !promoteBrand;
+  const disclosureLabel = promoteBrand
+    ? "Your photo/video will be labeled as 'Paid partnership'"
+    : promoteSelf
+      ? "Your photo/video will be labeled as 'Promotional content'"
+      : '';
+  const complianceDeclaration = commercialDisclosure
+    ? promoteBrand
+      ? "By posting, you agree to TikTok's Branded Content Policy and Music Usage Confirmation."
+      : promoteSelf
+        ? "By posting, you agree to TikTok's Music Usage Confirmation."
+        : ''
+    : "By posting, you agree to TikTok's Music Usage Confirmation.";
   const canPostNow = useMemo(() => {
     const flags = [
       creatorData?.creator_can_post,
@@ -135,6 +187,15 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
         if (isMounted) {
           setCreatorInfo(payload);
           setCreatorInfoStatus('success');
+          if (payload.data?.comment_disabled) {
+            setAllowComment(false);
+          }
+          if (payload.data?.duet_disabled) {
+            setAllowDuet(false);
+          }
+          if (payload.data?.stitch_disabled) {
+            setAllowStitch(false);
+          }
         }
       } catch (error) {
         if (isMounted) {
@@ -154,60 +215,62 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
     let cancelled = false;
     const loadDurations = async () => {
       const nextDurations: Record<string, number | null> = {};
-      for (const video of videos) {
-        const videoUrl = video.videoUrl;
-        if (!videoUrl) continue;
-        try {
-          const duration = await new Promise<number>((resolve, reject) => {
-            const el = document.createElement('video');
-            el.preload = 'metadata';
-            el.crossOrigin = 'anonymous';
-            el.onloadedmetadata = () => resolve(el.duration);
-            el.onerror = () => reject(new Error('Unable to load metadata'));
-            el.src = videoUrl;
-          });
-          nextDurations[video.id] = duration;
-        } catch {
-          nextDurations[video.id] = null;
-        }
-
-        if (cancelled) return;
-        setVideoDurations((prev) => ({ ...prev, ...nextDurations }));
+      if (!primaryVideo?.videoUrl) return;
+      try {
+        const duration = await new Promise<number>((resolve, reject) => {
+          const el = document.createElement('video');
+          el.preload = 'metadata';
+          el.crossOrigin = 'anonymous';
+          el.onloadedmetadata = () => resolve(el.duration);
+          el.onerror = () => reject(new Error('Unable to load metadata'));
+          el.src = primaryVideo.videoUrl as string;
+        });
+        nextDurations[primaryVideo.id] = duration;
+      } catch {
+        nextDurations[primaryVideo?.id ?? ''] = null;
       }
+
+      if (cancelled) return;
+      setVideoDurations((prev) => ({ ...prev, ...nextDurations }));
     };
 
     loadDurations();
     return () => {
       cancelled = true;
     };
-  }, [videos]);
+  }, [primaryVideo]);
 
   const durationViolations = useMemo(() => {
     if (!maxDuration) return [];
-    return videos.filter((video) => {
-      const duration = videoDurations[video.id];
-      return typeof duration === 'number' && duration > maxDuration;
-    });
-  }, [maxDuration, videoDurations, videos]);
+    if (!primaryVideo) return [];
+    const duration = videoDurations[primaryVideo.id];
+    return typeof duration === 'number' && duration > maxDuration ? [primaryVideo] : [];
+  }, [maxDuration, primaryVideo, videoDurations]);
 
   const hasUnknownDurations = useMemo(() => {
     if (!maxDuration) return false;
-    return videos.some((video) => video.videoUrl && videoDurations[video.id] == null);
-  }, [maxDuration, videoDurations, videos]);
+    if (!primaryVideo?.videoUrl) return false;
+    return videoDurations[primaryVideo.id] == null;
+  }, [maxDuration, primaryVideo, videoDurations]);
 
   const canSubmit =
     hasTikTokBinding &&
     Boolean(tikTokAccessToken) &&
     creatorInfoStatus === 'success' &&
     canPostNow &&
+    Boolean(privacyLevel) &&
+    privacyOptions.includes(privacyLevel) &&
+    Boolean(privacyOptions.length) &&
+    !disclosureSelectionMissing &&
+    uploadConsent &&
     !durationViolations.length &&
     !hasUnknownDurations &&
-    videos.length > 0;
+    Boolean(primaryVideo);
 
   const handleUpload = async () => {
     setUploadMessage(null);
-    if (!videos.length) {
-      setUploadMessage('No videos selected. Return to the AI video queue to choose clips.');
+    if (!primaryVideo) {
+      setUploadMessage('No video selected. Return to the AI video queue to choose a clip.');
       return;
     }
     if (!tikTokAccessToken) {
@@ -216,6 +279,22 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
     }
     if (creatorInfoStatus !== 'success') {
       setUploadMessage('Please refresh creator info before posting.');
+      return;
+    }
+    if (!privacyOptions.length) {
+      setUploadMessage('Privacy options are unavailable. Refresh creator info and try again.');
+      return;
+    }
+    if (!privacyLevel || !privacyOptions.includes(privacyLevel)) {
+      setUploadMessage('Select a TikTok privacy level before posting.');
+      return;
+    }
+    if (disclosureSelectionMissing) {
+      setUploadMessage('Select your commercial content disclosure options before posting.');
+      return;
+    }
+    if (!uploadConsent) {
+      setUploadMessage('Please confirm you consent to uploading this content to TikTok.');
       return;
     }
     if (!canPostNow) {
@@ -235,7 +314,7 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
 
     setIsUploading(true);
     setUploadStatuses(
-      videos.reduce((acc, video) => ({ ...acc, [video.id]: 'uploading' as const }), {}),
+      { [primaryVideo.id]: 'uploading' as const },
     );
     setUploadStatusDetails({});
     setPublishIds({});
@@ -246,20 +325,27 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           access_token: tikTokAccessToken,
-          videos: videos.map((video) => ({
-            id: video.id,
-            videoUrl: video.videoUrl,
-            title: video.tags?.[0] ? `AI video - ${video.tags[0]}` : 'AI video upload',
-          })),
+          videos: [
+            {
+              id: primaryVideo.id,
+              videoUrl: primaryVideo.videoUrl,
+              title: title.trim()
+                || (primaryVideo.tags?.[0] ? `AI video - ${primaryVideo.tags[0]}` : 'AI video upload'),
+              privacyLevel,
+              brandContent: commercialDisclosure ? promoteBrand : false,
+              brandOrganic: commercialDisclosure ? promoteSelf : false,
+              disableComment: disableCommentToggle || !allowComment,
+              disableDuet: isPhotoPost ? true : disableDuetToggle || !allowDuet,
+              disableStitch: isPhotoPost ? true : disableStitchToggle || !allowStitch,
+            },
+          ],
         }),
       });
 
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
         setUploadMessage(payload.error || 'TikTok upload failed.');
-        setUploadStatuses(
-          videos.reduce((acc, video) => ({ ...acc, [video.id]: 'error' as const }), {}),
-        );
+        setUploadStatuses({ [primaryVideo.id]: 'error' as const });
         return;
       }
 
@@ -302,9 +388,7 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
     } catch (error) {
       console.error('TikTok upload error', error);
       setUploadMessage('Unexpected error uploading to TikTok.');
-      setUploadStatuses(
-        videos.reduce((acc, video) => ({ ...acc, [video.id]: 'error' as const }), {}),
-      );
+      setUploadStatuses({ [primaryVideo.id]: 'error' as const });
     } finally {
       setIsUploading(false);
     }
@@ -410,11 +494,59 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
       }
       setCreatorInfo(payload);
       setCreatorInfoStatus('success');
+      if (payload.data?.comment_disabled) {
+        setAllowComment(false);
+      }
+      if (payload.data?.duet_disabled) {
+        setAllowDuet(false);
+      }
+      if (payload.data?.stitch_disabled) {
+        setAllowStitch(false);
+      }
     } catch (error) {
       setCreatorInfoStatus('error');
       setCreatorInfoMessage(error instanceof Error ? error.message : 'Unable to refresh creator info.');
     }
   };
+
+  useEffect(() => {
+    if (disableCommentToggle) {
+      setAllowComment(false);
+    }
+  }, [disableCommentToggle]);
+
+  useEffect(() => {
+    if (disableDuetToggle) {
+      setAllowDuet(false);
+    }
+  }, [disableDuetToggle]);
+
+  useEffect(() => {
+    if (disableStitchToggle) {
+      setAllowStitch(false);
+    }
+  }, [disableStitchToggle]);
+
+  useEffect(() => {
+    if (isPhotoPost) {
+      setAllowDuet(false);
+      setAllowStitch(false);
+    }
+  }, [isPhotoPost]);
+
+  useEffect(() => {
+    if (!commercialDisclosure) {
+      setPromoteSelf(false);
+      setPromoteBrand(false);
+    }
+  }, [commercialDisclosure]);
+
+  useEffect(() => {
+    if (brandedContentRequiresPublic && privacyLevel === privateOption) {
+      const fallback = privacyOptions.find((option) => option !== privateOption);
+      setPrivacyLevel(fallback ?? '');
+    }
+  }, [brandedContentRequiresPublic, privacyLevel, privacyOptions]);
 
   return (
     <div className="space-y-8 py-8">
@@ -448,15 +580,14 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
         </div>
       </div>
 
-      {!videos.length && (
+      {!primaryVideo && (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white/60 p-10 text-center text-sm text-slate-500">
-          No videos selected for posting. Return to the AI video queue to choose clips.
+          No video selected for posting. Return to the AI video queue to choose a clip.
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="space-y-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="space-y-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Creator info</p>
@@ -502,17 +633,60 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
             )}
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Upload settings</p>
                 <h2 className="text-lg font-semibold text-slate-900">TikTok publish configuration</h2>
               </div>
               <div className="text-xs font-semibold text-slate-500">
-                Privacy: <span className="text-slate-900">Public to everyone</span>
+                Privacy: <span className="text-slate-900">{privacyLevel ? formatPrivacyLabel(privacyLevel) : 'Select a value'}</span>
               </div>
             </div>
             <div className="mt-4 grid gap-3 text-sm text-slate-700 sm:grid-cols-2">
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Title</p>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="Add a title for TikTok"
+                  className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  maxLength={150}
+                />
+                <p className="mt-1 text-xs text-slate-500">Optional. TikTok allows up to 150 characters.</p>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Privacy status</p>
+                <select
+                  value={privacyLevel}
+                  onChange={(event) => setPrivacyLevel(event.target.value)}
+                  className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  disabled={!privacyOptions.length}
+                  title={brandedContentBlocksPrivate ? 'Branded content visibility cannot be set to private.' : ''}
+                >
+                  <option value="" disabled>
+                    Select privacy level
+                  </option>
+                  {privacyOptions.map((option) => (
+                    <option
+                      key={option}
+                      value={option}
+                      disabled={option === privateOption && brandedContentBlocksPrivate}
+                      title={option === privateOption && brandedContentBlocksPrivate
+                        ? 'Branded content visibility cannot be set to private.'
+                        : undefined}
+                    >
+                      {option === privateOption && brandedContentBlocksPrivate
+                        ? `${formatPrivacyLabel(option)} (not available)`
+                        : formatPrivacyLabel(option)}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-slate-500">
+                  Options match the creator info from TikTok.
+                </p>
+              </div>
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Creator limits</p>
                 <p className="mt-1 font-semibold text-slate-900">
@@ -523,65 +697,132 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
                 </p>
               </div>
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Brand flags</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">Brand content: No</p>
-                <p className="text-sm text-slate-600">Brand organic: Yes</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Commercial content</p>
+                <label className="mt-2 flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    checked={commercialDisclosure}
+                    onChange={(event) => setCommercialDisclosure(event.target.checked)}
+                  />
+                  Disclose commercial content
+                </label>
+                {commercialDisclosure && (
+                  <div className="mt-3 space-y-2 text-sm">
+                    <label className="flex items-center gap-2 text-slate-700">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        checked={promoteSelf}
+                        onChange={(event) => setPromoteSelf(event.target.checked)}
+                      />
+                      Your brand
+                    </label>
+                    <label className="flex items-center gap-2 text-slate-700">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        checked={promoteBrand}
+                        onChange={(event) => setPromoteBrand(event.target.checked)}
+                      />
+                      Branded content
+                    </label>
+                    {disclosureLabel && (
+                      <p className="text-xs font-semibold text-slate-500">{disclosureLabel}</p>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Engagement settings</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">
-                  Comments {commentSetting}
-                </p>
-                <p className="text-sm text-slate-600">
-                  Duet {duetSetting} / Stitch {stitchSetting}
-                </p>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Interaction ability</p>
+                <div className="mt-2 space-y-2 text-sm">
+                  <label className={`flex items-center gap-2 ${disableCommentToggle ? 'text-slate-400' : 'text-slate-700'}`}>
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      checked={allowComment}
+                      onChange={(event) => setAllowComment(event.target.checked)}
+                      disabled={disableCommentToggle}
+                    />
+                    Allow Comment {disableCommentToggle && '(disabled in TikTok settings)'}
+                  </label>
+                  {!isPhotoPost && (
+                    <label className={`flex items-center gap-2 ${disableDuetToggle ? 'text-slate-400' : 'text-slate-700'}`}>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        checked={allowDuet}
+                        onChange={(event) => setAllowDuet(event.target.checked)}
+                        disabled={disableDuetToggle}
+                      />
+                      Allow Duet {disableDuetToggle && '(disabled in TikTok settings)'}
+                    </label>
+                  )}
+                  {!isPhotoPost && (
+                    <label className={`flex items-center gap-2 ${disableStitchToggle ? 'text-slate-400' : 'text-slate-700'}`}>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        checked={allowStitch}
+                        onChange={(event) => setAllowStitch(event.target.checked)}
+                        disabled={disableStitchToggle}
+                      />
+                      Allow Stitch {disableStitchToggle && '(disabled in TikTok settings)'}
+                    </label>
+                  )}
+                </div>
               </div>
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Privacy options</p>
                 <p className="mt-1 text-sm font-semibold text-slate-900">
                   {creatorData?.privacy_level_options?.length
-                    ? creatorData.privacy_level_options.join(', ')
+                    ? creatorData.privacy_level_options.map(formatPrivacyLabel).join(', ')
                     : 'Not loaded'}
                 </p>
                 <p className="text-xs text-slate-500">Must match creator info from TikTok.</p>
+                {brandedContentBlocksPrivate && (
+                  <p className="mt-2 text-xs font-semibold text-rose-600">
+                    Branded content visibility cannot be set to private.
+                  </p>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Selected videos</p>
-                <h2 className="text-lg font-semibold text-slate-900">Clips ready to publish</h2>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Selected video</p>
+                <h2 className="text-lg font-semibold text-slate-900">Clip ready to publish</h2>
               </div>
-              <p className="text-sm font-semibold text-slate-500">{videos.length} total</p>
+              <p className="text-sm font-semibold text-slate-500">Single upload</p>
             </div>
             <div className="mt-4 space-y-3">
-              {videos.map((video) => {
-                const duration = videoDurations[video.id];
+              {primaryVideo && (() => {
+                const duration = videoDurations[primaryVideo.id];
                 const exceedsMax = maxDuration && typeof duration === 'number' && duration > maxDuration;
                 return (
                   <div
-                    key={video.id}
+                    key={primaryVideo.id}
                     className="flex flex-col gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      {video.thumbnailUrl ? (
+                      {primaryVideo.thumbnailUrl ? (
                         <img
-                          src={video.thumbnailUrl}
-                          alt={`Thumbnail for ${video.id}`}
+                          src={primaryVideo.thumbnailUrl}
+                          alt={`Thumbnail for ${primaryVideo.id}`}
                           className="h-16 w-12 rounded-lg object-cover"
                         />
                       ) : (
                         <div className="flex h-16 w-12 items-center justify-center rounded-lg bg-slate-200 text-xs text-slate-500">
-                          {video.id.slice(0, 3)}
+                          {primaryVideo.id.slice(0, 3)}
                         </div>
                       )}
                       <div>
                         <p className="text-sm font-semibold text-slate-900">
-                          {video.tags?.[0] ? `AI video - ${video.tags[0]}` : 'AI video upload'}
+                          {primaryVideo.tags?.[0] ? `AI video - ${primaryVideo.tags[0]}` : 'AI video upload'}
                         </p>
-                        <p className="text-xs text-slate-500">{video.id}</p>
+                        <p className="text-xs text-slate-500">{primaryVideo.id}</p>
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
@@ -594,12 +835,30 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
                           Exceeds limit
                         </span>
                       )}
-                      {statusBadge(uploadStatuses[video.id])}
+                      {statusBadge(uploadStatuses[primaryVideo.id])}
                     </div>
                   </div>
                 );
-              })}
+              })()}
             </div>
+            {primaryVideo?.videoUrl && (
+              <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-900">
+                {isPhotoPost ? (
+                  <img
+                    src={primaryVideo.videoUrl}
+                    alt="Preview of selected content"
+                    className="w-full object-contain"
+                  />
+                ) : (
+                  <video
+                    src={primaryVideo.videoUrl}
+                    controls
+                    playsInline
+                    className="w-full max-h-[70vh] bg-black object-contain"
+                  />
+                )}
+              </div>
+            )}
 
             {(durationViolations.length > 0 || hasUnknownDurations) && (
               <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-medium text-rose-700">
@@ -609,85 +868,85 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
               </div>
             )}
           </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Publish checklist</p>
-            <ul className="mt-3 space-y-3 text-sm text-slate-600">
-              <li className="flex items-start gap-2">
-                <Info className="mt-0.5 h-4 w-4 text-indigo-500" />
-                Creator info refreshed and nickname confirmed.
-              </li>
-              <li className="flex items-start gap-2">
-                <Info className="mt-0.5 h-4 w-4 text-indigo-500" />
-                Video duration validated against TikTok max post length.
-              </li>
-              <li className="flex items-start gap-2">
-                <Info className="mt-0.5 h-4 w-4 text-indigo-500" />
-                Privacy set to Public to Everyone.
-              </li>
-              <li className="flex items-start gap-2">
-                <Info className="mt-0.5 h-4 w-4 text-indigo-500" />
-                Brand flags confirmed (content: No, organic: Yes).
-              </li>
-            </ul>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Publish action</p>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Publish action</p>
+          <label className="mt-3 flex items-start gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              checked={uploadConsent}
+              onChange={(event) => setUploadConsent(event.target.checked)}
+            />
+            I consent to uploading this content to TikTok.
+          </label>
+          <span
+            className="mt-4 block"
+            title={
+              disclosureSelectionMissing
+                ? 'You need to indicate if your content promotes yourself, a third party, or both.'
+                : !uploadConsent
+                  ? 'Please confirm you consent to upload this content.'
+                : ''
+            }
+          >
             <button
               type="button"
               onClick={handleUpload}
-              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60"
               disabled={!canSubmit || isUploading}
             >
               <Upload className="h-4 w-4" />
               {isUploading ? 'Uploading...' : 'Confirm & post to TikTok'}
             </button>
-            {!hasTikTokBinding && (
-              <p className="mt-3 text-xs text-slate-500">
-                Connect a TikTok account before posting.
-              </p>
-            )}
-            {uploadMessage && (
-              <p className="mt-3 text-sm font-medium text-slate-600">{uploadMessage}</p>
-            )}
-          </div>
-
-          {Boolean(Object.keys(uploadStatuses).length) && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                <Info className="h-4 w-4 text-indigo-500" />
-                Upload status
-              </div>
-              <div className="mt-3 space-y-2 text-sm text-slate-700">
-                {Object.entries(uploadStatuses).map(([videoId, status]) => (
-                  <div
-                    key={videoId}
-                    className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-xs"
-                  >
-                    <span className="font-semibold text-slate-900">{videoId}</span>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">
-                        {status === 'uploading'
-                          ? 'Uploading...'
-                          : status === 'checking'
-                            ? 'Checking TikTok status...'
-                            : status === 'success'
-                              ? 'Published'
-                              : 'Failed'}
-                      </p>
-                      {uploadStatusDetails[videoId] ? (
-                        <p className="text-xs text-slate-500">{uploadStatusDetails[videoId]}</p>
-                      ) : null}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          </span>
+          {!hasTikTokBinding && (
+            <p className="mt-3 text-xs text-slate-500">
+              Connect a TikTok account before posting.
+            </p>
           )}
+          {uploadMessage && (
+            <p className="mt-3 text-sm font-medium text-slate-600">{uploadMessage}</p>
+          )}
+          {complianceDeclaration && (
+            <p className="mt-3 text-xs text-slate-500">{complianceDeclaration}</p>
+          )}
+          <p className="mt-2 text-xs text-slate-500">
+            After publishing, TikTok may take a few minutes to process and show the post on your profile.
+          </p>
         </div>
+
+        {Boolean(Object.keys(uploadStatuses).length) && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              <Info className="h-4 w-4 text-indigo-500" />
+              Upload status
+            </div>
+            <div className="mt-3 space-y-2 text-sm text-slate-700">
+              {Object.entries(uploadStatuses).map(([videoId, status]) => (
+                <div
+                  key={videoId}
+                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-xs"
+                >
+                  <span className="font-semibold text-slate-900">{videoId}</span>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">
+                      {status === 'uploading'
+                        ? 'Uploading...'
+                        : status === 'checking'
+                          ? 'Checking TikTok status...'
+                          : status === 'success'
+                            ? 'Published'
+                            : 'Failed'}
+                    </p>
+                    {uploadStatusDetails[videoId] ? (
+                      <p className="text-xs text-slate-500">{uploadStatusDetails[videoId]}</p>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { AiVideoRecord, TikTokBindingInfo, VideoStatus } from './types';
 
 const PYTHON_API_BASE = process.env.CAMPAIGNS_API_URL || 'http://localhost:5000';
+const TIKTOK_TOKEN_ENDPOINT = 'https://open.tiktokapis.com/v2/oauth/token/';
 
 type AiVideoLibraryItem = {
   id: string;
@@ -24,6 +25,17 @@ type TikTokUserProfile = {
 };
 
 type TikTokAccountRecord = Awaited<ReturnType<typeof prisma.tikTokAccount.findUnique>>;
+type TikTokTokenResponse = {
+  access_token?: string;
+  refresh_token?: string;
+  scope?: string;
+  open_id?: string;
+  expires_in?: number;
+  refresh_expires_in?: number;
+  error?: string;
+  error_description?: string;
+  message?: string;
+};
 
 export async function fetchAiVideos(userId: string | null): Promise<AiVideoRecord[]> {
   try {
@@ -76,6 +88,108 @@ function mapToRecord(item: AiVideoLibraryItem): AiVideoRecord {
     tags,
     status,
   };
+}
+
+export async function refreshTikTokAccount(account: TikTokAccountRecord): Promise<TikTokAccountRecord | null> {
+  if (!account) {
+    return null;
+  }
+
+  const now = Date.now();
+  let nextAccount = account;
+  if (account.refresh_expires_at.getTime() <= now) {
+    await prisma.tikTokAccount.delete({
+      where: { user_id: account.user_id },
+    });
+    return null;
+  }
+
+  if (account.expires_at.getTime() <= now) {
+    if (!account.refresh_token) {
+      console.error('TikTok access token expired without refresh token', {
+        userId: account.user_id,
+      });
+      return account;
+    }
+
+    const clientKey = process.env.TIKTOK_CLIENT_KEY;
+    const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
+
+    if (!clientKey || !clientSecret) {
+      console.error('TikTok token refresh skipped: missing client credentials', {
+        hasClientKey: Boolean(clientKey),
+        hasClientSecret: Boolean(clientSecret),
+      });
+      return account;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        client_key: clientKey,
+        client_secret: clientSecret,
+        grant_type: 'refresh_token',
+        refresh_token: account.refresh_token,
+      });
+
+      const response = await fetch(TIKTOK_TOKEN_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params.toString(),
+        cache: 'no-store',
+      });
+
+      const payload = (await response.json()) as TikTokTokenResponse;
+      if (!response.ok || payload.error) {
+        console.error('TikTok token refresh failed', {
+          status: response.status,
+          error: payload.error,
+          message: payload.error_description || payload.message,
+        });
+        return account;
+      }
+
+      const expiresAt = payload.expires_in ? new Date(now + payload.expires_in * 1000) : account.expires_at;
+      const refreshExpiresAt = payload.refresh_expires_in
+        ? new Date(now + payload.refresh_expires_in * 1000)
+        : account.refresh_expires_at;
+
+      nextAccount = await prisma.tikTokAccount.update({
+        where: { user_id: account.user_id },
+        data: {
+          access_token: payload.access_token ?? account.access_token,
+          refresh_token: payload.refresh_token ?? account.refresh_token,
+          scope: payload.scope ?? account.scope,
+          expires_at: expiresAt,
+          refresh_expires_at: refreshExpiresAt,
+          tiktok_open_id: payload.open_id ?? account.tiktok_open_id,
+          updated_at: new Date(),
+        },
+      });
+    } catch (error) {
+      console.error('TikTok token refresh error', error);
+      return account;
+    }
+  }
+
+  const profile = await fetchTikTokProfile(nextAccount.access_token);
+  if (!profile) {
+    return nextAccount;
+  }
+
+  return await prisma.tikTokAccount.update({
+    where: { user_id: nextAccount.user_id },
+    data: {
+      handle: profile.username ?? profile.displayName ?? nextAccount.handle,
+      display_name: profile.displayName ?? nextAccount.display_name,
+      avatar_url: profile.avatarUrl ?? nextAccount.avatar_url,
+      follower_count: profile.followerCount ?? nextAccount.follower_count,
+      tiktok_open_id: profile.openId ?? nextAccount.tiktok_open_id,
+      last_synced_at: new Date(),
+      updated_at: new Date(),
+    },
+  });
 }
 
 export async function buildTikTokBinding(account: TikTokAccountRecord): Promise<TikTokBindingInfo | null> {

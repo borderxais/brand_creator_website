@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import AiVideoDashboard from './AiVideoDashboard';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { buildTikTokBinding, fetchAiVideos } from './data';
+import { buildTikTokBinding, fetchAiVideos, refreshTikTokAccount } from './data';
 
 export const metadata: Metadata = {
   title: 'AI Video Library | Cricher AI CreatorHub',
@@ -23,7 +23,8 @@ export default async function AiVideoPage() {
       : Promise.resolve(null),
   ]);
 
-  const tikTokBinding = await buildTikTokBinding(tiktokAccount);
+  const refreshedAccount = await refreshTikTokAccount(tiktokAccount);
+  const tikTokBinding = await buildTikTokBinding(refreshedAccount);
 
   return <AiVideoDashboard videos={videos} tikTokBinding={tikTokBinding} />;
 }

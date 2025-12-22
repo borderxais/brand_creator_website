@@ -256,16 +256,14 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
   );
 
   const toggleSelect = (videoId: string) => {
-    setSelectedVideoIds((prev) =>
-      prev.includes(videoId) ? prev.filter((id) => id !== videoId) : [...prev, videoId],
-    );
+    setSelectedVideoIds((prev) => (prev.includes(videoId) ? [] : [videoId]));
     setSelectionMessage(null);
   };
 
   const handleReview = () => {
     const selectedReadyIds = selectedVideoIds.filter((id) => readyVideoIds.includes(id));
     if (!selectedReadyIds.length) {
-      setSelectionMessage('Choose at least one ready video to review before posting to TikTok.');
+      setSelectionMessage('Choose one ready video to review before posting to TikTok.');
       return;
     }
 
@@ -352,7 +350,7 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
                 Review & post to TikTok
               </button>
               <p className="text-sm text-slate-600">
-                {selectedVideoIds.length ? `${selectedVideoIds.length} selected` : 'No videos selected'}
+                {selectedVideoIds.length ? 'Video selected' : 'No videos selected'}
               </p>
             </div>
             {selectionMessage && (

@@ -39,10 +39,11 @@ export default async function PostToTikTokPage({ searchParams }: PageProps) {
   const selectedVideos = selectedIds.length
     ? videos.filter((video) => selectedIds.includes(video.id) && video.status === 'ready' && video.videoUrl)
     : [];
+  const primaryVideo = selectedVideos.length ? [selectedVideos[0]] : [];
 
   return (
     <AiVideoPostPage
-      videos={selectedVideos}
+      videos={primaryVideo}
       tikTokBinding={tikTokBinding}
       uploadEndpoint={`${PYTHON_API_BASE}/tiktok/upload-ai-video`}
       statusEndpoint={`${PYTHON_API_BASE}/tiktok/publish-status`}
