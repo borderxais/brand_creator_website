@@ -68,6 +68,47 @@ const formatPrivacyLabel = (value: string) => {
   }
 };
 
+const formatPublishStatus = (value?: string | null) => {
+  if (!value) {
+    return 'Checking TikTok publish status';
+  }
+
+  const normalized = value.toUpperCase();
+  const mapping: Record<string, string> = {
+    PUBLISH_COMPLETE: 'Published',
+    PUBLISHING: 'Publishing',
+    PROCESSING: 'Processing',
+    REVIEWING: 'Reviewing',
+    SUCCESS: 'Published',
+    PUBLISHED: 'Published',
+    COMPLETED: 'Published',
+    FAILED: 'Failed',
+  };
+
+  if (mapping[normalized]) {
+    return mapping[normalized];
+  }
+
+  return value
+    .toLowerCase()
+    .split('_')
+    .map((chunk) => (chunk ? `${chunk[0].toUpperCase()}${chunk.slice(1)}` : chunk))
+    .join(' ');
+};
+
+const uploadStatusMeta = (status?: UploadStatus) => {
+  if (status === 'uploading') {
+    return { label: 'Uploading', tone: 'text-indigo-600', icon: RefreshCw, spin: true };
+  }
+  if (status === 'checking') {
+    return { label: 'Checking TikTok status', tone: 'text-indigo-600', icon: RefreshCw, spin: true };
+  }
+  if (status === 'success') {
+    return { label: 'Published', tone: 'text-emerald-600', icon: CheckCircle, spin: false };
+  }
+  return { label: 'Failed', tone: 'text-rose-600', icon: AlertTriangle, spin: false };
+};
+
 const statusBadge = (status?: UploadStatus) => {
   if (!status) return null;
   if (status === 'uploading' || status === 'checking') {
@@ -142,13 +183,35 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
     : promoteSelf
       ? "Your photo/video will be labeled as 'Promotional content'"
       : '';
+  const musicUsageConfirmationLink = (
+    <a
+      href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en"
+      target="_blank"
+      rel="noreferrer"
+      className="font-semibold text-indigo-600 hover:text-indigo-500"
+    >
+      TikTok&apos;s Music Usage Confirmation
+    </a>
+  );
   const complianceDeclaration = commercialDisclosure
     ? promoteBrand
-      ? "By posting, you agree to TikTok's Branded Content Policy and Music Usage Confirmation."
+      ? (
+        <>
+          By posting, you agree to TikTok&apos;s Branded Content Policy and {musicUsageConfirmationLink}.
+        </>
+      )
       : promoteSelf
-        ? "By posting, you agree to TikTok's Music Usage Confirmation."
+        ? (
+          <>
+            By posting, you agree to {musicUsageConfirmationLink}.
+          </>
+        )
         : ''
-    : "By posting, you agree to TikTok's Music Usage Confirmation.";
+    : (
+      <>
+        By posting, you agree to {musicUsageConfirmationLink}.
+      </>
+    );
   const canPostNow = useMemo(() => {
     const flags = [
       creatorData?.creator_can_post,
@@ -375,10 +438,10 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
           } else {
             nextStatuses[result.id] = 'checking';
           }
-          nextDetails[result.id] = publishStatus;
+          nextDetails[result.id] = formatPublishStatus(publishStatus);
         } else {
           nextStatuses[result.id] = 'checking';
-          nextDetails[result.id] = 'Checking TikTok publish status';
+          nextDetails[result.id] = formatPublishStatus(null);
         }
       });
 
@@ -450,13 +513,13 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
           const normalized = typeof status === 'string' ? status.toUpperCase() : '';
           if (normalized === 'PUBLISH_COMPLETE' || normalized === 'SUCCESS' || normalized === 'PUBLISHED') {
             nextStatuses[videoId] = 'success';
-            nextDetails[videoId] = status;
+            nextDetails[videoId] = formatPublishStatus(status);
           } else if (normalized === 'FAILED') {
             nextStatuses[videoId] = 'error';
             nextDetails[videoId] = failReason || 'Publish failed';
           } else {
             nextStatuses[videoId] = 'checking';
-            nextDetails[videoId] = status || 'Checking TikTok publish status';
+            nextDetails[videoId] = formatPublishStatus(status);
           }
         });
 
@@ -921,29 +984,31 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
               <Info className="h-4 w-4 text-indigo-500" />
               Upload status
             </div>
-            <div className="mt-3 space-y-2 text-sm text-slate-700">
-              {Object.entries(uploadStatuses).map(([videoId, status]) => (
-                <div
-                  key={videoId}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-xs"
-                >
-                  <span className="font-semibold text-slate-900">{videoId}</span>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">
-                      {status === 'uploading'
-                        ? 'Uploading...'
-                        : status === 'checking'
-                          ? 'Checking TikTok status...'
-                          : status === 'success'
-                            ? 'Published'
-                            : 'Failed'}
-                    </p>
-                    {uploadStatusDetails[videoId] ? (
-                      <p className="text-xs text-slate-500">{uploadStatusDetails[videoId]}</p>
-                    ) : null}
+            <div className="mt-4 space-y-3 text-sm text-slate-700">
+              {Object.entries(uploadStatuses).map(([videoId, status]) => {
+                const meta = uploadStatusMeta(status);
+                const detail = uploadStatusDetails[videoId];
+                const Icon = meta.icon;
+                return (
+                  <div
+                    key={videoId}
+                    className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-xs"
+                  >
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
+                      <Icon className={`h-5 w-5 ${meta.tone}${meta.spin ? ' animate-spin' : ''}`} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-slate-900">{meta.label}</p>
+                      <p className="text-xs text-slate-500">
+                        {detail || formatPublishStatus(null)}
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium text-slate-400">
+                      {primaryVideo?.id === videoId ? 'Primary video' : videoId}
+                    </span>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
