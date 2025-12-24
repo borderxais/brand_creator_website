@@ -193,11 +193,21 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
       TikTok&apos;s Music Usage Confirmation
     </a>
   );
+  const brandedContentPolicyLink = (
+    <a
+      href="https://www.tiktok.com/legal/page/global/bc-policy/en"
+      target="_blank"
+      rel="noreferrer"
+      className="font-semibold text-indigo-600 hover:text-indigo-500"
+    >
+      TikTok&apos;s Branded Content Policy
+    </a>
+  );
   const complianceDeclaration = commercialDisclosure
     ? promoteBrand
       ? (
         <>
-          By posting, you agree to TikTok&apos;s Branded Content Policy and {musicUsageConfirmationLink}.
+          By posting, you agree to {brandedContentPolicyLink} and {musicUsageConfirmationLink}.
         </>
       )
       : promoteSelf
@@ -206,7 +216,11 @@ export default function AiVideoPostPage({ videos, tikTokBinding, uploadEndpoint,
             By posting, you agree to {musicUsageConfirmationLink}.
           </>
         )
-        : ''
+        : (
+          <>
+            By posting, you agree to {musicUsageConfirmationLink}.
+          </>
+        )
     : (
       <>
         By posting, you agree to {musicUsageConfirmationLink}.
