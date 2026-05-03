@@ -1,1 +1,2 @@
+# Husky v9: no shebang or husky.sh source needed.
 npx lint-staged

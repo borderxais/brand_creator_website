@@ -50,6 +50,8 @@ Husky + lint-staged. Single `pre-commit` hook dispatches by file glob.
 | `backend/**/*.py`          | `ruff format` → `ruff check --fix` → `mypy` on changed files      |
 | `*.{json,md,yml,yaml,css}` | `prettier --write`                                                |
 
+**Friction note.** The per-file `eslint --fix --max-warnings=0` step blocks a commit when the staged file already carries a warning, even if your change is unrelated to the warning. The 35 warnings tracked at branch creation (`@next/next/no-img-element`, `react-hooks/exhaustive-deps`) live in roughly 20 files. If your commit touches one of these, fix the warning in-place or add a `// eslint-disable-next-line <rule> -- TODO(harness): <issue>` comment with a tracking issue. To preview the warning list, run `npm run lint`. To run the strictest gate manually, `npm run lint:strict`.
+
 Target: < 10 s on a typical staged set (touches only staged files).
 
 Hook error format:

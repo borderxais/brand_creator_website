@@ -48,7 +48,7 @@ module.exports = [
   {
     files: ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
     plugins: { "@typescript-eslint": tseslint },
-    languageOptions: { parser: tsParser },
+    languageOptions: { parser: tsParser, parserOptions: { project: true } },
     rules: {
       "@typescript-eslint/no-unused-vars": [
         "error",

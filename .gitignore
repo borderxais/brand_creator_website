@@ -59,4 +59,3 @@ backend/app.yaml
 AGENTS.md
 playwright-report/
 test-results/
-coverage/
