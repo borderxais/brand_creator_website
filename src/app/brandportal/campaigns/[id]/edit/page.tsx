@@ -19,26 +19,12 @@ export default function EditCampaign() {
   
   // Add null check and type safety for campaignId
   const campaignId = params?.id as string | undefined;
-  
-  // Early return if no campaign ID
-  if (!campaignId) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">Invalid campaign ID</p>
-          <Link href="/brandportal/campaigns" className="text-red-600 hover:text-red-800 underline">
-            Back to Campaigns
-          </Link>
-        </div>
-      </div>
-    );
-  }
-  
+
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [formError, setFormError] = useState<string | null>(null);
-  const [originalCampaign, setOriginalCampaign] = useState<any>(null);
+  const [_originalCampaign, setOriginalCampaign] = useState<any>(null);
   
   // State for managing dropdown sections
   const [expandedSections, setExpandedSections] = useState({
@@ -113,7 +99,7 @@ export default function EditCampaign() {
     'Other'
   ];
 
-  const contentNiches = [
+  const _contentNiches = [
     'Beauty',
     'Food',
     'Comedy / Skits',
@@ -128,7 +114,7 @@ export default function EditCampaign() {
     'Other'
   ];
 
-  const locations = [
+  const _locations = [
     'United States (priority)',
     'Any English-speaking country (e.g., US, UK, Canada)',
     'Spanish-speaking countries (e.g., Mexico, Colombia, Spain)',
@@ -199,7 +185,7 @@ export default function EditCampaign() {
         if (!field) return [];
         try {
           return JSON.parse(field);
-        } catch (e) {
+        } catch (_e) {
           return field.split(',').map(item => item.trim());
         }
       };
@@ -418,18 +404,31 @@ export default function EditCampaign() {
     );
   }
 
+  if (!campaignId) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Invalid campaign ID</p>
+          <Link href="/brandportal/campaigns" className="text-red-600 hover:text-red-800 underline">
+            Back to Campaigns
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center mb-6">
-          <Link 
+          <Link
             href="/brandportal/campaigns"
             className="flex items-center text-purple-600 hover:text-purple-800"
           >
             <ArrowLeft className="w-4 h-4 mr-1" /> Back to Campaigns
           </Link>
         </div>
-        
+
         <h1 className="text-3xl font-bold mb-6">Edit Campaign</h1>
         
         {formError && (

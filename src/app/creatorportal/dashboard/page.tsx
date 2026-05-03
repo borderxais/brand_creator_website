@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BarChart3, DollarSign, Eye, ThumbsUp, MessageSquare, Calendar, Bell, ArrowRight, Image } from 'lucide-react';
+import { BarChart3, DollarSign, Eye, ThumbsUp, Calendar, Bell, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -43,12 +43,6 @@ const stats = [
   }
 ];
 
-// Empty array instead of mock posts
-const recentPosts = [];
-
-// Empty array instead of mock notifications
-const notifications = [];
-
 interface CampaignClaim {
   id: string;
   campaign_id: string;
@@ -64,24 +58,6 @@ export default function CreatorDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [recentApplications, setRecentApplications] = useState<CampaignClaim[]>([]);
-
-  console.log('Creator Dashboard - Session:', session);
-  console.log('Creator Dashboard - Status:', status);
-
-  // Protect the route
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-      </div>
-    );
-  }
-
-  if (status === 'unauthenticated' || !session?.user?.role || session.user.role !== 'CREATOR') {
-    console.log('Unauthorized access attempt - redirecting to login');
-    router.push('/login');
-    return null;
-  }
 
   useEffect(() => {
     const fetchRecentApplications = async () => {
@@ -101,7 +77,19 @@ export default function CreatorDashboard() {
     }
   }, [session, status, router]);
 
-  const [selectedTab, setSelectedTab] = useState('overview');
+  // Protect the route
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated' || !session?.user?.role || session.user.role !== 'CREATOR') {
+    router.push('/login');
+    return null;
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
