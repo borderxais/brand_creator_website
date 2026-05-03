@@ -1,4 +1,4 @@
-export type VideoStatus = 'ready' | 'expired';
+export type VideoStatus = "ready" | "expired";
 
 export type AiVideoRecord = {
   id: string;

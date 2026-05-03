@@ -1,5 +1,5 @@
-import { randomBytes } from 'crypto';
-import { prisma } from './prisma';
+import { randomBytes } from "crypto";
+import { prisma } from "./prisma";
 
 /**
  * Generate a secure random token
@@ -7,7 +7,7 @@ import { prisma } from './prisma';
  * @returns A random hex string
  */
 export function generateToken(length: number = 32): string {
-  return randomBytes(length).toString('hex');
+  return randomBytes(length).toString("hex");
 }
 
 /**
@@ -27,25 +27,28 @@ export function generateExpirationDate(hours: number = 24): Date {
  * @param expiresInHours Hours until the token expires
  * @returns The generated token string
  */
-export async function createVerificationToken(email: string, expiresInHours: number = 24): Promise<string> {
+export async function createVerificationToken(
+  email: string,
+  expiresInHours: number = 24
+): Promise<string> {
   // Delete any existing tokens for this email to prevent duplicate tokens
   await prisma.verificationToken.deleteMany({
-    where: { identifier: email }
+    where: { identifier: email },
   });
-  
+
   // Generate a new token and expiration date
   const token = generateToken();
   const expires = generateExpirationDate(expiresInHours);
-  
+
   // Store the token in the database
   await prisma.verificationToken.create({
     data: {
       identifier: email,
       token,
       expires,
-    }
+    },
   });
-  
+
   return token;
 }
 
@@ -57,14 +60,14 @@ export async function createVerificationToken(email: string, expiresInHours: num
 export async function verifyToken(token: string): Promise<string | null> {
   // Find the token in the database
   const verificationToken = await prisma.verificationToken.findUnique({
-    where: { token }
+    where: { token },
   });
-  
+
   // If token doesn't exist or is expired, return null
   if (!verificationToken || verificationToken.expires < new Date()) {
     return null;
   }
-  
+
   return verificationToken.identifier; // Return the email
 }
 
@@ -76,15 +79,15 @@ export async function verifyToken(token: string): Promise<string | null> {
 export async function consumeToken(token: string): Promise<string | null> {
   // Verify the token first
   const email = await verifyToken(token);
-  
+
   if (!email) {
     return null;
   }
-  
+
   // Delete the token to prevent reuse
   await prisma.verificationToken.delete({
-    where: { token }
+    where: { token },
   });
-  
+
   return email;
 }

@@ -13,7 +13,7 @@ class RateLimiter {
     this.cache = new Map();
     this.windowMs = windowMs;
     this.maxRequests = maxRequests;
-    
+
     // Clean up expired entries every hour
     setInterval(() => this.cleanup(), 60 * 60 * 1000);
   }
@@ -46,7 +46,7 @@ class RateLimiter {
   getRemainingTime(key: string): number {
     const entry = this.cache.get(key);
     if (!entry) return 0;
-    
+
     const now = Date.now();
     return Math.max(0, Math.ceil((entry.resetAt - now) / 1000));
   }

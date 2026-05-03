@@ -1,42 +1,42 @@
-'use client';
+"use client";
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Platform, PLATFORM_LABELS } from '@/types/platform';
-import { Category, CATEGORY_LABELS } from '@/types/category';
+import { useRouter, useSearchParams } from "next/navigation";
+import { Platform, PLATFORM_LABELS } from "@/types/platform";
+import { Category, CATEGORY_LABELS } from "@/types/category";
 
 interface SearchBarProps {
-  initialPlatform?: Platform | 'all';
-  initialCategory?: Category | 'all';
+  initialPlatform?: Platform | "all";
+  initialCategory?: Category | "all";
 }
 
 const platforms = [
-  { id: 'all' as const, name: 'All Platforms' },
-  ...Object.entries(PLATFORM_LABELS).map(([id, name]) => ({ id: id as Platform, name }))
+  { id: "all" as const, name: "All Platforms" },
+  ...Object.entries(PLATFORM_LABELS).map(([id, name]) => ({ id: id as Platform, name })),
 ];
 
 const categories = [
-  { id: 'all' as const, name: 'All Categories' },
-  ...Object.entries(CATEGORY_LABELS).map(([id, name]) => ({ id: id as Category, name }))
+  { id: "all" as const, name: "All Categories" },
+  ...Object.entries(CATEGORY_LABELS).map(([id, name]) => ({ id: id as Category, name })),
 ];
 
-export function SearchBar({ initialPlatform = 'all', initialCategory = 'all' }: SearchBarProps) {
+export function SearchBar({ initialPlatform = "all", initialCategory = "all" }: SearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const platform = formData.get('platform') as string;
-    const category = formData.get('category') as string;
+    const platform = formData.get("platform") as string;
+    const category = formData.get("category") as string;
 
-    const params = new URLSearchParams(searchParams?.toString() || '');
+    const params = new URLSearchParams(searchParams?.toString() || "");
 
-    if (platform && platform !== 'all') params.set('platform', platform);
-    else params.delete('platform');
-    if (category && category !== 'all') params.set('category', category);
-    else params.delete('category');
+    if (platform && platform !== "all") params.set("platform", platform);
+    else params.delete("platform");
+    if (category && category !== "all") params.set("category", category);
+    else params.delete("category");
 
-    router.push(`/find-creators${params.toString() ? `?${params.toString()}` : ''}`);
+    router.push(`/find-creators${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
   return (

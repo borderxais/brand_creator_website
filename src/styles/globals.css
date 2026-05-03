@@ -1,5 +1,5 @@
 /* Import portal-specific styles */
-@import './portals.css';
+@import "./portals.css";
 
 @tailwind base;
 @tailwind components;
@@ -9,10 +9,10 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
-  
+
   .hide-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
 }
 
@@ -33,7 +33,6 @@
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-start-rgb));
-  
 }
 
 input {

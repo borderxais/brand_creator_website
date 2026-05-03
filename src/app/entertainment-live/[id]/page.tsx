@@ -1,13 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { 
-  ArrowLeft, Calendar, Users, DollarSign, MapPin,
-  Target, FileText, AlertTriangle, CheckCircle, Tag, Globe,
-  Award, TrendingUp, Shield, Zap
-} from 'lucide-react';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import {
+  ArrowLeft,
+  Calendar,
+  Users,
+  DollarSign,
+  MapPin,
+  Target,
+  FileText,
+  AlertTriangle,
+  CheckCircle,
+  Tag,
+  Globe,
+  Award,
+  TrendingUp,
+  Shield,
+  Zap,
+} from "lucide-react";
+import Link from "next/link";
 
 // Complete mission interface with all database fields
 interface DetailedMission {
@@ -47,22 +59,22 @@ export default function MissionDetail() {
     const fetchMission = async () => {
       try {
         setIsLoading(true);
-        
+
         // Await params before accessing properties with null check
         const resolvedParams = await params;
         if (!resolvedParams || !resolvedParams.id) {
-          setError('Mission ID not found');
+          setError("Mission ID not found");
           return;
         }
-        
+
         const missionId = resolvedParams.id as string;
-        
+
         // Fetch from the real API
         const response = await fetch(`/api/entertainment-live/${missionId}`);
-        
+
         if (!response.ok) {
           if (response.status === 404) {
-            setError('Mission not found');
+            setError("Mission not found");
           } else {
             throw new Error(`Failed to fetch mission: ${response.status}`);
           }
@@ -70,12 +82,11 @@ export default function MissionDetail() {
         }
 
         const data = await response.json();
-        console.log('Fetched mission detail:', data);
+        console.log("Fetched mission detail:", data);
         setMission(data);
-        
       } catch (err) {
-        console.error('Error fetching mission details:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load mission details');
+        console.error("Error fetching mission details:", err);
+        setError(err instanceof Error ? err.message : "Failed to load mission details");
       } finally {
         setIsLoading(false);
       }
@@ -93,16 +104,16 @@ export default function MissionDetail() {
   };
 
   const getRewardDisplay = () => {
-    if (!mission) return 'TBD';
-    
-    if (mission.reward_model === 'fixed' && mission.fixed_reward) {
+    if (!mission) return "TBD";
+
+    if (mission.reward_model === "fixed" && mission.fixed_reward) {
       return `$${mission.fixed_reward} (Fixed)`;
-    } else if (mission.reward_model === 'cps' && mission.cps_rate) {
+    } else if (mission.reward_model === "cps" && mission.cps_rate) {
       return `$${mission.cps_rate} per view`;
-    } else if (mission.reward_model === 'tiered' && mission.tiered_table) {
-      return 'Tiered rewards (see details below)';
+    } else if (mission.reward_model === "tiered" && mission.tiered_table) {
+      return "Tiered rewards (see details below)";
     }
-    return 'TBD';
+    return "TBD";
   };
 
   if (isLoading) {
@@ -118,7 +129,9 @@ export default function MissionDetail() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Mission Not Found</h1>
-          <p className="text-gray-600 mb-4">{error || 'The requested mission could not be found.'}</p>
+          <p className="text-gray-600 mb-4">
+            {error || "The requested mission could not be found."}
+          </p>
           <Link
             href="/entertainment-live"
             className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
@@ -159,7 +172,9 @@ export default function MissionDetail() {
           <div className="flex items-start justify-between mb-6">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{mission.task_title}</h1>
-              <p className="text-lg text-gray-600 mb-4">by {mission.brand_name || 'Unknown Brand'}</p>
+              <p className="text-lg text-gray-600 mb-4">
+                by {mission.brand_name || "Unknown Brand"}
+              </p>
               <p className="text-gray-700 leading-relaxed">{mission.campaign_objective}</p>
             </div>
             <div className="ml-6">
@@ -189,7 +204,8 @@ export default function MissionDetail() {
               <div>
                 <p className="text-sm text-gray-500">Followers Required</p>
                 <p className="font-semibold text-lg">
-                  {mission.follower_min?.toLocaleString() || 0} - {mission.follower_max?.toLocaleString() || 'Unlimited'}
+                  {mission.follower_min?.toLocaleString() || 0} -{" "}
+                  {mission.follower_max?.toLocaleString() || "Unlimited"}
                 </p>
               </div>
             </div>
@@ -200,7 +216,9 @@ export default function MissionDetail() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Platform</p>
-                <p className="font-semibold text-lg capitalize">{mission.platform || 'Not specified'}</p>
+                <p className="font-semibold text-lg capitalize">
+                  {mission.platform || "Not specified"}
+                </p>
               </div>
             </div>
 
@@ -211,7 +229,7 @@ export default function MissionDetail() {
               <div>
                 <p className="text-sm text-gray-500">Region</p>
                 <p className="font-semibold text-lg capitalize">
-                  {mission.region_priority?.replace('_', ' ') || 'Global'}
+                  {mission.region_priority?.replace("_", " ") || "Global"}
                 </p>
               </div>
             </div>
@@ -364,7 +382,7 @@ export default function MissionDetail() {
             )}
 
             {/* Tiered Rewards (if applicable) */}
-            {mission.reward_model === 'tiered' && mission.tiered_table && (
+            {mission.reward_model === "tiered" && mission.tiered_table && (
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold mb-4 flex items-center">
                   <Award className="w-5 h-5 mr-2 text-yellow-600" />

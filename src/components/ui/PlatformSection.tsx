@@ -1,6 +1,6 @@
-import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
+import React from "react";
+import Link from "next/link";
+import Image from "next/image";
 
 interface Creator {
   id: string;
@@ -36,34 +36,35 @@ export default function PlatformSection({ platform, creators, iconUrl }: Platfor
         <div className="flex items-center">
           {iconUrl && (
             <div className="mr-2 w-6 h-6 relative">
-              <Image
-                src={iconUrl}
-                alt={platform}
-                width={24}
-                height={24}
-              />
+              <Image src={iconUrl} alt={platform} width={24} height={24} />
             </div>
           )}
           <h2 className="text-2xl font-bold">{platform} Creators</h2>
         </div>
 
-        <Link href={`/platforms/${platform.toLowerCase()}`} className="text-purple-600 hover:text-purple-800">
+        <Link
+          href={`/platforms/${platform.toLowerCase()}`}
+          className="text-purple-600 hover:text-purple-800"
+        >
           View all
         </Link>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {creators.slice(0, 6).map((creator) => {
           // Check if platforms exists before using find
-          const platformData = creator.platforms ? 
-            creator.platforms.find(p => p.platform.name === platform.toLowerCase()) : undefined;
-          
+          const platformData = creator.platforms
+            ? creator.platforms.find((p) => p.platform.name === platform.toLowerCase())
+            : undefined;
+
           // If no platform data, use the creator's direct properties
           const followers = platformData ? platformData.followers : creator.followers;
-          const engagementRate = platformData ? platformData.engagementRate : creator.engagementRate;
+          const engagementRate = platformData
+            ? platformData.engagementRate
+            : creator.engagementRate;
 
           return (
-            <Link 
+            <Link
               href={`/creator/${creator.id}`}
               key={creator.id}
               className="block hover:shadow-lg transition-shadow duration-300"
@@ -82,14 +83,14 @@ export default function PlatformSection({ platform, creators, iconUrl }: Platfor
                             height={64}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.src = '/images/default-avatar.png';
+                              target.src = "/images/default-avatar.png";
                             }}
                           />
                         </div>
                       ) : (
                         <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
                           <span className="text-gray-500 text-lg font-bold">
-                            {creator.name ? creator.name[0].toUpperCase() : '?'}
+                            {creator.name ? creator.name[0].toUpperCase() : "?"}
                           </span>
                         </div>
                       )}

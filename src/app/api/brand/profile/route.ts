@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function PUT(request: Request) {
   try {
@@ -34,24 +34,18 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(Array.isArray(updatedProfile) ? updatedProfile[0] : null);
   } catch (error) {
-    console.error('Error updating brand profile:', error);
-    return NextResponse.json(
-      { error: 'Failed to update brand profile' },
-      { status: 500 }
-    );
+    console.error("Error updating brand profile:", error);
+    return NextResponse.json({ error: "Failed to update brand profile" }, { status: 500 });
   }
 }
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const userId = searchParams.get("userId");
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
     }
 
     const brandProfile = await prisma.$queryRaw`
@@ -66,18 +60,12 @@ export async function GET(request: Request) {
     `;
 
     if (!brandProfile || (Array.isArray(brandProfile) && brandProfile.length === 0)) {
-      return NextResponse.json(
-        { error: 'Brand profile not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Brand profile not found" }, { status: 404 });
     }
 
     return NextResponse.json(Array.isArray(brandProfile) ? brandProfile[0] : brandProfile);
   } catch (error) {
-    console.error('Error fetching brand profile:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch brand profile' },
-      { status: 500 }
-    );
+    console.error("Error fetching brand profile:", error);
+    return NextResponse.json({ error: "Failed to fetch brand profile" }, { status: 500 });
   }
 }

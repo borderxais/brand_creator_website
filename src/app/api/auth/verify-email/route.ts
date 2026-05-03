@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     if (!email) {
       return new Response(
         createErrorHtml(
-          "Verification Failed", 
+          "Verification Failed",
           "Your verification link is invalid or has expired. Please request a new verification email."
         ),
         { status: 400, headers: { "Content-Type": "text/html" } }
@@ -35,7 +35,10 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       return new Response(
-        createErrorHtml("User Not Found", "We couldn't find an account associated with this email."),
+        createErrorHtml(
+          "User Not Found",
+          "We couldn't find an account associated with this email."
+        ),
         { status: 404, headers: { "Content-Type": "text/html" } }
       );
     }

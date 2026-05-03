@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowRight, CheckCircle } from 'lucide-react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, CheckCircle } from "lucide-react";
 
 interface FormData {
   name: string;
@@ -19,52 +19,47 @@ interface FormData {
 export default function JoinAsCreatorChinese() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState<FormData>({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    niche: '',
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    niche: "",
     platforms: [],
-    audienceSize: '',
-    bio: '',
-    creatorHandleName: '',
+    audienceSize: "",
+    bio: "",
+    creatorHandleName: "",
   });
 
-  const platforms = [
-    'Instagram',
-    'TikTok',
-    'YouTube',
-    'Twitter',
-    'LinkedIn',
-    'Facebook',
-  ] as const;
+  const platforms = ["Instagram", "TikTok", "YouTube", "Twitter", "LinkedIn", "Facebook"] as const;
 
   const niches = [
-    '时尚与风格',
-    '美妆',
-    '健康与健身',
-    '美食与烹饪',
-    '旅行与探险',
-    '科技与游戏',
-    '商业与金融',
-    '生活方式',
-    '娱乐',
-    '教育',
+    "时尚与风格",
+    "美妆",
+    "健康与健身",
+    "美食与烹饪",
+    "旅行与探险",
+    "科技与游戏",
+    "商业与金融",
+    "生活方式",
+    "娱乐",
+    "教育",
   ] as const;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePlatformToggle = (platform: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       platforms: prev.platforms.includes(platform)
-        ? prev.platforms.filter(p => p !== platform)
-        : [...prev.platforms, platform]
+        ? prev.platforms.filter((p) => p !== platform)
+        : [...prev.platforms, platform],
     }));
   };
 
@@ -76,36 +71,36 @@ export default function JoinAsCreatorChinese() {
       try {
         // Validate passwords match
         if (formData.password !== formData.confirmPassword) {
-          setError('密码不匹配');
+          setError("密码不匹配");
           return;
         }
 
         // Register the user - Now using the standard registration endpoint
-        const response = await fetch('/api/register', {
-          method: 'POST',
+        const response = await fetch("/api/register", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             email: formData.email,
             password: formData.password,
             name: formData.name,
-            role: 'CREATOR',
-            creatorHandleName: formData.creatorHandleName
+            role: "CREATOR",
+            creatorHandleName: formData.creatorHandleName,
           }),
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || '注册失败');
+          throw new Error(data.error || "注册失败");
         }
 
         // Redirect to login with success message
-        router.push('/zh/login?registered=true');
+        router.push("/zh/login?registered=true");
       } catch (error) {
-        console.error('错误:', error);
-        setError(error instanceof Error ? error.message : '注册失败');
+        console.error("错误:", error);
+        setError(error instanceof Error ? error.message : "注册失败");
       }
     }
   };
@@ -120,16 +115,14 @@ export default function JoinAsCreatorChinese() {
               <div key={num} className="flex items-center">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    step >= num ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'
+                    step >= num ? "bg-purple-600 text-white" : "bg-gray-200 text-gray-600"
                   }`}
                 >
                   {step > num ? <CheckCircle className="w-5 h-5" /> : num}
                 </div>
                 {num < 3 && (
                   <div
-                    className={`w-24 h-1 mx-2 ${
-                      step > num ? 'bg-purple-600' : 'bg-gray-200'
-                    }`}
+                    className={`w-24 h-1 mx-2 ${step > num ? "bg-purple-600" : "bg-gray-200"}`}
                   />
                 )}
               </div>
@@ -197,7 +190,10 @@ export default function JoinAsCreatorChinese() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="creatorHandleName" className="block text-sm font-medium text-black">
+                  <label
+                    htmlFor="creatorHandleName"
+                    className="block text-sm font-medium text-black"
+                  >
                     创作者账号名称
                   </label>
                   <div className="mt-1">
@@ -207,7 +203,9 @@ export default function JoinAsCreatorChinese() {
                       type="text"
                       required
                       value={formData.creatorHandleName}
-                      onChange={(e) => setFormData({...formData, creatorHandleName: e.target.value})}
+                      onChange={(e) =>
+                        setFormData({ ...formData, creatorHandleName: e.target.value })
+                      }
                       className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-black"
                       placeholder="您的独特创作者名称"
                     />
@@ -278,8 +276,8 @@ export default function JoinAsCreatorChinese() {
                       onClick={() => handlePlatformToggle(platform)}
                       className={`p-4 border rounded-lg flex items-center justify-between ${
                         formData.platforms.includes(platform)
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-300'
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-300"
                       }`}
                     >
                       <span className="text-black">{platform}</span>
@@ -297,7 +295,7 @@ export default function JoinAsCreatorChinese() {
                 type="submit"
                 className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
               >
-                {step === 3 ? '创建账户' : '下一步'}
+                {step === 3 ? "创建账户" : "下一步"}
                 <ArrowRight className="ml-2 w-4 h-4" />
               </button>
             </div>

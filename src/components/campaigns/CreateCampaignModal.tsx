@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
-import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
-import { Button } from '@/components/ui/Button';
-import { Calendar } from '@/components/ui/Calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
+import { Button } from "@/components/ui/Button";
+import { Calendar } from "@/components/ui/Calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 interface Platform {
   id: string;
@@ -24,24 +24,29 @@ interface CreateCampaignModalProps {
   platforms: Platform[];
 }
 
-export default function CreateCampaignModal({ isOpen, onClose, onSubmit, platforms }: CreateCampaignModalProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [budget, setBudget] = useState('');
-  const [requirements, setRequirements] = useState('');
+export default function CreateCampaignModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  platforms,
+}: CreateCampaignModalProps) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [budget, setBudget] = useState("");
+  const [requirements, setRequirements] = useState("");
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [newCategory, setNewCategory] = useState('');
+  const [newCategory, setNewCategory] = useState("");
   const [deliverables, setDeliverables] = useState<string[]>([]);
-  const [newDeliverable, setNewDeliverable] = useState('');
+  const [newDeliverable, setNewDeliverable] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!startDate || !endDate) {
-      alert('Please select both start and end dates');
+      alert("Please select both start and end dates");
       return;
     }
 
@@ -51,13 +56,13 @@ export default function CreateCampaignModal({ isOpen, onClose, onSubmit, platfor
       budget: parseFloat(budget),
       requirements: JSON.stringify({
         platforms: selectedPlatforms,
-        list: requirements.split('\n').filter(r => r.trim())
+        list: requirements.split("\n").filter((r) => r.trim()),
       }),
       startDate,
       endDate,
       platformIds: selectedPlatforms,
       categories: JSON.stringify(categories),
-      deliverables: JSON.stringify(deliverables)
+      deliverables: JSON.stringify(deliverables),
     };
 
     await onSubmit(campaignData);
@@ -67,23 +72,23 @@ export default function CreateCampaignModal({ isOpen, onClose, onSubmit, platfor
   const addCategory = () => {
     if (newCategory.trim() && !categories.includes(newCategory)) {
       setCategories([...categories, newCategory.trim()]);
-      setNewCategory('');
+      setNewCategory("");
     }
   };
 
   const removeCategory = (category: string) => {
-    setCategories(categories.filter(c => c !== category));
+    setCategories(categories.filter((c) => c !== category));
   };
 
   const addDeliverable = () => {
     if (newDeliverable.trim() && !deliverables.includes(newDeliverable)) {
       setDeliverables([...deliverables, newDeliverable.trim()]);
-      setNewDeliverable('');
+      setNewDeliverable("");
     }
   };
 
   const removeDeliverable = (deliverable: string) => {
-    setDeliverables(deliverables.filter(d => d !== deliverable));
+    setDeliverables(deliverables.filter((d) => d !== deliverable));
   };
 
   return (
@@ -92,7 +97,7 @@ export default function CreateCampaignModal({ isOpen, onClose, onSubmit, platfor
         <DialogHeader>
           <DialogTitle>Create New Campaign</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
@@ -182,12 +187,7 @@ export default function CreateCampaignModal({ isOpen, onClose, onSubmit, platfor
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                  />
+                  <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus />
                 </PopoverContent>
               </Popover>
             </div>
@@ -201,16 +201,16 @@ export default function CreateCampaignModal({ isOpen, onClose, onSubmit, platfor
                   key={platform.id}
                   type="button"
                   onClick={() => {
-                    setSelectedPlatforms(prev =>
+                    setSelectedPlatforms((prev) =>
                       prev.includes(platform.id)
-                        ? prev.filter(id => id !== platform.id)
+                        ? prev.filter((id) => id !== platform.id)
                         : [...prev, platform.id]
                     );
                   }}
                   className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                     selectedPlatforms.includes(platform.id)
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? "bg-purple-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   {platform.displayName}
@@ -229,7 +229,9 @@ export default function CreateCampaignModal({ isOpen, onClose, onSubmit, platfor
                 placeholder="Add a category"
                 className="flex-1"
               />
-              <Button type="button" onClick={addCategory}>Add</Button>
+              <Button type="button" onClick={addCategory}>
+                Add
+              </Button>
             </div>
             <div className="flex flex-wrap gap-2">
               {categories.map((category) => (
@@ -260,7 +262,9 @@ export default function CreateCampaignModal({ isOpen, onClose, onSubmit, platfor
                 placeholder="Add a deliverable"
                 className="flex-1"
               />
-              <Button type="button" onClick={addDeliverable}>Add</Button>
+              <Button type="button" onClick={addDeliverable}>
+                Add
+              </Button>
             </div>
             <div className="flex flex-wrap gap-2">
               {deliverables.map((deliverable) => (
@@ -285,9 +289,7 @@ export default function CreateCampaignModal({ isOpen, onClose, onSubmit, platfor
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">
-              Create Campaign
-            </Button>
+            <Button type="submit">Create Campaign</Button>
           </div>
         </form>
       </DialogContent>

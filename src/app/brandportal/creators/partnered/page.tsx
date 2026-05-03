@@ -1,92 +1,92 @@
-'use client';
+"use client";
 
-import { Search, Filter } from 'lucide-react';
-import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
+import { Search, Filter } from "lucide-react";
+import { FaInstagram, FaYoutube, FaTiktok } from "react-icons/fa";
 
 const partneredCreators = [
   {
-    name: 'Sarah Johnson',
-    handle: '@sarahjstyle',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-    category: 'Fashion & Lifestyle',
-    followers: '125K',
-    engagement: '4.8%',
-    platforms: ['instagram', 'tiktok'],
+    name: "Sarah Johnson",
+    handle: "@sarahjstyle",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
+    category: "Fashion & Lifestyle",
+    followers: "125K",
+    engagement: "4.8%",
+    platforms: ["instagram", "tiktok"],
     activeCampaigns: 2,
-    totalRevenue: '$12,500',
-    lastCampaign: '2024-01-15',
+    totalRevenue: "$12,500",
+    lastCampaign: "2024-01-15",
     performance: {
-      reachTarget: '120%',
-      contentQuality: '95%',
-      responseTime: '98%'
+      reachTarget: "120%",
+      contentQuality: "95%",
+      responseTime: "98%",
     },
     recentPosts: [
-      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200',
-      'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=200',
-      'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=200'
-    ]
+      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200",
+      "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=200",
+      "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=200",
+    ],
   },
   {
-    name: 'Michael Chen',
-    handle: '@techreviewmike',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-    category: 'Tech & Gaming',
-    followers: '89K',
-    engagement: '5.2%',
-    platforms: ['youtube', 'instagram'],
+    name: "Michael Chen",
+    handle: "@techreviewmike",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
+    category: "Tech & Gaming",
+    followers: "89K",
+    engagement: "5.2%",
+    platforms: ["youtube", "instagram"],
     activeCampaigns: 1,
-    totalRevenue: '$8,900',
-    lastCampaign: '2024-01-20',
+    totalRevenue: "$8,900",
+    lastCampaign: "2024-01-20",
     performance: {
-      reachTarget: '110%',
-      contentQuality: '92%',
-      responseTime: '95%'
+      reachTarget: "110%",
+      contentQuality: "92%",
+      responseTime: "95%",
     },
     recentPosts: [
-      'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200',
-      'https://images.unsplash.com/photo-1591370874773-6702e8f12fd8?w=200',
-      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200'
-    ]
+      "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200",
+      "https://images.unsplash.com/photo-1591370874773-6702e8f12fd8?w=200",
+      "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200",
+    ],
   },
   {
-    name: 'Emma Rodriguez',
-    handle: '@emmafitness',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100',
-    category: 'Fitness & Health',
-    followers: '250K',
-    engagement: '6.1%',
-    platforms: ['instagram', 'tiktok', 'youtube'],
+    name: "Emma Rodriguez",
+    handle: "@emmafitness",
+    avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100",
+    category: "Fitness & Health",
+    followers: "250K",
+    engagement: "6.1%",
+    platforms: ["instagram", "tiktok", "youtube"],
     activeCampaigns: 3,
-    totalRevenue: '$18,200',
-    lastCampaign: '2024-01-25',
+    totalRevenue: "$18,200",
+    lastCampaign: "2024-01-25",
     performance: {
-      reachTarget: '135%',
-      contentQuality: '98%',
-      responseTime: '96%'
+      reachTarget: "135%",
+      contentQuality: "98%",
+      responseTime: "96%",
     },
     recentPosts: [
-      'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=200',
-      'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=200',
-      'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=200'
-    ]
-  }
+      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=200",
+      "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=200",
+      "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=200",
+    ],
+  },
 ];
 
 const categories = [
-  'All Categories',
-  'Fashion & Lifestyle',
-  'Tech & Gaming',
-  'Fitness & Health',
-  'Travel & Adventure',
-  'Beauty & Skincare',
-  'Food & Cooking',
-  'Art & Design'
+  "All Categories",
+  "Fashion & Lifestyle",
+  "Tech & Gaming",
+  "Fitness & Health",
+  "Travel & Adventure",
+  "Beauty & Skincare",
+  "Food & Cooking",
+  "Art & Design",
 ];
 
 const platformIcons = {
   instagram: FaInstagram,
   youtube: FaYoutube,
-  tiktok: FaTiktok
+  tiktok: FaTiktok,
 };
 
 export default function PartneredCreators() {
@@ -111,7 +111,9 @@ export default function PartneredCreators() {
         </div>
         <select className="rounded-xl border border-white/20 bg-white/50 backdrop-blur-xl py-2 pl-3 pr-10 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 w-48">
           {categories.map((category) => (
-            <option key={category} className="text-gray-700">{category}</option>
+            <option key={category} className="text-gray-700">
+              {category}
+            </option>
           ))}
         </select>
         <button className="flex items-center rounded-xl border border-white/20 bg-white/50 backdrop-blur-xl px-4 py-2 text-sm text-gray-700 hover:bg-white/80 transition-all duration-300">
@@ -159,11 +161,15 @@ export default function PartneredCreators() {
                 <div className="mt-4 lg:mt-0 grid grid-cols-3 gap-4">
                   <div className="text-center">
                     <p className="text-sm font-medium text-gray-500">Active Campaigns</p>
-                    <p className="mt-1 text-lg font-semibold text-gray-900">{creator.activeCampaigns}</p>
+                    <p className="mt-1 text-lg font-semibold text-gray-900">
+                      {creator.activeCampaigns}
+                    </p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-medium text-gray-500">Total Revenue</p>
-                    <p className="mt-1 text-lg font-semibold text-gray-900">{creator.totalRevenue}</p>
+                    <p className="mt-1 text-lg font-semibold text-gray-900">
+                      {creator.totalRevenue}
+                    </p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-medium text-gray-500">Last Campaign</p>
@@ -188,15 +194,21 @@ export default function PartneredCreators() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-green-50 rounded-lg p-3">
                     <p className="text-sm text-gray-500">Reach Target</p>
-                    <p className="text-lg font-semibold text-green-600">{creator.performance.reachTarget}</p>
+                    <p className="text-lg font-semibold text-green-600">
+                      {creator.performance.reachTarget}
+                    </p>
                   </div>
                   <div className="bg-blue-50 rounded-lg p-3">
                     <p className="text-sm text-gray-500">Content Quality</p>
-                    <p className="text-lg font-semibold text-blue-600">{creator.performance.contentQuality}</p>
+                    <p className="text-lg font-semibold text-blue-600">
+                      {creator.performance.contentQuality}
+                    </p>
                   </div>
                   <div className="bg-purple-50 rounded-lg p-3">
                     <p className="text-sm text-gray-500">Response Time</p>
-                    <p className="text-lg font-semibold text-purple-600">{creator.performance.responseTime}</p>
+                    <p className="text-lg font-semibold text-purple-600">
+                      {creator.performance.responseTime}
+                    </p>
                   </div>
                 </div>
               </div>

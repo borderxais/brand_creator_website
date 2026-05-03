@@ -1,13 +1,14 @@
-import { Metadata } from 'next'
+import { Metadata } from "next";
 
 // Tell Next.js this is static content that can be prerendered
-export const dynamic = 'force-static'
+export const dynamic = "force-static";
 
 // Add proper metadata
 export const metadata: Metadata = {
-  title: 'About Us | Brand Creator Platform',
-  description: 'Learn more about our mission to connect brands with authentic creators and revolutionize the creator economy.'
-}
+  title: "About Us | Brand Creator Platform",
+  description:
+    "Learn more about our mission to connect brands with authentic creators and revolutionize the creator economy.",
+};
 
 export default function AboutPage() {
   return (
@@ -15,9 +16,7 @@ export default function AboutPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">About Us</h1>
-          <p className="mt-4 text-xl text-gray-600">
-            Connecting brands with authentic creators
-          </p>
+          <p className="mt-4 text-xl text-gray-600">Connecting brands with authentic creators</p>
         </div>
 
         <div className="mt-16">
@@ -25,9 +24,10 @@ export default function AboutPage() {
             <div className="px-6 py-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Our Mission</h2>
               <p className="text-gray-600">
-                We&apos;re on a mission to revolutionize the creator economy by building meaningful connections 
-                between brands and content creators. Our platform enables authentic collaborations that 
-                drive value for both creators and brands while delivering engaging content to audiences.
+                We&apos;re on a mission to revolutionize the creator economy by building meaningful
+                connections between brands and content creators. Our platform enables authentic
+                collaborations that drive value for both creators and brands while delivering
+                engaging content to audiences.
               </p>
 
               <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">What We Do</h2>
@@ -35,15 +35,17 @@ export default function AboutPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">For Creators</h3>
                   <p className="text-gray-600">
-                    We help creators monetize their passion and connect with brands that align with their values. 
-                    Our platform provides tools to showcase your work, manage collaborations, and grow your influence.
+                    We help creators monetize their passion and connect with brands that align with
+                    their values. Our platform provides tools to showcase your work, manage
+                    collaborations, and grow your influence.
                   </p>
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">For Brands</h3>
                   <p className="text-gray-600">
-                    We connect brands with authentic creators who can tell their story to engaged audiences. 
-                    Our platform streamlines the entire collaboration process, from discovery to campaign execution.
+                    We connect brands with authentic creators who can tell their story to engaged
+                    audiences. Our platform streamlines the entire collaboration process, from
+                    discovery to campaign execution.
                   </p>
                 </div>
               </div>
@@ -59,7 +61,8 @@ export default function AboutPage() {
                 <div className="p-4 bg-purple-50 rounded-lg">
                   <h3 className="text-lg font-semibold text-purple-900 mb-2">Innovation</h3>
                   <p className="text-purple-700">
-                    We continuously evolve our platform to meet the changing needs of creators and brands.
+                    We continuously evolve our platform to meet the changing needs of creators and
+                    brands.
                   </p>
                 </div>
                 <div className="p-4 bg-purple-50 rounded-lg">

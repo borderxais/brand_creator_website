@@ -23,13 +23,13 @@ Current `netlify.toml` (repo root):
   package = "@netlify/plugin-nextjs"
 ```
 
-| Key | Value | Purpose |
-|-----|-------|---------|
-| `build.command` | `npx prisma generate && next build` | Generates the Prisma client before building Next.js |
-| `build.publish` | `.next` | Netlify serves from the Next.js build output |
-| `functions.external_node_modules` | `@prisma/client`, `axios` | Bundled outside the function zip (large native binaries) |
-| `functions.included_files` | `prisma/**` | Prisma schema and migration files included in function bundle |
-| `@netlify/plugin-nextjs` | official plugin | Adapts Next.js App Router for Netlify's edge/functions runtime |
+| Key                               | Value                               | Purpose                                                        |
+| --------------------------------- | ----------------------------------- | -------------------------------------------------------------- |
+| `build.command`                   | `npx prisma generate && next build` | Generates the Prisma client before building Next.js            |
+| `build.publish`                   | `.next`                             | Netlify serves from the Next.js build output                   |
+| `functions.external_node_modules` | `@prisma/client`, `axios`           | Bundled outside the function zip (large native binaries)       |
+| `functions.included_files`        | `prisma/**`                         | Prisma schema and migration files included in function bundle  |
+| `@netlify/plugin-nextjs`          | official plugin                     | Adapts Next.js App Router for Netlify's edge/functions runtime |
 
 A smoke E2E plugin (`/plugins/smoke-e2e`) will be registered here in a later harness PR (PR 8).
 
@@ -39,12 +39,12 @@ A smoke E2E plugin (`/plugins/smoke-e2e`) will be registered here in a later har
 
 Set these in the Netlify site dashboard under **Site configuration → Environment variables**:
 
-| Variable | Purpose |
-|----------|---------|
-| `DATABASE_URL` | Pooled PostgreSQL connection string |
-| `DIRECT_URL` | Direct PostgreSQL connection (for migrations) |
-| `NEXTAUTH_SECRET` | NextAuth.js secret for session signing |
-| `NEXTAUTH_URL` | Canonical site URL (e.g., `https://your-site.netlify.app`) |
+| Variable          | Purpose                                                    |
+| ----------------- | ---------------------------------------------------------- |
+| `DATABASE_URL`    | Pooled PostgreSQL connection string                        |
+| `DIRECT_URL`      | Direct PostgreSQL connection (for migrations)              |
+| `NEXTAUTH_SECRET` | NextAuth.js secret for session signing                     |
+| `NEXTAUTH_URL`    | Canonical site URL (e.g., `https://your-site.netlify.app`) |
 
 Additional secrets (Supabase, TikTok, email) mirror what you have in `.env.local`. See `AGENTS.md` for the full list of env categories.
 
@@ -91,6 +91,7 @@ Netlify makes the selected deploy live immediately. No git revert required (thou
 ## When to Update
 
 Update this file when:
+
 - `netlify.toml` is modified (new plugins, changed build command, new redirect rules).
 - Required environment variables change.
 - The rollback procedure changes.

@@ -40,31 +40,31 @@ Next.js API routes proxy to the FastAPI service when platform-specific logic (e.
 
 ## Repo Map
 
-| Path | Owns |
-|------|------|
-| `src/app/` | Next.js App Router — pages, layouts, API routes |
-| `src/components/` | Shared React components (`campaigns/`, `charts/`, `providers/`, `ui/`) |
-| `src/lib/` | Utilities and singletons: `auth.ts`, `email.ts`, `prisma.ts`, `rate-limiter.ts`, `tokens.ts`, `utils.ts` |
-| `src/styles/` | Global CSS |
-| `src/types/` | Shared TypeScript types |
-| `src/middleware.ts` | Next.js middleware (auth guards, redirects) |
-| `pages/` | Legacy error fallbacks only — do not add routes here |
-| `prisma/` | `schema.prisma`, migrations under `prisma/migrations/`, seed script `prisma/seed.js` |
-| `backend/` | FastAPI service (`backend/app/main/`), run scripts, `requirements.txt` |
-| `public/` | Static assets served at `/` |
-| `plugins/` | Local Netlify build plugins (added by later harness PRs) |
-| `scripts/` | Repo automation scripts (added by later harness PRs) |
-| `docs/` | Canonical reference — this directory |
+| Path                | Owns                                                                                                     |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| `src/app/`          | Next.js App Router — pages, layouts, API routes                                                          |
+| `src/components/`   | Shared React components (`campaigns/`, `charts/`, `providers/`, `ui/`)                                   |
+| `src/lib/`          | Utilities and singletons: `auth.ts`, `email.ts`, `prisma.ts`, `rate-limiter.ts`, `tokens.ts`, `utils.ts` |
+| `src/styles/`       | Global CSS                                                                                               |
+| `src/types/`        | Shared TypeScript types                                                                                  |
+| `src/middleware.ts` | Next.js middleware (auth guards, redirects)                                                              |
+| `pages/`            | Legacy error fallbacks only — do not add routes here                                                     |
+| `prisma/`           | `schema.prisma`, migrations under `prisma/migrations/`, seed script `prisma/seed.js`                     |
+| `backend/`          | FastAPI service (`backend/app/main/`), run scripts, `requirements.txt`                                   |
+| `public/`           | Static assets served at `/`                                                                              |
+| `plugins/`          | Local Netlify build plugins (added by later harness PRs)                                                 |
+| `scripts/`          | Repo automation scripts (added by later harness PRs)                                                     |
+| `docs/`             | Canonical reference — this directory                                                                     |
 
 ### Key config files
 
-| File | Purpose |
-|------|---------|
-| `next.config.js` | Next.js config; image domains, CORS headers, strict lint/TS flags |
-| `tailwind.config.ts` | Tailwind design tokens and content paths |
-| `netlify.toml` | Build command, publish dir, plugin registrations |
-| `tsconfig.json` | TypeScript compiler options (strict mode) |
-| `prisma/schema.prisma` | Database schema — source of truth for models |
+| File                   | Purpose                                                           |
+| ---------------------- | ----------------------------------------------------------------- |
+| `next.config.js`       | Next.js config; image domains, CORS headers, strict lint/TS flags |
+| `tailwind.config.ts`   | Tailwind design tokens and content paths                          |
+| `netlify.toml`         | Build command, publish dir, plugin registrations                  |
+| `tsconfig.json`        | TypeScript compiler options (strict mode)                         |
+| `prisma/schema.prisma` | Database schema — source of truth for models                      |
 
 ---
 
@@ -79,6 +79,7 @@ Next.js API routes proxy to the FastAPI service when platform-specific logic (e.
 ## When to Update
 
 Update this file when:
+
 - A new top-level directory is added.
 - The request flow changes (e.g., a new sidecar service, a new database).
 - A major config file is added or removed.

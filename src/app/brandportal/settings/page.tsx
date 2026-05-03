@@ -1,31 +1,31 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 export default function Settings() {
   const [formData, setFormData] = useState({
-    companyName: 'StyleCo',
-    website: 'www.styleco.com',
-    industry: 'fashion',
-    email: 'contact@styleco.com',
-    phone: '+1 (123) 456-7890',
+    companyName: "StyleCo",
+    website: "www.styleco.com",
+    industry: "fashion",
+    email: "contact@styleco.com",
+    phone: "+1 (123) 456-7890",
     notifyNewMessages: true,
     notifyCampaignUpdates: true,
-    notifyNewCreators: false
+    notifyNewCreators: false,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle form submission
-    console.log('Settings updated:', formData);
+    console.log("Settings updated:", formData);
   };
 
   return (

@@ -42,6 +42,7 @@ One-page lifecycle reference. For full repo conventions see [`AGENTS.md`](../AGE
 ## When to Update
 
 Update this file when:
+
 - The branch or merge workflow changes.
 - New mandatory steps are added to the lifecycle (e.g., a required manual check).
 - The hook chain changes significantly (summarise and link to [harness.md](harness.md)).

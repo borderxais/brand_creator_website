@@ -1,85 +1,88 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Search, Send, MoreVertical, Image as ImageIcon, Paperclip } from 'lucide-react';
+import { useState } from "react";
+import { Search, Send, MoreVertical, Image as ImageIcon, Paperclip } from "lucide-react";
 
 const mockChats = [
   {
     id: 1,
     brand: {
-      name: 'Nike',
-      logo: '/images/placeholder-40.svg',
+      name: "Nike",
+      logo: "/images/placeholder-40.svg",
       lastMessage: "Hi Sarah! We'd love to work with you on our new collection.",
-      timestamp: '10:30 AM',
-      unread: 2
-    }
+      timestamp: "10:30 AM",
+      unread: 2,
+    },
   },
   {
     id: 2,
     brand: {
-      name: 'Adidas',
-      logo: '/images/placeholder-40.svg',
-      lastMessage: 'The campaign results look great! Let\'s discuss the next steps.',
-      timestamp: 'Yesterday',
-      unread: 0
-    }
+      name: "Adidas",
+      logo: "/images/placeholder-40.svg",
+      lastMessage: "The campaign results look great! Let's discuss the next steps.",
+      timestamp: "Yesterday",
+      unread: 0,
+    },
   },
   {
     id: 3,
     brand: {
-      name: 'Puma',
-      logo: '/images/placeholder-40.svg',
-      lastMessage: 'Contract has been sent to your email.',
-      timestamp: 'Jan 28',
-      unread: 0
-    }
-  }
+      name: "Puma",
+      logo: "/images/placeholder-40.svg",
+      lastMessage: "Contract has been sent to your email.",
+      timestamp: "Jan 28",
+      unread: 0,
+    },
+  },
 ];
 
 const mockMessages = [
   {
     id: 1,
-    sender: 'Nike',
-    content: "Hi Sarah! We'd love to work with you on our new collection. Your aesthetic perfectly matches our brand vision.",
-    timestamp: '10:30 AM',
-    isBrand: true
+    sender: "Nike",
+    content:
+      "Hi Sarah! We'd love to work with you on our new collection. Your aesthetic perfectly matches our brand vision.",
+    timestamp: "10:30 AM",
+    isBrand: true,
   },
   {
     id: 2,
-    sender: 'Me',
-    content: "Hi Nike! Thank you for reaching out. I'd love to hear more about the collection and collaboration opportunity.",
-    timestamp: '10:35 AM',
-    isBrand: false
+    sender: "Me",
+    content:
+      "Hi Nike! Thank you for reaching out. I'd love to hear more about the collection and collaboration opportunity.",
+    timestamp: "10:35 AM",
+    isBrand: false,
   },
   {
     id: 3,
-    sender: 'Nike',
-    content: 'Great! We\'re launching a sustainable fashion line this spring, and we\'d like you to be one of our key influencers.',
-    timestamp: '10:38 AM',
-    isBrand: true
+    sender: "Nike",
+    content:
+      "Great! We're launching a sustainable fashion line this spring, and we'd like you to be one of our key influencers.",
+    timestamp: "10:38 AM",
+    isBrand: true,
   },
   {
     id: 4,
-    sender: 'Nike',
-    content: 'The campaign would involve 3 Instagram posts and 2 Reels over a 2-month period.',
-    timestamp: '10:38 AM',
-    isBrand: true
-  }
+    sender: "Nike",
+    content: "The campaign would involve 3 Instagram posts and 2 Reels over a 2-month period.",
+    timestamp: "10:38 AM",
+    isBrand: true,
+  },
 ];
 
 export default function Messages() {
   const [selectedChat, setSelectedChat] = useState(mockChats[0]);
-  const [messageInput, setMessageInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [messageInput, setMessageInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredChats = mockChats.filter(chat =>
+  const filteredChats = mockChats.filter((chat) =>
     chat.brand.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSendMessage = () => {
     if (messageInput.trim()) {
       // Handle sending message
-      setMessageInput('');
+      setMessageInput("");
     }
   };
 
@@ -108,7 +111,7 @@ export default function Messages() {
               <div
                 key={chat.id}
                 className={`p-4 cursor-pointer hover:bg-gray-50 ${
-                  selectedChat.id === chat.id ? 'bg-blue-50' : ''
+                  selectedChat.id === chat.id ? "bg-blue-50" : ""
                 }`}
                 onClick={() => setSelectedChat(chat)}
               >
@@ -150,9 +153,7 @@ export default function Messages() {
                   className="h-10 w-10 rounded-full"
                 />
                 <div>
-                  <h2 className="text-lg font-medium text-gray-900">
-                    {selectedChat.brand.name}
-                  </h2>
+                  <h2 className="text-lg font-medium text-gray-900">{selectedChat.brand.name}</h2>
                   <p className="text-sm text-gray-500">Active now</p>
                 </div>
               </div>
@@ -165,19 +166,18 @@ export default function Messages() {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {mockMessages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.isBrand ? '' : 'justify-end'}`}
-              >
+              <div key={message.id} className={`flex ${message.isBrand ? "" : "justify-end"}`}>
                 <div
                   className={`max-w-[70%] ${
                     message.isBrand
-                      ? 'bg-gray-500 rounded-tr-lg'
-                      : 'bg-blue-500 text-white rounded-tl-lg'
+                      ? "bg-gray-500 rounded-tr-lg"
+                      : "bg-blue-500 text-white rounded-tl-lg"
                   } p-3 rounded-b-lg`}
                 >
                   <p className="text-sm">{message.content}</p>
-                  <p className={`text-xs mt-1 ${message.isBrand ? 'text-gray-500' : 'text-blue-100'}`}>
+                  <p
+                    className={`text-xs mt-1 ${message.isBrand ? "text-gray-500" : "text-blue-100"}`}
+                  >
                     {message.timestamp}
                   </p>
                 </div>
@@ -200,7 +200,7 @@ export default function Messages() {
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
               />
               <button
                 className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"

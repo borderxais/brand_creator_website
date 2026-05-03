@@ -1,8 +1,8 @@
-import { prisma } from '@/lib/prisma';
-import { AiVideoRecord, TikTokBindingInfo, VideoStatus } from './types';
+import { prisma } from "@/lib/prisma";
+import { AiVideoRecord, TikTokBindingInfo, VideoStatus } from "./types";
 
-const PYTHON_API_BASE = process.env.CAMPAIGNS_API_URL || 'http://localhost:5000';
-const TIKTOK_TOKEN_ENDPOINT = 'https://open.tiktokapis.com/v2/oauth/token/';
+const PYTHON_API_BASE = process.env.CAMPAIGNS_API_URL || "http://localhost:5000";
+const TIKTOK_TOKEN_ENDPOINT = "https://open.tiktokapis.com/v2/oauth/token/";
 
 type AiVideoLibraryItem = {
   id: string;
@@ -40,42 +40,47 @@ type TikTokTokenResponse = {
 export async function fetchAiVideos(userId: string | null): Promise<AiVideoRecord[]> {
   try {
     const baseUrl = PYTHON_API_BASE;
-    const url = new URL('/ai-videos/library', baseUrl);
+    const url = new URL("/ai-videos/library", baseUrl);
     if (userId) {
-      url.searchParams.set('creator_id', userId);
+      url.searchParams.set("creator_id", userId);
     }
 
-    const response = await fetch(url.toString(), { cache: 'no-store' });
+    const response = await fetch(url.toString(), { cache: "no-store" });
     if (response.status === 404) {
       return [];
     }
     if (!response.ok) {
-      console.error('Failed to fetch AI videos', await response.text());
+      console.error("Failed to fetch AI videos", await response.text());
       return [];
     }
 
     const responseBody = await response.clone().text();
-    console.log('AI video library response body', responseBody);
+    console.log("AI video library response body", responseBody);
     const payload: AiVideoLibraryItem[] = await response.json();
-    console.log('AI video library payload', payload);
+    console.log("AI video library payload", payload);
     return payload.map(mapToRecord);
   } catch (error) {
-    console.error('Unable to load AI videos', error);
+    console.error("Unable to load AI videos", error);
     return [];
   }
 }
 
 function mapToRecord(item: AiVideoLibraryItem): AiVideoRecord {
   const generatedAt = item.generated_time ?? item.created_at ?? new Date().toISOString();
-  const expiresAt = new Date(new Date(generatedAt).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  const status: VideoStatus = new Date(expiresAt).getTime() < Date.now() ? 'expired' : 'ready';
+  const expiresAt = new Date(
+    new Date(generatedAt).getTime() + 7 * 24 * 60 * 60 * 1000
+  ).toISOString();
+  const status: VideoStatus = new Date(expiresAt).getTime() < Date.now() ? "expired" : "ready";
   const videoUrl = item.video_url ?? item.video;
   const tags = Array.isArray(item.tags)
     ? item.tags
     : Array.isArray(item.tag)
       ? item.tag
-      : typeof item.tag === 'string'
-        ? item.tag.split(',').map((tag) => tag.trim()).filter(Boolean)
+      : typeof item.tag === "string"
+        ? item.tag
+            .split(",")
+            .map((tag) => tag.trim())
+            .filter(Boolean)
         : [];
 
   return {
@@ -90,7 +95,9 @@ function mapToRecord(item: AiVideoLibraryItem): AiVideoRecord {
   };
 }
 
-export async function refreshTikTokAccount(account: TikTokAccountRecord): Promise<TikTokAccountRecord | null> {
+export async function refreshTikTokAccount(
+  account: TikTokAccountRecord
+): Promise<TikTokAccountRecord | null> {
   if (!account) {
     return null;
   }
@@ -106,7 +113,7 @@ export async function refreshTikTokAccount(account: TikTokAccountRecord): Promis
 
   if (account.expires_at.getTime() <= now) {
     if (!account.refresh_token) {
-      console.error('TikTok access token expired without refresh token', {
+      console.error("TikTok access token expired without refresh token", {
         userId: account.user_id,
       });
       return account;
@@ -116,7 +123,7 @@ export async function refreshTikTokAccount(account: TikTokAccountRecord): Promis
     const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
 
     if (!clientKey || !clientSecret) {
-      console.error('TikTok token refresh skipped: missing client credentials', {
+      console.error("TikTok token refresh skipped: missing client credentials", {
         hasClientKey: Boolean(clientKey),
         hasClientSecret: Boolean(clientSecret),
       });
@@ -127,22 +134,22 @@ export async function refreshTikTokAccount(account: TikTokAccountRecord): Promis
       const params = new URLSearchParams({
         client_key: clientKey,
         client_secret: clientSecret,
-        grant_type: 'refresh_token',
+        grant_type: "refresh_token",
         refresh_token: account.refresh_token,
       });
 
       const response = await fetch(TIKTOK_TOKEN_ENDPOINT, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          "Content-Type": "application/x-www-form-urlencoded",
         },
         body: params.toString(),
-        cache: 'no-store',
+        cache: "no-store",
       });
 
       const payload = (await response.json()) as TikTokTokenResponse;
       if (!response.ok || payload.error) {
-        console.error('TikTok token refresh failed', {
+        console.error("TikTok token refresh failed", {
           status: response.status,
           error: payload.error,
           message: payload.error_description || payload.message,
@@ -150,7 +157,9 @@ export async function refreshTikTokAccount(account: TikTokAccountRecord): Promis
         return account;
       }
 
-      const expiresAt = payload.expires_in ? new Date(now + payload.expires_in * 1000) : account.expires_at;
+      const expiresAt = payload.expires_in
+        ? new Date(now + payload.expires_in * 1000)
+        : account.expires_at;
       const refreshExpiresAt = payload.refresh_expires_in
         ? new Date(now + payload.refresh_expires_in * 1000)
         : account.refresh_expires_at;
@@ -168,7 +177,7 @@ export async function refreshTikTokAccount(account: TikTokAccountRecord): Promis
         },
       });
     } catch (error) {
-      console.error('TikTok token refresh error', error);
+      console.error("TikTok token refresh error", error);
       return account;
     }
   }
@@ -192,7 +201,9 @@ export async function refreshTikTokAccount(account: TikTokAccountRecord): Promis
   });
 }
 
-export async function buildTikTokBinding(account: TikTokAccountRecord): Promise<TikTokBindingInfo | null> {
+export async function buildTikTokBinding(
+  account: TikTokAccountRecord
+): Promise<TikTokBindingInfo | null> {
   if (!account) {
     return null;
   }
@@ -238,17 +249,17 @@ async function fetchTikTokProfile(accessToken?: string): Promise<TikTokUserProfi
   if (!accessToken) return null;
 
   try {
-    const requestedFields = ['open_id', 'avatar_url', 'display_name', 'follower_count'];
-    const url = `https://open.tiktokapis.com/v2/user/info/?fields=${requestedFields.join(',')}`;
+    const requestedFields = ["open_id", "avatar_url", "display_name", "follower_count"];
+    const url = `https://open.tiktokapis.com/v2/user/info/?fields=${requestedFields.join(",")}`;
     const response = await fetch(url, {
-      method: 'GET',
+      method: "GET",
       headers: { Authorization: `Bearer ${accessToken}` },
-      cache: 'no-store',
+      cache: "no-store",
     });
 
     const body = await response.json().catch(() => null);
     if (!response.ok) {
-      console.error('Failed to fetch TikTok user info on dashboard render', {
+      console.error("Failed to fetch TikTok user info on dashboard render", {
         status: response.status,
         body,
         url,
@@ -268,7 +279,7 @@ async function fetchTikTokProfile(accessToken?: string): Promise<TikTokUserProfi
       followerCount: user.follower_count ?? user.followerCount,
     };
   } catch (error) {
-    console.error('Error fetching TikTok profile on dashboard render', error);
+    console.error("Error fetching TikTok profile on dashboard render", error);
     return null;
   }
 }

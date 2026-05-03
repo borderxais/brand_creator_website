@@ -7,19 +7,14 @@ const TOKEN_ENDPOINT = "https://open.tiktokapis.com/v2/oauth/token/";
 const STATE_COOKIE_NAME = "tiktok_oauth_state";
 const CODE_VERIFIER_COOKIE_NAME = "tiktok_code_verifier";
 
-const appBaseUrl =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://cricher.ai";
-const successRedirectPath =
-  process.env.TIKTOK_SUCCESS_REDIRECT_PATH ?? "/creatorportal/ai-video";
-const errorRedirectPath =
-  process.env.TIKTOK_ERROR_REDIRECT_PATH ?? "/login";
+const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://cricher.ai";
+const successRedirectPath = process.env.TIKTOK_SUCCESS_REDIRECT_PATH ?? "/creatorportal/ai-video";
+const errorRedirectPath = process.env.TIKTOK_ERROR_REDIRECT_PATH ?? "/login";
 
 const successRedirectUrl = `${appBaseUrl}${successRedirectPath}`;
 const errorRedirectUrl = `${appBaseUrl}${errorRedirectPath}`;
 
-const redirectUri =
-  process.env.TIKTOK_REDIRECT_URI ??
-  `${appBaseUrl}/api/auth/tiktok/callback`;
+const redirectUri = process.env.TIKTOK_REDIRECT_URI ?? `${appBaseUrl}/api/auth/tiktok/callback`;
 
 type TikTokTokenResponse = {
   access_token?: string;
@@ -106,17 +101,13 @@ export async function GET(request: NextRequest) {
 
     if (!tokenResponse.ok || payload.error) {
       const errorDescription =
-        payload.error_description ||
-        payload.message ||
-        "token_exchange_failed";
+        payload.error_description || payload.message || "token_exchange_failed";
 
       return redirectWithError(errorDescription);
     }
 
     const now = Date.now();
-    const expiresAt = payload.expires_in
-      ? new Date(now + payload.expires_in * 1000)
-      : null;
+    const expiresAt = payload.expires_in ? new Date(now + payload.expires_in * 1000) : null;
     const refreshExpiresAt = payload.refresh_expires_in
       ? new Date(now + payload.refresh_expires_in * 1000)
       : null;
@@ -171,9 +162,7 @@ export async function GET(request: NextRequest) {
     }
 
     const response = NextResponse.redirect(
-      `${successRedirectUrl}?provider=tiktok${
-        state ? `&state=${encodeURIComponent(state)}` : ""
-      }`
+      `${successRedirectUrl}?provider=tiktok${state ? `&state=${encodeURIComponent(state)}` : ""}`
     );
 
     if (payload.access_token) {
@@ -227,9 +216,7 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch (err) {
-    return redirectWithError(
-      err instanceof Error ? err.message : "unknown_error"
-    );
+    return redirectWithError(err instanceof Error ? err.message : "unknown_error");
   }
 }
 
@@ -240,7 +227,10 @@ type TikTokUserProfile = {
   followerCount?: number;
 };
 
-async function fetchTikTokProfile(accessToken?: string, tokenScope?: string | null): Promise<TikTokUserProfile | null> {
+async function fetchTikTokProfile(
+  accessToken?: string,
+  tokenScope?: string | null
+): Promise<TikTokUserProfile | null> {
   if (!accessToken) {
     console.error("TikTok profile fetch skipped: missing access token");
     return null;
@@ -250,7 +240,8 @@ async function fetchTikTokProfile(accessToken?: string, tokenScope?: string | nu
     // Keep the request minimal to avoid scope errors; these fields are supported by user.info.basic/profile + stats.
     const requestedFields = ["open_id", "avatar_url", "display_name", "follower_count"];
 
-    const apiBase = process.env.TIKTOK_API_BASE_URL?.replace(/\/$/, "") || "https://open.tiktokapis.com";
+    const apiBase =
+      process.env.TIKTOK_API_BASE_URL?.replace(/\/$/, "") || "https://open.tiktokapis.com";
     const getUrl = `${apiBase}/v2/user/info/?fields=${requestedFields.join(",")}`;
     const response = await fetch(getUrl, {
       method: "GET",
@@ -307,10 +298,7 @@ async function fetchTikTokProfile(accessToken?: string, tokenScope?: string | nu
       return null;
     }
 
-    const user =
-      body?.data?.user ??
-      body?.data ??
-      null;
+    const user = body?.data?.user ?? body?.data ?? null;
 
     if (!user) {
       return null;

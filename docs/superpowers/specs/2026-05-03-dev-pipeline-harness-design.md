@@ -17,19 +17,19 @@ Establish a layered, opinionated developer pipeline harness that catches defects
 
 ## 2. Decisions (locked via brainstorm)
 
-| # | Topic | Decision |
-|---|-------|----------|
-| 1 | Harness scope | Local pre-commit + Netlify preview gates + DB migration safety + FastAPI checks. **No GitHub Actions CI.** |
-| 2 | Strictness | **Strict reset.** Re-enable disabled ESLint rules, fail build on ESLint/TS errors, fix existing violations as part of rollout. |
-| 3 | Test harness | **Mid.** Vitest unit (lib + components) + Playwright smoke E2E (login, brand portal, creator portal landing). Pre-commit runs unit; E2E on demand + preview. |
-| 4 | Pre-commit tooling | **Husky + lint-staged.** Claude Code hooks added as bonus layer. |
-| 5 | Formatter | **Prettier.** |
-| 6 | DB migration safety | **Drift detect only.** `prisma migrate diff` schema-vs-migrations check. |
-| 7 | Netlify preview gate | **Build + smoke E2E** against `$DEPLOY_PRIME_URL` via Netlify Build Plugin. |
-| 8 | FastAPI checks | **Lint+format+typecheck.** Ruff + mypy. No tests. |
-| 9 | Polyglot orchestration | **Unified Husky + lint-staged dispatch** by file glob (Node + Python in single hook chain). |
-| 10 | Smoke E2E execution site | **Netlify Build Plugin** (`onSuccess`), colocated in repo. |
-| 11 | Knowledge layer | **`/docs/` directory at repo root** covering architecture/frontend/backend/database/harness/deployment/contributing. Referenced from every hook failure message. |
+| #   | Topic                    | Decision                                                                                                                                                         |
+| --- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Harness scope            | Local pre-commit + Netlify preview gates + DB migration safety + FastAPI checks. **No GitHub Actions CI.**                                                       |
+| 2   | Strictness               | **Strict reset.** Re-enable disabled ESLint rules, fail build on ESLint/TS errors, fix existing violations as part of rollout.                                   |
+| 3   | Test harness             | **Mid.** Vitest unit (lib + components) + Playwright smoke E2E (login, brand portal, creator portal landing). Pre-commit runs unit; E2E on demand + preview.     |
+| 4   | Pre-commit tooling       | **Husky + lint-staged.** Claude Code hooks added as bonus layer.                                                                                                 |
+| 5   | Formatter                | **Prettier.**                                                                                                                                                    |
+| 6   | DB migration safety      | **Drift detect only.** `prisma migrate diff` schema-vs-migrations check.                                                                                         |
+| 7   | Netlify preview gate     | **Build + smoke E2E** against `$DEPLOY_PRIME_URL` via Netlify Build Plugin.                                                                                      |
+| 8   | FastAPI checks           | **Lint+format+typecheck.** Ruff + mypy. No tests.                                                                                                                |
+| 9   | Polyglot orchestration   | **Unified Husky + lint-staged dispatch** by file glob (Node + Python in single hook chain).                                                                      |
+| 10  | Smoke E2E execution site | **Netlify Build Plugin** (`onSuccess`), colocated in repo.                                                                                                       |
+| 11  | Knowledge layer          | **`/docs/` directory at repo root** covering architecture/frontend/backend/database/harness/deployment/contributing. Referenced from every hook failure message. |
 
 ---
 
@@ -71,13 +71,13 @@ Cross-links between siblings. Code references use `path:line`. Each file ends wi
 
 Single `pre-commit` hook. `lint-staged` dispatches by file glob:
 
-| Glob | Actions |
-|------|---------|
-| `*.{ts,tsx,js,jsx,mjs}` | `prettier --write` → `eslint --fix --max-warnings=0` |
-| `*.{ts,tsx}` | `tsc --noEmit` scoped to changed files via `tsc-files` |
-| `prisma/schema.prisma` | `prisma format` → `prisma migrate diff --exit-code` (drift check) |
-| `backend/**/*.py` | `ruff format` → `ruff check --fix` → `mypy` on changed files |
-| `*.{json,md,yml,yaml,css}` | `prettier --write` |
+| Glob                       | Actions                                                           |
+| -------------------------- | ----------------------------------------------------------------- |
+| `*.{ts,tsx,js,jsx,mjs}`    | `prettier --write` → `eslint --fix --max-warnings=0`              |
+| `*.{ts,tsx}`               | `tsc --noEmit` scoped to changed files via `tsc-files`            |
+| `prisma/schema.prisma`     | `prisma format` → `prisma migrate diff --exit-code` (drift check) |
+| `backend/**/*.py`          | `ruff format` → `ruff check --fix` → `mypy` on changed files      |
+| `*.{json,md,yml,yaml,css}` | `prettier --write`                                                |
 
 Hook fails closed. Bypass requires explicit `--no-verify` (logged in `docs/harness.md`).
 
@@ -159,15 +159,15 @@ Lands **before** harness PR. Scope:
     "e2e:preview": "PLAYWRIGHT_BASE_URL=$DEPLOY_PRIME_URL playwright test",
     "lint": "eslint . --max-warnings=0",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs}": ["prettier --write", "eslint --fix --max-warnings=0"],
     "*.{ts,tsx}": ["tsc-files --noEmit"],
     "prisma/schema.prisma": ["prisma format", "node scripts/harness/prisma-drift.js"],
     "backend/**/*.py": ["ruff format", "ruff check --fix", "node scripts/harness/mypy-staged.js"],
-    "*.{json,md,yml,yaml,css}": ["prettier --write"]
-  }
+    "*.{json,md,yml,yaml,css}": ["prettier --write"],
+  },
 }
 ```
 
@@ -233,7 +233,9 @@ module.exports = {
     try {
       await utils.run.command(`PLAYWRIGHT_BASE_URL=${url} npx playwright test e2e/smoke`);
     } catch (err) {
-      utils.build.failPlugin("Smoke E2E failed. See docs/deployment.md#preview-gates", { error: err });
+      utils.build.failPlugin("Smoke E2E failed. See docs/deployment.md#preview-gates", {
+        error: err,
+      });
     }
   },
 };
@@ -283,16 +285,16 @@ Idempotent. Runs on every `npm install`.
 
 ### 4.10 `/docs/` content (initial)
 
-| File | Sections |
-|------|----------|
-| `README.md` | Reading order, repo tour, env setup quickstart |
-| `architecture.md` | High-level diagram (text), request flow (Next → Prisma → Postgres; Next → FastAPI), repo map |
-| `frontend.md` | App Router layout, route groups (`brandportal`, `creatorportal`, `find-creators`, `login`), `src/` tour, Tailwind tokens, naming |
-| `backend.md` | FastAPI service purpose, `backend/app/main` entry, run scripts, env vars, route map |
-| `database.md` | Prisma schema model overview, **#migration-workflow** (anchor used by drift hook), seeding, env (`DATABASE_URL`/`DIRECT_URL`) |
-| `harness.md` | All six layers, every hook, bypass rules, troubleshooting per failure type |
-| `deployment.md` | `netlify.toml` walkthrough, env vars, **#preview-gates** (anchor used by smoke E2E plugin), rollback procedure |
-| `contributing.md` | Lifecycle: edit → commit → push → preview → merge. Cross-references rules in `AGENTS.md` |
+| File              | Sections                                                                                                                         |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `README.md`       | Reading order, repo tour, env setup quickstart                                                                                   |
+| `architecture.md` | High-level diagram (text), request flow (Next → Prisma → Postgres; Next → FastAPI), repo map                                     |
+| `frontend.md`     | App Router layout, route groups (`brandportal`, `creatorportal`, `find-creators`, `login`), `src/` tour, Tailwind tokens, naming |
+| `backend.md`      | FastAPI service purpose, `backend/app/main` entry, run scripts, env vars, route map                                              |
+| `database.md`     | Prisma schema model overview, **#migration-workflow** (anchor used by drift hook), seeding, env (`DATABASE_URL`/`DIRECT_URL`)    |
+| `harness.md`      | All six layers, every hook, bypass rules, troubleshooting per failure type                                                       |
+| `deployment.md`   | `netlify.toml` walkthrough, env vars, **#preview-gates** (anchor used by smoke E2E plugin), rollback procedure                   |
+| `contributing.md` | Lifecycle: edit → commit → push → preview → merge. Cross-references rules in `AGENTS.md`                                         |
 
 `AGENTS.md` and root `README.md` updated to point at `docs/README.md` as canonical entrypoint.
 
@@ -350,6 +352,7 @@ CONTRIBUTING.md          (one-page redirect to docs/README.md)
 ## 6. Failure UX
 
 Every blocking hook prints:
+
 1. What failed.
 2. Concrete fix command.
 3. Doc anchor: `docs/<file>.md#<anchor>`.
@@ -393,15 +396,15 @@ Each PR ships independently; harness becomes useful after PR 3.
 
 ## 8. Risks & Mitigations
 
-| Risk | Mitigation |
-|------|------------|
-| Strict reset PR too large | Acceptable cost; one-time. If unmanageable, allow `eslint-disable` per-line with TODO + tracking issue. |
-| Pre-commit too slow | Layer 2 only touches staged files. Measured target <10 s. If breached, demote rules to Layer 3. |
-| Devs use `--no-verify` | Documented bypass policy in `docs/harness.md`. Netlify preview gate catches what local skipped. |
-| Playwright in Netlify build adds minutes | Smoke suite kept tiny (4 specs). Browser binary cached via Netlify cache. Acceptable trade for preview safety. |
-| `DEPLOY_PRIME_URL` missing on prod deploys | Plugin runs only when `$DEPLOY_PRIME_URL` set; production deploys skip smoke (preview-only gate by design). |
-| Python tooling drift across devs | `backend/requirements-dev.txt` pinned; `docs/backend.md` documents install. Future: pre-commit checks venv presence. |
-| `tsc-files` reports false positives across project boundaries | Fall back to scoped `tsc --noEmit -p tsconfig.json` if issues; full check still runs in pre-push. |
+| Risk                                                          | Mitigation                                                                                                           |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Strict reset PR too large                                     | Acceptable cost; one-time. If unmanageable, allow `eslint-disable` per-line with TODO + tracking issue.              |
+| Pre-commit too slow                                           | Layer 2 only touches staged files. Measured target <10 s. If breached, demote rules to Layer 3.                      |
+| Devs use `--no-verify`                                        | Documented bypass policy in `docs/harness.md`. Netlify preview gate catches what local skipped.                      |
+| Playwright in Netlify build adds minutes                      | Smoke suite kept tiny (4 specs). Browser binary cached via Netlify cache. Acceptable trade for preview safety.       |
+| `DEPLOY_PRIME_URL` missing on prod deploys                    | Plugin runs only when `$DEPLOY_PRIME_URL` set; production deploys skip smoke (preview-only gate by design).          |
+| Python tooling drift across devs                              | `backend/requirements-dev.txt` pinned; `docs/backend.md` documents install. Future: pre-commit checks venv presence. |
+| `tsc-files` reports false positives across project boundaries | Fall back to scoped `tsc --noEmit -p tsconfig.json` if issues; full check still runs in pre-push.                    |
 
 ---
 

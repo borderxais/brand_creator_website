@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowRight, CheckCircle } from 'lucide-react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, CheckCircle } from "lucide-react";
 
 // Update the FormData interface to include termsAccepted
 interface FormData {
@@ -21,84 +21,84 @@ interface FormData {
 export default function JoinAsBrand() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState<FormData>({
-    companyName: '',
-    website: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    industry: '',
-    size: '',
-    marketingBudget: '',
+    companyName: "",
+    website: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    industry: "",
+    size: "",
+    marketingBudget: "",
     goals: [],
     termsAccepted: false, // Initialize as false
   });
 
   const industries = [
-    'Fashion & Apparel',
-    'Beauty & Cosmetics',
-    'Health & Wellness',
-    'Food & Beverage',
-    'Travel & Hospitality',
-    'Technology',
-    'Finance & Fintech',
-    'E-commerce',
-    'Entertainment',
-    'Education',
+    "Fashion & Apparel",
+    "Beauty & Cosmetics",
+    "Health & Wellness",
+    "Food & Beverage",
+    "Travel & Hospitality",
+    "Technology",
+    "Finance & Fintech",
+    "E-commerce",
+    "Entertainment",
+    "Education",
   ] as const;
 
   const companySizes = [
-    'Startup (1-10 employees)',
-    'Small (11-50 employees)',
-    'Medium (51-200 employees)',
-    'Large (201-1000 employees)',
-    'Enterprise (1000+ employees)',
+    "Startup (1-10 employees)",
+    "Small (11-50 employees)",
+    "Medium (51-200 employees)",
+    "Large (201-1000 employees)",
+    "Enterprise (1000+ employees)",
   ] as const;
 
   const marketingBudgets = [
-    'Under $5,000/month',
-    '$5,000 - $10,000/month',
-    '$10,000 - $25,000/month',
-    '$25,000 - $50,000/month',
-    '$50,000+/month',
+    "Under $5,000/month",
+    "$5,000 - $10,000/month",
+    "$10,000 - $25,000/month",
+    "$25,000 - $50,000/month",
+    "$50,000+/month",
   ] as const;
 
   const goals = [
-    'Brand Awareness',
-    'Product Launch',
-    'Sales & Conversions',
-    'Social Media Growth',
-    'Content Creation',
-    'Community Building',
+    "Brand Awareness",
+    "Product Launch",
+    "Sales & Conversions",
+    "Social Media Growth",
+    "Content Creation",
+    "Community Building",
   ] as const;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleGoalToggle = (goal: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       goals: prev.goals.includes(goal)
-        ? prev.goals.filter(g => g !== goal)
-        : [...prev.goals, goal]
+        ? prev.goals.filter((g) => g !== goal)
+        : [...prev.goals, goal],
     }));
   };
 
   // Add checkbox change handler if it doesn't already exist
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
-    setFormData(prev => ({ ...prev, [name]: checked }));
+    setFormData((prev) => ({ ...prev, [name]: checked }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     // Validate terms acceptance on step 3
     if (step === 3 && !formData.termsAccepted) {
-      setError('You must accept the Terms of Service and Privacy Policy');
+      setError("You must accept the Terms of Service and Privacy Policy");
       return;
     }
 
@@ -108,35 +108,35 @@ export default function JoinAsBrand() {
       try {
         // Validate passwords match
         if (formData.password !== formData.confirmPassword) {
-          setError('Passwords do not match');
+          setError("Passwords do not match");
           return;
         }
 
         // Register the user
-        const response = await fetch('/api/register', {
-          method: 'POST',
+        const response = await fetch("/api/register", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             email: formData.email,
             password: formData.password,
             name: formData.companyName,
-            role: 'BRAND'
+            role: "BRAND",
           }),
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Registration failed');
+          throw new Error(data.error || "Registration failed");
         }
 
         // Redirect to login with success message
-        router.push('/login?registered=true');
+        router.push("/login?registered=true");
       } catch (error) {
-        console.error('Error:', error);
-        setError(error instanceof Error ? error.message : 'Registration failed');
+        console.error("Error:", error);
+        setError(error instanceof Error ? error.message : "Registration failed");
       }
     }
   };
@@ -151,16 +151,14 @@ export default function JoinAsBrand() {
               <div key={num} className="flex items-center">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    step >= num ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'
+                    step >= num ? "bg-purple-600 text-white" : "bg-gray-200 text-gray-600"
                   }`}
                 >
                   {step > num ? <CheckCircle className="w-5 h-5" /> : num}
                 </div>
                 {num < 3 && (
                   <div
-                    className={`w-24 h-1 mx-2 ${
-                      step > num ? 'bg-purple-600' : 'bg-gray-200'
-                    }`}
+                    className={`w-24 h-1 mx-2 ${step > num ? "bg-purple-600" : "bg-gray-200"}`}
                   />
                 )}
               </div>
@@ -184,9 +182,7 @@ export default function JoinAsBrand() {
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-black">Company Information</h2>
                 <div>
-                  <label className="block text-sm font-medium text-black">
-                    Company Name
-                  </label>
+                  <label className="block text-sm font-medium text-black">Company Name</label>
                   <input
                     type="text"
                     name="companyName"
@@ -316,8 +312,8 @@ export default function JoinAsBrand() {
                       onClick={() => handleGoalToggle(goal)}
                       className={`p-4 border rounded-lg flex items-center justify-between ${
                         formData.goals.includes(goal)
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-300'
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-300"
                       }`}
                     >
                       <span className="text-black">{goal}</span>
@@ -346,8 +342,8 @@ export default function JoinAsBrand() {
                       <label htmlFor="termsAccepted" className="font-medium text-gray-700">
                         I agree to the
                       </label>{" "}
-                      <a 
-                        href="https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/sign/terms/Terms.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXJtcy9UZXJtcy5wZGYiLCJpYXQiOjE3NDY2MzkzMTMsImV4cCI6MjA2MTk5OTMxM30.ONaP6D4wReFTY5z6MuXzX3cm3WKJHqwxceIwncJpDIQ" 
+                      <a
+                        href="https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/sign/terms/Terms.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXJtcy9UZXJtcy5wZGYiLCJpYXQiOjE3NDY2MzkzMTMsImV4cCI6MjA2MTk5OTMxM30.ONaP6D4wReFTY5z6MuXzX3cm3WKJHqwxceIwncJpDIQ"
                         className="text-purple-600 hover:text-purple-500"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -355,8 +351,8 @@ export default function JoinAsBrand() {
                         Terms of Service
                       </a>{" "}
                       and{" "}
-                      <a 
-                        href="https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/sign/terms/Privacy%20Policy.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXJtcy9Qcml2YWN5IFBvbGljeS5wZGYiLCJpYXQiOjE3NDY2Mzg4NDUsImV4cCI6MjA2MTk5ODg0NX0.x-zvJQc76-FnGAyUWhBW95PeaV9_4UNm8n7cKM6vko0" 
+                      <a
+                        href="https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/sign/terms/Privacy%20Policy.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXJtcy9Qcml2YWN5IFBvbGljeS5wZGYiLCJpYXQiOjE3NDY2Mzg4NDUsImV4cCI6MjA2MTk5ODg0NX0.x-zvJQc76-FnGAyUWhBW95PeaV9_4UNm8n7cKM6vko0"
                         className="text-purple-600 hover:text-purple-500"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -374,7 +370,7 @@ export default function JoinAsBrand() {
                 type="submit"
                 className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
               >
-                {step === 3 ? 'Create Account' : 'Next'}
+                {step === 3 ? "Create Account" : "Next"}
                 <ArrowRight className="ml-2 w-4 h-4" />
               </button>
             </div>

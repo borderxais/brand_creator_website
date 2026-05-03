@@ -40,10 +40,7 @@ const authOptions: NextAuthOptions = {
         }
 
         // Check password
-        const passwordValid = await compare(
-          credentials.password,
-          user.password || ""
-        );
+        const passwordValid = await compare(credentials.password, user.password || "");
 
         if (!passwordValid) {
           return null;

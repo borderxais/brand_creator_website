@@ -1,17 +1,17 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authConfig } from '@/app/api/auth/[...nextauth]/auth.config';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authConfig } from "@/app/api/auth/[...nextauth]/auth.config";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(_request: Request) {
   try {
     // Get the authenticated user's session
     const session = await getServerSession(authConfig);
-    console.log('Session:', session);
+    console.log("Session:", session);
 
     if (!session?.user?.email) {
-      console.log('No session or email');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.log("No session or email");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get the user and ensure they are a creator
@@ -20,9 +20,9 @@ export async function GET(_request: Request) {
       select: { id: true, role: true },
     });
 
-    if (!user || user.role !== 'CREATOR') {
-      console.log('Not a creator:', { role: user?.role });
-      return NextResponse.json({ error: 'Unauthorized - Creator access only' }, { status: 403 });
+    if (!user || user.role !== "CREATOR") {
+      console.log("Not a creator:", { role: user?.role });
+      return NextResponse.json({ error: "Unauthorized - Creator access only" }, { status: 403 });
     }
 
     const creatorProfile = await prisma.creatorProfile.findUnique({
@@ -31,8 +31,8 @@ export async function GET(_request: Request) {
     });
 
     if (!creatorProfile) {
-      console.log('Creator profile not found for user');
-      return NextResponse.json({ error: 'Unauthorized - Creator access only' }, { status: 403 });
+      console.log("Creator profile not found for user");
+      return NextResponse.json({ error: "Unauthorized - Creator access only" }, { status: 403 });
     }
 
     // Fetch claim records (acts like applications)
@@ -57,12 +57,12 @@ export async function GET(_request: Request) {
 
     // Extract campaign IDs creator already applied to
     const appliedCampaignIds = claims
-      .map(claim => claim.campaign_id)
+      .map((claim) => claim.campaign_id)
       .filter((id): id is string => Boolean(id));
 
     // Get campaigns the creator has applied to
     const currentCampaigns = claims
-      .map(claim => {
+      .map((claim) => {
         if (!claim.campaigns) return null;
         return {
           ...claim.campaigns,
@@ -71,7 +71,7 @@ export async function GET(_request: Request) {
         };
       })
       .filter((campaign): campaign is NonNullable<typeof campaign> => campaign !== null);
-    console.log('Current campaigns:', currentCampaigns.length);
+    console.log("Current campaigns:", currentCampaigns.length);
 
     // Get available campaigns (open and not already applied)
     const availableCampaigns = await prisma.campaigns.findMany({
@@ -91,14 +91,14 @@ export async function GET(_request: Request) {
         },
       },
     });
-    console.log('Available campaigns:', availableCampaigns.length);
+    console.log("Available campaigns:", availableCampaigns.length);
 
     return NextResponse.json({
       currentCampaigns,
       availableCampaigns,
     });
   } catch (error) {
-    console.error('Error fetching creator campaigns:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error("Error fetching creator campaigns:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

@@ -41,10 +41,10 @@ For the route map, see [`backend/README.md`](../backend/README.md) — that file
 
 Two helper scripts start the FastAPI server. Both live at the **repo root**:
 
-| Script | Platform | Usage |
-|--------|---------|-------|
-| `start_api_server.sh` | macOS / Linux | `bash start_api_server.sh` |
-| `start_api_server.bat` | Windows | `start_api_server.bat` |
+| Script                 | Platform      | Usage                      |
+| ---------------------- | ------------- | -------------------------- |
+| `start_api_server.sh`  | macOS / Linux | `bash start_api_server.sh` |
+| `start_api_server.bat` | Windows       | `start_api_server.bat`     |
 
 Run these from the repo root after activating the Python virtual environment and installing dependencies (see Local Development below).
 
@@ -81,6 +81,7 @@ bash start_api_server.sh            # Windows: start_api_server.bat
 ## When to Update
 
 Update this file when:
+
 - A new run script is added or the existing ones move.
 - The entry point path changes.
 - Required environment variables change (also update `backend/README.md`).

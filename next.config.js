@@ -3,47 +3,47 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'via.placeholder.com',
+        protocol: "https",
+        hostname: "via.placeholder.com",
       },
       {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
+        protocol: "https",
+        hostname: "images.unsplash.com",
       },
       {
-        protocol: 'https',
-        hostname: 'randomuser.me',
+        protocol: "https",
+        hostname: "randomuser.me",
       },
       {
-        protocol: 'https',
-        hostname: 'p16-sign.tiktokcdn-us.com',
+        protocol: "https",
+        hostname: "p16-sign.tiktokcdn-us.com",
       },
       {
-        protocol: 'https',
-        hostname: 'p19-sign.tiktokcdn-us.com',
+        protocol: "https",
+        hostname: "p19-sign.tiktokcdn-us.com",
       },
       {
-        protocol: 'https',
-        hostname: 'p16-sign.tiktokcdn.com',
+        protocol: "https",
+        hostname: "p16-sign.tiktokcdn.com",
       },
       {
-        protocol: 'https',
-        hostname: '*.tiktokcdn.com',
+        protocol: "https",
+        hostname: "*.tiktokcdn.com",
       },
       {
-        protocol: 'https',
-        hostname: '*.tiktokcdn-us.com',
+        protocol: "https",
+        hostname: "*.tiktokcdn-us.com",
       },
       {
-        protocol: 'https',
-        hostname: 'ldlxyyctxylgmstfqlzh.supabase.co',
+        protocol: "https",
+        hostname: "ldlxyyctxylgmstfqlzh.supabase.co",
       },
       {
-        protocol: 'https',
-        hostname: '*.supabase.co',
+        protocol: "https",
+        hostname: "*.supabase.co",
       },
     ],
-    formats: ['image/avif', 'image/webp'],
+    formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
@@ -52,18 +52,22 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     serverActions: {
-      bodySizeLimit: '10mb', // Increase body size limit to 10MB
+      bodySizeLimit: "10mb", // Increase body size limit to 10MB
     },
   },
   async headers() {
     return [
       {
-        source: '/api/:path*',
+        source: "/api/:path*",
         headers: [
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,DELETE,PATCH,POST,PUT' },
-          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
+          { key: "Access-Control-Allow-Credentials", value: "true" },
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Methods", value: "GET,DELETE,PATCH,POST,PUT" },
+          {
+            key: "Access-Control-Allow-Headers",
+            value:
+              "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version",
+          },
         ],
       },
     ];

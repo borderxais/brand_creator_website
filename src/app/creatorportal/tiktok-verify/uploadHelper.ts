@@ -21,33 +21,33 @@ export interface UploadUrlsResponse {
  * Get file extension from filename
  */
 export function getFileExtension(filename: string): string {
-  return filename.split('.').pop()?.toLowerCase() || 'jpg';
+  return filename.split(".").pop()?.toLowerCase() || "jpg";
 }
 
 /**
  * Generate upload URLs for files
  */
 export async function generateUploadUrls(
-  idNumber: string, 
+  idNumber: string,
   files: FileUploadInfo[]
 ): Promise<UploadUrlsResponse> {
-  const response = await fetch('/api/tiktokverification/upload-urls', {
-    method: 'POST',
+  const response = await fetch("/api/tiktokverification/upload-urls", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       id_number: idNumber,
-      files: files.map(f => ({
+      files: files.map((f) => ({
         key: f.key,
-        extension: f.extension
-      }))
+        extension: f.extension,
+      })),
     }),
   });
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.error || 'Failed to generate upload URLs');
+    throw new Error(errorData.error || "Failed to generate upload URLs");
   }
 
   return await response.json();
@@ -57,7 +57,7 @@ export async function generateUploadUrls(
  * Upload file directly to Supabase using pre-signed URL
  */
 export async function uploadFileToSupabase(
-  file: File, 
+  file: File,
   uploadUrl: string,
   onProgress?: (progress: number) => void
 ): Promise<void> {
@@ -66,7 +66,7 @@ export async function uploadFileToSupabase(
 
     // Track upload progress
     if (onProgress) {
-      xhr.upload.addEventListener('progress', (event) => {
+      xhr.upload.addEventListener("progress", (event) => {
         if (event.lengthComputable) {
           const progress = (event.loaded / event.total) * 100;
           onProgress(progress);
@@ -74,7 +74,7 @@ export async function uploadFileToSupabase(
       });
     }
 
-    xhr.addEventListener('load', () => {
+    xhr.addEventListener("load", () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve();
       } else {
@@ -82,20 +82,20 @@ export async function uploadFileToSupabase(
       }
     });
 
-    xhr.addEventListener('error', () => {
-      reject(new Error('Upload failed due to network error'));
+    xhr.addEventListener("error", () => {
+      reject(new Error("Upload failed due to network error"));
     });
 
-    xhr.addEventListener('abort', () => {
-      reject(new Error('Upload was aborted'));
+    xhr.addEventListener("abort", () => {
+      reject(new Error("Upload was aborted"));
     });
 
     // Open the request
-    xhr.open('PUT', uploadUrl);
-    
+    xhr.open("PUT", uploadUrl);
+
     // Set content type
-    xhr.setRequestHeader('Content-Type', file.type);
-    
+    xhr.setRequestHeader("Content-Type", file.type);
+
     // Send the file
     xhr.send(file);
   });
@@ -117,27 +117,27 @@ export async function uploadMultipleFiles(
     }
 
     try {
-      await uploadFileToSupabase(
-        fileInfo.file,
-        urlInfo.upload_url,
-        (progress) => onProgress?.(fileInfo.key, progress)
+      await uploadFileToSupabase(fileInfo.file, urlInfo.upload_url, (progress) =>
+        onProgress?.(fileInfo.key, progress)
       );
-      
+
       onFileComplete?.(fileInfo.key);
       return { key: fileInfo.key, path: urlInfo.file_path };
     } catch (error) {
       console.error(`Failed to upload ${fileInfo.key}:`, error);
-      throw new Error(`Failed to upload ${fileInfo.key}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to upload ${fileInfo.key}: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
   });
 
   const results = await Promise.all(uploadPromises);
-  
+
   // Convert array to object mapping file keys to paths
   const filePaths: Record<string, string> = {};
-  results.forEach(result => {
+  results.forEach((result) => {
     filePaths[result.key] = result.path;
   });
-  
+
   return filePaths;
 }

@@ -14,13 +14,13 @@ The entire Next.js application lives under `src/app/`. Each folder is a route se
 
 The following route groups are the core portals of the platform:
 
-| Segment | Purpose |
-|---------|---------|
-| `brandportal/` | Brand-side portal — campaign management, creator search |
-| `creatorportal/` | Creator-side portal — profile, campaign applications |
-| `find-creators/` | Public creator discovery page |
-| `login/` | Authentication entry point |
-| `api/` | Next.js API routes (lightweight; heavy logic proxied to FastAPI) |
+| Segment          | Purpose                                                          |
+| ---------------- | ---------------------------------------------------------------- |
+| `brandportal/`   | Brand-side portal — campaign management, creator search          |
+| `creatorportal/` | Creator-side portal — profile, campaign applications             |
+| `find-creators/` | Public creator discovery page                                    |
+| `login/`         | Authentication entry point                                       |
+| `api/`           | Next.js API routes (lightweight; heavy logic proxied to FastAPI) |
 
 ### Additional Routes
 
@@ -36,25 +36,25 @@ Root files: `layout.tsx` (root layout), `page.tsx` (home page), `not-found.tsx`,
 
 Shared React components, grouped by concern:
 
-| Subfolder | Contents |
-|-----------|---------|
-| `campaigns/` | Campaign-related UI components |
-| `charts/` | Data visualization components |
+| Subfolder    | Contents                                       |
+| ------------ | ---------------------------------------------- |
+| `campaigns/` | Campaign-related UI components                 |
+| `charts/`    | Data visualization components                  |
 | `providers/` | React context providers (session, theme, etc.) |
-| `ui/` | General-purpose UI primitives |
+| `ui/`        | General-purpose UI primitives                  |
 
 ### `src/lib/`
 
 Utilities and singletons shared across the app:
 
-| File | Purpose |
-|------|---------|
-| `auth.ts` | NextAuth configuration and helpers |
-| `email.ts` | Email sending utilities |
-| `prisma.ts` | Prisma client singleton |
-| `rate-limiter.ts` | API rate limiting logic |
-| `tokens.ts` | Token generation / validation |
-| `utils.ts` | General-purpose helpers |
+| File              | Purpose                            |
+| ----------------- | ---------------------------------- |
+| `auth.ts`         | NextAuth configuration and helpers |
+| `email.ts`        | Email sending utilities            |
+| `prisma.ts`       | Prisma client singleton            |
+| `rate-limiter.ts` | API rate limiting logic            |
+| `tokens.ts`       | Token generation / validation      |
+| `utils.ts`        | General-purpose helpers            |
 
 ### `src/styles/`
 
@@ -80,13 +80,13 @@ Config: `tailwind.config.ts`. Extend design tokens — colors, spacing, typograp
 
 These are enforced by [`AGENTS.md`](../AGENTS.md) and the ESLint config:
 
-| Thing | Convention | Example |
-|-------|-----------|---------|
-| React components | PascalCase | `BrandPortalLayout.tsx` |
-| Helper functions | camelCase | `formatCurrency` |
-| Route folders | kebab-case | `find-creators/` |
-| Import alias | `@/` → `src/` | `import { prisma } from '@/lib/prisma'` |
-| Unused identifiers | `_` prefix | `_unusedParam` |
+| Thing              | Convention    | Example                                 |
+| ------------------ | ------------- | --------------------------------------- |
+| React components   | PascalCase    | `BrandPortalLayout.tsx`                 |
+| Helper functions   | camelCase     | `formatCurrency`                        |
+| Route folders      | kebab-case    | `find-creators/`                        |
+| Import alias       | `@/` → `src/` | `import { prisma } from '@/lib/prisma'` |
+| Unused identifiers | `_` prefix    | `_unusedParam`                          |
 
 TypeScript strict mode is enabled. All new files must be `.ts` or `.tsx`.
 
@@ -107,6 +107,7 @@ See [harness.md](harness.md) for the full pre-commit / pre-push hook chain (not 
 ## When to Update
 
 Update this file when:
+
 - A new significant route group or top-level segment is added to `src/app/`.
 - A new shared directory is added under `src/`.
 - Naming conventions change.

@@ -7,6 +7,7 @@ Six-layer quality harness: fast edit-time feedback → pre-commit gates → pre-
 > **Status:** This is the docs PR (PR 2). The knowledge layer is being established here; tooling layers land in subsequent harness PRs (PR 3–9). Layers marked "not yet wired" will gain their tooling in those PRs.
 
 Every hook failure prints:
+
 1. What failed.
 2. The concrete fix command.
 3. A `docs/<file>.md#<anchor>` reference.
@@ -41,13 +42,13 @@ IDE and Claude Code feedback — sub-second.
 
 Husky + lint-staged. Single `pre-commit` hook dispatches by file glob.
 
-| Glob | Actions |
-|------|---------|
-| `*.{ts,tsx,js,jsx,mjs}` | `prettier --write` → `eslint --fix --max-warnings=0` |
-| `*.{ts,tsx}` | `tsc --noEmit` scoped to changed files via `tsc-files` |
-| `prisma/schema.prisma` | `prisma format` → drift check (`prisma migrate diff --exit-code`) |
-| `backend/**/*.py` | `ruff format` → `ruff check --fix` → `mypy` on changed files |
-| `*.{json,md,yml,yaml,css}` | `prettier --write` |
+| Glob                       | Actions                                                           |
+| -------------------------- | ----------------------------------------------------------------- |
+| `*.{ts,tsx,js,jsx,mjs}`    | `prettier --write` → `eslint --fix --max-warnings=0`              |
+| `*.{ts,tsx}`               | `tsc --noEmit` scoped to changed files via `tsc-files`            |
+| `prisma/schema.prisma`     | `prisma format` → drift check (`prisma migrate diff --exit-code`) |
+| `backend/**/*.py`          | `ruff format` → `ruff check --fix` → `mypy` on changed files      |
+| `*.{json,md,yml,yaml,css}` | `prettier --write`                                                |
 
 Target: < 10 s on a typical staged set (touches only staged files).
 
@@ -92,11 +93,11 @@ Hook error format:
 
 Manual scripts available via `package.json` (added in later harness PRs):
 
-| Script | Purpose |
-|--------|---------|
-| `npm run e2e` | Playwright smoke tests vs local dev server |
-| `npm run e2e:preview` | Playwright smoke tests vs `$DEPLOY_PRIME_URL` |
-| `npm run harness:full` | Layer 3 checks + E2E + full mypy |
+| Script                    | Purpose                                              |
+| ------------------------- | ---------------------------------------------------- |
+| `npm run e2e`             | Playwright smoke tests vs local dev server           |
+| `npm run e2e:preview`     | Playwright smoke tests vs `$DEPLOY_PRIME_URL`        |
+| `npm run harness:full`    | Layer 3 checks + E2E + full mypy                     |
 | `npm run harness:install` | Bootstrap: install Husky, scaffold env, print banner |
 
 **Status:** Not yet wired (scripts land across PRs 3–8).
@@ -141,19 +142,20 @@ Habitual use of `--no-verify` defeats the harness. If the hook is too slow or in
 
 This section will be expanded as each harness PR lands with per-failure-type entries. Stub entries below.
 
-| Symptom | Likely cause | Fix |
-|---------|-------------|-----|
-| Pre-commit blocks on ESLint errors | Rule violation in staged file | `npm run lint -- --fix`, review remaining errors |
-| Pre-commit blocks on Prisma drift | Schema edited without migration | `npm run prisma:migrate` — see [database.md#migration-workflow](database.md#migration-workflow) |
-| Pre-push TypeScript errors | Type error in full project | `npm run typecheck`, fix errors, re-push |
-| Netlify preview smoke fails | Page render broken on preview URL | Check deploy log screenshots; fix the route; re-deploy |
-| `--no-verify` was used and preview fails | Local gates skipped | Fix the underlying issue; do not use `--no-verify` again |
+| Symptom                                  | Likely cause                      | Fix                                                                                             |
+| ---------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Pre-commit blocks on ESLint errors       | Rule violation in staged file     | `npm run lint -- --fix`, review remaining errors                                                |
+| Pre-commit blocks on Prisma drift        | Schema edited without migration   | `npm run prisma:migrate` — see [database.md#migration-workflow](database.md#migration-workflow) |
+| Pre-push TypeScript errors               | Type error in full project        | `npm run typecheck`, fix errors, re-push                                                        |
+| Netlify preview smoke fails              | Page render broken on preview URL | Check deploy log screenshots; fix the route; re-deploy                                          |
+| `--no-verify` was used and preview fails | Local gates skipped               | Fix the underlying issue; do not use `--no-verify` again                                        |
 
 ---
 
 ## When to Update
 
 Update this file when:
+
 - A layer's hooks, commands, or file globs change.
 - A new layer is added.
 - Bypass policy changes.

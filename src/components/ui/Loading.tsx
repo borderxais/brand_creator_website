@@ -1,4 +1,4 @@
-export default function Loading({ message = 'Loading...' }: { message?: string }) {
+export default function Loading({ message = "Loading..." }: { message?: string }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center">

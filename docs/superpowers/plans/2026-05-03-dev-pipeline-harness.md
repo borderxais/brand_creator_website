@@ -15,6 +15,7 @@
 ## File Structure (additions / modifications)
 
 **Created:**
+
 - `.husky/pre-commit`, `.husky/pre-push`
 - `.prettierrc.json`, `.prettierignore`
 - `.vscode/settings.json`
@@ -30,6 +31,7 @@
 - `CONTRIBUTING.md`
 
 **Modified:**
+
 - `package.json` (scripts, lint-staged config, devDependencies, prepare hook)
 - `.eslintrc.json` (re-enable disabled rules)
 - `next.config.js` (fail builds on lint/TS errors)
@@ -45,6 +47,7 @@
 Lands first. Independent of harness tooling. Re-enables lint rules, fails builds on errors, fixes resulting violations.
 
 **Files:**
+
 - Modify: `.eslintrc.json`
 - Modify: `next.config.js`
 - Modify: `tsconfig.json` (verify only)
@@ -53,19 +56,24 @@ Lands first. Independent of harness tooling. Re-enables lint rules, fails builds
 - [ ] **Step 1.1: Snapshot current `next.config.js` and `.eslintrc.json`**
 
 Run:
+
 ```
 cat next.config.js
 cat .eslintrc.json
 ```
+
 Save output to scratch notes. Used to verify nothing else regressed.
 
 - [ ] **Step 1.2: Verify `tsconfig.json` strict mode**
 
 Run:
+
 ```
 node -e "console.log(JSON.parse(require('fs').readFileSync('tsconfig.json','utf8')).compilerOptions.strict)"
 ```
+
 Expected: `true`. If `false` or missing, set `"strict": true` under `compilerOptions`. Commit separately first if changed:
+
 ```
 git add tsconfig.json
 git commit -m "chore: enable TypeScript strict mode"
@@ -80,7 +88,10 @@ Replace `.eslintrc.json` with:
   "extends": "next/core-web-vitals",
   "plugins": ["@typescript-eslint"],
   "rules": {
-    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+    ],
     "no-unused-vars": "off",
     "react/no-unescaped-entities": "error",
     "@next/next/no-img-element": "warn",
@@ -95,17 +106,21 @@ Rationale: unused-vars as `error` with `_` escape; hook rules restored; `no-img-
 - [ ] **Step 1.4: Run lint, capture violation list**
 
 Run:
+
 ```
 npm run lint 2>&1 | tee /tmp/eslint-baseline.log
 ```
+
 Expected: list of violations across the repo. Note approximate count.
 
 - [ ] **Step 1.5: Auto-fix what is auto-fixable**
 
 Run:
+
 ```
 npx eslint . --fix
 ```
+
 Re-run `npm run lint` and capture remaining manual violations.
 
 - [ ] **Step 1.6: Fix remaining violations one rule at a time**
@@ -116,10 +131,12 @@ Order: `react-hooks/rules-of-hooks` (always error) → `react/no-unescaped-entit
 git add -A
 git commit -m "fix: resolve react-hooks/rules-of-hooks violations"
 ```
+
 ```
 git add -A
 git commit -m "fix: resolve react/no-unescaped-entities violations"
 ```
+
 ```
 git add -A
 git commit -m "fix: resolve @typescript-eslint/no-unused-vars violations"
@@ -130,19 +147,24 @@ If a violation needs a real refactor not a quick fix, leave it with `// eslint-d
 - [ ] **Step 1.7: Flip `next.config.js` build flags**
 
 Edit `next.config.js`. Set:
+
 ```js
 eslint: { ignoreDuringBuilds: false },
 typescript: { ignoreBuildErrors: false },
 ```
+
 (Add the keys if absent.)
 
 - [ ] **Step 1.8: Run full typecheck**
 
 Run:
+
 ```
 npx tsc --noEmit
 ```
+
 Expected: zero errors. Fix any reported errors using minimal changes (prefer narrowing types or `_` ignores; avoid `any` unless truly unavoidable). Commit fixes:
+
 ```
 git add -A
 git commit -m "fix: resolve tsc strict-mode errors"
@@ -151,9 +173,11 @@ git commit -m "fix: resolve tsc strict-mode errors"
 - [ ] **Step 1.9: Run production build**
 
 Run:
+
 ```
 npm run build
 ```
+
 Expected: build succeeds. ESLint and TS errors now block the build, so a clean build proves the strict reset is complete.
 
 - [ ] **Step 1.10: Final commit for config flips**
@@ -221,6 +245,7 @@ Cover: `netlify.toml` walkthrough, env vars required for builds, `npx prisma gen
 - [ ] **Step 2.7: Create `docs/harness.md`**
 
 Cover all six layers (0–5) verbatim from the spec §3. Add anchors:
+
 - `## Layer 2 Pre-Commit` (heading id `layer-2-pre-commit`)
 - `## Layer 3 Pre-Push` (heading id `layer-3-pre-push`)
 - `## Layer 5 Netlify Preview` (heading id `layer-5-netlify-preview`)
@@ -247,9 +272,11 @@ In `AGENTS.md`, prepend a "Canonical reference" line linking to `docs/README.md`
 - [ ] **Step 2.11: Verify all anchors resolve in plain markdown**
 
 Run:
+
 ```
 grep -rE 'docs/[a-z-]+\.md#' docs/ scripts/ plugins/ 2>/dev/null
 ```
+
 Expected: only known anchors (`#migration-workflow`, `#preview-gates`, `#layer-2-pre-commit`, `#layer-3-pre-push`, `#layer-5-netlify-preview`, `#bypass-rules`). Anchors only exist as headings in this PR for now; later PRs reference them.
 
 - [ ] **Step 2.12: Commit and open PR 2**
@@ -268,6 +295,7 @@ PR title: `docs: scaffold /docs knowledge layer`.
 The harness becomes useful here. Format whole repo, install hooks, wire Layer 2.
 
 **Files:**
+
 - Create: `.husky/pre-commit`, `.husky/pre-push`
 - Create: `.prettierrc.json`, `.prettierignore`
 - Create: `.vscode/settings.json`
@@ -278,9 +306,11 @@ The harness becomes useful here. Format whole repo, install hooks, wire Layer 2.
 - [ ] **Step 3.1: Install dev dependencies**
 
 Run:
+
 ```
 npm install --save-dev husky lint-staged prettier tsc-files
 ```
+
 Expected: success. `package.json` `devDependencies` updated.
 
 - [ ] **Step 3.2: Add `.prettierrc.json`**
@@ -312,10 +342,13 @@ package-lock.json
 - [ ] **Step 3.4: Format whole repo (one-time)**
 
 Run:
+
 ```
 npx prettier --write .
 ```
+
 Expected: a sweeping diff. Stage and commit on its own to keep subsequent diffs reviewable:
+
 ```
 git add -A
 git commit -m "style: format repo with Prettier"
@@ -324,6 +357,7 @@ git commit -m "style: format repo with Prettier"
 - [ ] **Step 3.5: Add `package.json` scripts and lint-staged config**
 
 Add to `scripts`:
+
 ```
 "prepare": "husky install && node scripts/harness/banner.js",
 "harness:install": "npm install && npm run prepare",
@@ -333,6 +367,7 @@ Add to `scripts`:
 ```
 
 Add top-level:
+
 ```jsonc
 "lint-staged": {
   "*.{ts,tsx,js,jsx,mjs}": ["prettier --write", "eslint --fix --max-warnings=0"],
@@ -346,9 +381,11 @@ Add top-level:
 - [ ] **Step 3.6: Initialize Husky**
 
 Run:
+
 ```
 npm run prepare
 ```
+
 Expected: `.husky/` directory created. Banner prints (banner script written next).
 
 - [ ] **Step 3.7: Write `scripts/harness/banner.js`**
@@ -376,6 +413,7 @@ npx lint-staged
 ```
 
 Make executable:
+
 ```
 chmod +x .husky/pre-commit
 ```
@@ -414,6 +452,7 @@ chmod +x .husky/pre-push
 - [ ] **Step 3.11: Update `.gitignore`**
 
 Append:
+
 ```
 playwright-report/
 test-results/
@@ -423,6 +462,7 @@ coverage/
 - [ ] **Step 3.12: Verify pre-commit blocks bad input**
 
 Manually validate (do not commit garbage):
+
 ```
 echo "const x = 1" > scratch.ts
 git add scratch.ts
@@ -430,14 +470,17 @@ git commit -m "test: hook smoke"  # should rewrite via Prettier (adds semicolon 
 git rm scratch.ts
 git commit -m "chore: drop scratch"
 ```
+
 Expected: lint-staged ran. If hook didn't fire, `chmod +x` was skipped — re-run Step 3.8/3.9.
 
 - [ ] **Step 3.13: Verify pre-push runs**
 
 Run:
+
 ```
 git push --dry-run
 ```
+
 Expected: pre-push hook executes typecheck + lint. Both pass (Task 1 cleaned them).
 
 - [ ] **Step 3.14: Commit harness wiring and open PR 3**
@@ -456,6 +499,7 @@ PR title: `feat(harness): Husky + lint-staged + Prettier (Layer 2 pre-commit)`.
 TDD seed tests for `src/lib`, wire Vitest into pre-push.
 
 **Files:**
+
 - Create: `vitest.config.ts`, `vitest.setup.ts`
 - Create: 3 seed test files under `src/lib/__tests__/`
 - Modify: `package.json`, `.husky/pre-push`
@@ -497,6 +541,7 @@ import "@testing-library/jest-dom/vitest";
 - [ ] **Step 4.4: Add `package.json` scripts**
 
 Add:
+
 ```
 "test": "vitest",
 "test:run": "vitest run"
@@ -505,9 +550,11 @@ Add:
 - [ ] **Step 4.5: Identify three real targets in `src/lib/`**
 
 Run:
+
 ```
 ls src/lib/
 ```
+
 Expected: 1+ files. Pick three pure-utility candidates (e.g., date helpers, formatters, validators). If `src/lib/` is empty or has nothing testable, write tests against a single existing utility plus skip-create the other two seed slots — but the plan target is three real tests.
 
 If no existing target is suitable, create a small utility used by the codebase (do not create one that has no caller) and test it.
@@ -532,6 +579,7 @@ describe("formatCurrency", () => {
 ```
 npm run test:run -- src/lib/__tests__/<utility-1>.test.ts
 ```
+
 Expected: FAIL (function does not exist OR returns different value).
 
 - [ ] **Step 4.8: Implement minimal utility**
@@ -543,6 +591,7 @@ If function does not exist: create the smallest possible implementation that mak
 ```
 npm run test:run -- src/lib/__tests__/<utility-1>.test.ts
 ```
+
 Expected: PASS.
 
 - [ ] **Step 4.10: Repeat 4.6–4.9 for utility #2 and #3**
@@ -554,6 +603,7 @@ Each cycle: failing test → implement / verify → passing test.
 ```
 npm run test:run
 ```
+
 Expected: 3 passing tests, 0 failures.
 
 - [ ] **Step 4.12: Wire Vitest into `.husky/pre-push`**
@@ -574,6 +624,7 @@ npm run test:run
 ```
 git push --dry-run
 ```
+
 Expected: typecheck + lint + test:run all execute and pass.
 
 - [ ] **Step 4.14: Commit and open PR 4**
@@ -590,6 +641,7 @@ PR title: `feat(harness): Vitest seed tests + Layer 3 pre-push`.
 ## Task 5: Prisma Drift Detection (PR 5)
 
 **Files:**
+
 - Create: `scripts/harness/prisma-drift.js`
 - Modify: `package.json` (lint-staged + harness:prepush)
 - Modify: `.husky/pre-push`
@@ -633,24 +685,31 @@ process.exit(r.status || 1);
 - [ ] **Step 5.2: Smoke test the script in clean state**
 
 Run:
+
 ```
 node scripts/harness/prisma-drift.js
 ```
+
 Expected: exit 0 (assuming migrations match schema). If exit 1: there is real drift on `main` — fix with `npm run prisma:migrate` before continuing.
 
 - [ ] **Step 5.3: Smoke test the script under drift**
 
 Manually edit `prisma/schema.prisma` to add a temporary field:
+
 ```
 model TempDrift {
   id String @id @default(cuid())
 }
 ```
+
 Run:
+
 ```
 node scripts/harness/prisma-drift.js
 ```
+
 Expected: exit 1 with the "Schema drift detected" message. Revert the edit:
+
 ```
 git checkout -- prisma/schema.prisma
 ```
@@ -685,9 +744,11 @@ npm run test:run
 - [ ] **Step 5.6: Verify**
 
 Run:
+
 ```
 git push --dry-run
 ```
+
 Expected: drift check runs, exits 0.
 
 - [ ] **Step 5.7: Commit and open PR 5**
@@ -704,6 +765,7 @@ PR title: `feat(harness): Prisma migrate drift detection`.
 ## Task 6: FastAPI Ruff + mypy (PR 6)
 
 **Files:**
+
 - Create: `backend/pyproject.toml`, `backend/requirements-dev.txt`
 - Create: `scripts/harness/mypy-staged.js`
 - Modify: `package.json` (lint-staged + harness:prepush)
@@ -816,11 +878,13 @@ npm run test:run && \
 - [ ] **Step 6.7: Document install in `docs/backend.md`**
 
 Add under a "Local development setup" section:
+
 ```
 python -m venv backend/.venv
 source backend/.venv/bin/activate
 pip install -r backend/requirements.txt -r backend/requirements-dev.txt
 ```
+
 Note: pre-commit and pre-push assume `mypy` and `ruff` are on PATH inside the backend venv. The recommended pattern is to activate the venv before committing Python changes.
 
 - [ ] **Step 6.8: Add `harness:prepush` script (centralized)**
@@ -843,9 +907,11 @@ npm run harness:prepush
 - [ ] **Step 6.9: Verify**
 
 Run:
+
 ```
 npm run harness:prepush
 ```
+
 Expected: PASS.
 
 - [ ] **Step 6.10: Commit and open PR 6**
@@ -864,6 +930,7 @@ PR title: `feat(harness): FastAPI Ruff + mypy gates`.
 Specs only. No Netlify wiring yet.
 
 **Files:**
+
 - Create: `playwright.config.ts`
 - Create: `e2e/smoke/auth.spec.ts`, `e2e/smoke/brand-portal.spec.ts`, `e2e/smoke/creator-portal.spec.ts`, `e2e/smoke/find-creators.spec.ts`
 - Modify: `package.json`
@@ -927,13 +994,17 @@ test("/login renders form fields", async ({ page }) => {
 - [ ] **Step 7.5: Run dev server in background and execute**
 
 Terminal A:
+
 ```
 npm run dev
 ```
+
 Terminal B (after dev server is listening on 3000):
+
 ```
 npx playwright test e2e/smoke/auth.spec.ts
 ```
+
 Expected: PASS. If FAIL because the page contains console errors: investigate; do not relax the assertion. If FAIL because the selector misses: confirm against the real `/login` page markup, then update the selector to be the simplest accurate match.
 
 - [ ] **Step 7.6: Repeat for `brand-portal.spec.ts`**
@@ -971,23 +1042,28 @@ Same shape, target `/find-creators`.
 ```
 npm run e2e -- e2e/smoke
 ```
+
 Expected: 4 passing.
 
 - [ ] **Step 7.10: Confirm `e2e/` excluded from Vitest**
 
 `vitest.config.ts` `include` is scoped to `src/**`, so e2e specs do not get collected by Vitest. Verify:
+
 ```
 npm run test:run
 ```
+
 Expected: same 3 tests as Task 4. No Playwright tests collected.
 
 - [ ] **Step 7.11: Add ESLint ignore for `e2e/`**
 
 Append to `.eslintignore` (create if missing):
+
 ```
 e2e/
 plugins/
 ```
+
 (Lint covers `src/`, `pages/`, `prisma/seed.js`. E2E follows Playwright conventions which ESLint Next config does not match.)
 
 - [ ] **Step 7.12: Commit and open PR 7**
@@ -1004,6 +1080,7 @@ PR title: `feat(harness): Playwright smoke E2E (Layer 4 on-demand)`.
 ## Task 8: Netlify Smoke Plugin (PR 8)
 
 **Files:**
+
 - Create: `plugins/smoke-e2e/manifest.yml`, `plugins/smoke-e2e/index.js`, `plugins/smoke-e2e/package.json`
 - Modify: `netlify.toml`
 
@@ -1063,17 +1140,21 @@ Append:
 - [ ] **Step 8.5: Verify plugin metadata locally**
 
 Run:
+
 ```
 node -e "console.log(require('./plugins/smoke-e2e/index.js'))"
 ```
+
 Expected: object with `onSuccess` function.
 
 - [ ] **Step 8.6: Sanity check `netlify.toml` parses**
 
 If Netlify CLI is installed:
+
 ```
 npx netlify build --dry
 ```
+
 Expected: no parse errors. If CLI not available, skip — production validation happens on the first preview deploy.
 
 - [ ] **Step 8.7: Commit and open PR 8**
@@ -1094,11 +1175,13 @@ PR description must call out: first preview deploy after merge is the real valid
 Bonus layer. Adds PostToolUse hooks to Claude Code's `.claude/settings.json` so format/lint runs on Claude edits in addition to git commits.
 
 **Files:**
+
 - Create or Modify: `.claude/settings.json`
 
 - [ ] **Step 9.1: Inspect current `.claude/settings.json`**
 
 Run:
+
 ```
 test -f .claude/settings.json && cat .claude/settings.json || echo "(absent)"
 ```
@@ -1114,15 +1197,15 @@ Target `.claude/settings.json`. If the file already exists with hooks, merge. Re
       {
         "matcher": "Write|Edit",
         "command": "node scripts/harness/claude-format.js",
-        "description": "Format + lint Claude edits"
+        "description": "Format + lint Claude edits",
       },
       {
         "matcher": "Write|Edit",
         "command": "node scripts/harness/claude-ruff.js",
-        "description": "Format + lint Claude Python edits"
-      }
-    ]
-  }
+        "description": "Format + lint Claude Python edits",
+      },
+    ],
+  },
 }
 ```
 
@@ -1192,26 +1275,28 @@ PR title: `feat(harness): Claude Code PostToolUse hooks`.
 After all 9 PRs merge, run the success-criteria checks from the spec:
 
 - [ ] **V1: Fresh-clone bootstrap.**
+
   ```
   git clone <repo> /tmp/harness-test && cd /tmp/harness-test
   npm run harness:install
   ```
+
   Expected: dependencies installed, Husky hooks installed, banner printed pointing at `docs/`.
 
 - [ ] **V2: Lint-block on commit.**
-  Introduce a deliberate ESLint violation, `git add`, `git commit`. Expected: pre-commit blocks; failure message includes a docs anchor.
+      Introduce a deliberate ESLint violation, `git add`, `git commit`. Expected: pre-commit blocks; failure message includes a docs anchor.
 
 - [ ] **V3: Drift block.**
-  Edit `prisma/schema.prisma` without creating a migration. Expected: pre-commit blocks with the drift message and `docs/database.md#migration-workflow` pointer.
+      Edit `prisma/schema.prisma` without creating a migration. Expected: pre-commit blocks with the drift message and `docs/database.md#migration-workflow` pointer.
 
 - [ ] **V4: Pre-push full check.**
-  Push a clean branch. Expected: `harness:prepush` runs typecheck + lint + drift + Vitest + Ruff + mypy, all pass under 60 s.
+      Push a clean branch. Expected: `harness:prepush` runs typecheck + lint + drift + Vitest + Ruff + mypy, all pass under 60 s.
 
 - [ ] **V5: Preview smoke.**
-  Open a PR with a deliberately broken `/login` route. Expected: Netlify preview deploys, smoke fails, deploy marked failed, screenshot in deploy log.
+      Open a PR with a deliberately broken `/login` route. Expected: Netlify preview deploys, smoke fails, deploy marked failed, screenshot in deploy log.
 
 - [ ] **V6: Failure UX.**
-  Every blocking hook prints a docs anchor (grep your latest hook outputs).
+      Every blocking hook prints a docs anchor (grep your latest hook outputs).
 
 ---
 

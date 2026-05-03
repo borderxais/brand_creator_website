@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import ErrorHandlingImage from '@/components/ui/ErrorHandlingImage';
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import ErrorHandlingImage from "@/components/ui/ErrorHandlingImage";
 
 // Type definitions for creator data
 interface Platform {
@@ -38,12 +38,12 @@ interface CreatorsResponse {
 }
 
 export default function FindCreatorsChinese() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedPlatform, setSelectedPlatform] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedPlatform, setSelectedPlatform] = useState("");
   const [creators, setCreators] = useState<Creator[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [noCreators, setNoCreators] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [hasNewCreators, setHasNewCreators] = useState(false);
@@ -57,18 +57,16 @@ export default function FindCreatorsChinese() {
   // Check for creators (both new and existing)
   const checkForCreators = useCallback(async (refreshAll = false) => {
     try {
-      const url = refreshAll 
-        ? '/api/creators/check-new?refresh=true'
-        : '/api/creators/check-new';
-        
+      const url = refreshAll ? "/api/creators/check-new?refresh=true" : "/api/creators/check-new";
+
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('检查创作者失败');
+        throw new Error("检查创作者失败");
       }
 
       const data = await response.json();
       setHasNewCreators(data.hasNewCreators);
-      
+
       return {
         hasNewCreators: data.hasNewCreators,
         hasCreators: data.hasCreators,
@@ -76,7 +74,7 @@ export default function FindCreatorsChinese() {
         newCreators: data.newCreators,
       };
     } catch (err) {
-      console.error('检查创作者时出错:', err);
+      console.error("检查创作者时出错:", err);
       return {
         hasNewCreators: false,
         hasCreators: false,
@@ -92,19 +90,19 @@ export default function FindCreatorsChinese() {
     try {
       // Build query parameters
       const params = new URLSearchParams();
-      if (searchQuery) params.append('query', searchQuery);
-      if (selectedCategory) params.append('category', selectedCategory);
-      if (selectedPlatform) params.append('platform', selectedPlatform);
-      
+      if (searchQuery) params.append("query", searchQuery);
+      if (selectedCategory) params.append("category", selectedCategory);
+      if (selectedPlatform) params.append("platform", selectedPlatform);
+
       // Add pagination parameters
-      params.append('page', currentPage.toString());
-      params.append('pageSize', PAGE_SIZE.toString());
+      params.append("page", currentPage.toString());
+      params.append("pageSize", PAGE_SIZE.toString());
 
       // Add a cache-busting parameter to ensure fresh data
-      params.append('_t', Date.now().toString());
+      params.append("_t", Date.now().toString());
 
       const response = await fetch(`/api/creators?${params.toString()}`);
-      if (!response.ok) throw new Error('获取创作者失败');
+      if (!response.ok) throw new Error("获取创作者失败");
 
       const data: CreatorsResponse = await response.json();
 
@@ -116,10 +114,10 @@ export default function FindCreatorsChinese() {
       setTotalPages(Math.ceil(data.totalCount / PAGE_SIZE));
       setHasMorePages(data.hasMore);
       setNoCreators(data.totalCount === 0);
-      setError('');
+      setError("");
     } catch (err) {
-      console.error('获取创作者时出错:', err);
-      setError('加载创作者失败。请稍后再试。');
+      console.error("获取创作者时出错:", err);
+      setError("加载创作者失败。请稍后再试。");
       setCreators([]);
     } finally {
       setLoading(false);
@@ -127,50 +125,53 @@ export default function FindCreatorsChinese() {
   }, [searchQuery, selectedCategory, selectedPlatform, currentPage]);
 
   // Function to sync TikTok creators (new or refresh all)
-  const syncCreators = useCallback(async (refreshAll = false) => {
-    try {
-      setIsSyncing(true);
-      
-      // Step 1: Get creators to sync (all or just new ones)
-      const creatorsData = await checkForCreators(refreshAll);
-      const creatorsToSync = refreshAll ? creatorsData.allCreators : creatorsData.newCreators;
-      
-      if (!creatorsToSync.length) {
-        // No creators to sync
-        await fetchCreators();
-        return;
-      }
-      
-      setRefreshProgress({ current: 0, total: creatorsToSync.length });
-      setIsRefreshing(true);
-      
-      // Step 2: Sync each creator individually to show progress
-      for (let i = 0; i < creatorsToSync.length; i++) {
-        const handle = creatorsToSync[i];
-        
-        // Update progress
-        setRefreshProgress({ current: i + 1, total: creatorsToSync.length });
-        
-        // Sync this creator
-        try {
-          await fetch(`/api/creators/sync?handle_name=${encodeURIComponent(handle)}`);
-        } catch (err) {
-          console.error(`同步创作者 ${handle} 失败:`, err);
+  const syncCreators = useCallback(
+    async (refreshAll = false) => {
+      try {
+        setIsSyncing(true);
+
+        // Step 1: Get creators to sync (all or just new ones)
+        const creatorsData = await checkForCreators(refreshAll);
+        const creatorsToSync = refreshAll ? creatorsData.allCreators : creatorsData.newCreators;
+
+        if (!creatorsToSync.length) {
+          // No creators to sync
+          await fetchCreators();
+          return;
         }
+
+        setRefreshProgress({ current: 0, total: creatorsToSync.length });
+        setIsRefreshing(true);
+
+        // Step 2: Sync each creator individually to show progress
+        for (let i = 0; i < creatorsToSync.length; i++) {
+          const handle = creatorsToSync[i];
+
+          // Update progress
+          setRefreshProgress({ current: i + 1, total: creatorsToSync.length });
+
+          // Sync this creator
+          try {
+            await fetch(`/api/creators/sync?handle_name=${encodeURIComponent(handle)}`);
+          } catch (err) {
+            console.error(`同步创作者 ${handle} 失败:`, err);
+          }
+        }
+
+        setHasNewCreators(false);
+
+        // After syncing, fetch creators again
+        await fetchCreators();
+      } catch (err) {
+        console.error("同步创作者时出错:", err);
+        setError("同步创作者失败。请稍后再试。");
+      } finally {
+        setIsSyncing(false);
+        setIsRefreshing(false);
       }
-      
-      setHasNewCreators(false);
-      
-      // After syncing, fetch creators again
-      await fetchCreators();
-    } catch (err) {
-      console.error('同步创作者时出错:', err);
-      setError('同步创作者失败。请稍后再试。');
-    } finally {
-      setIsSyncing(false);
-      setIsRefreshing(false);
-    }
-  }, [checkForCreators, fetchCreators]);
+    },
+    [checkForCreators, fetchCreators]
+  );
 
   // Function to refresh all creators
   const handleRefreshAllCreators = () => {
@@ -213,9 +214,9 @@ export default function FindCreatorsChinese() {
 
   // Function to handle filter clearing
   const handleClearFilters = () => {
-    setSearchQuery('');
-    setSelectedCategory('');
-    setSelectedPlatform('');
+    setSearchQuery("");
+    setSelectedCategory("");
+    setSelectedPlatform("");
   };
 
   // Function to refresh the page and check for new creators
@@ -238,13 +239,13 @@ export default function FindCreatorsChinese() {
   // Handlers for pagination
   const handleNextPage = () => {
     if (hasMorePages) {
-      setCurrentPage(prev => prev + 1);
+      setCurrentPage((prev) => prev + 1);
     }
   };
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
-      setCurrentPage(prev => prev - 1);
+      setCurrentPage((prev) => prev - 1);
     }
   };
 
@@ -268,13 +269,24 @@ export default function FindCreatorsChinese() {
                 disabled={isSyncing}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
               >
-                <svg className="-ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                <svg
+                  className="-ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                  />
                 </svg>
                 同步新创作者
               </button>
             )}
-            
+
             <button
               onClick={handleRefreshAllCreators}
               disabled={isSyncing}
@@ -282,16 +294,45 @@ export default function FindCreatorsChinese() {
             >
               {isSyncing ? (
                 <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
-                  {isRefreshing ? `刷新中 ${refreshProgress.current}/${refreshProgress.total}` : '刷新中...'}
+                  {isRefreshing
+                    ? `刷新中 ${refreshProgress.current}/${refreshProgress.total}`
+                    : "刷新中..."}
                 </>
               ) : (
                 <>
-                  <svg className="-ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 8 0 01-15.357-2m15.357 2H15" />
+                  <svg
+                    className="-ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 8 0 01-15.357-2m15.357 2H15"
+                    />
                   </svg>
                   刷新所有创作者
                 </>
@@ -368,19 +409,39 @@ export default function FindCreatorsChinese() {
           <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="animate-spin h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin h-5 w-5 text-blue-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-blue-800">正在刷新创作者数据</h3>
                 <div className="mt-2 text-sm text-blue-700">
-                  <p>正在刷新 {refreshProgress.current} / {refreshProgress.total} 创作者...</p>
+                  <p>
+                    正在刷新 {refreshProgress.current} / {refreshProgress.total} 创作者...
+                  </p>
                   <div className="mt-1 w-full bg-blue-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full" 
-                      style={{ width: `${(refreshProgress.current / refreshProgress.total) * 100}%` }}
+                    <div
+                      className="bg-blue-600 h-2 rounded-full"
+                      style={{
+                        width: `${(refreshProgress.current / refreshProgress.total) * 100}%`,
+                      }}
                     ></div>
                   </div>
                 </div>
@@ -414,7 +475,8 @@ export default function FindCreatorsChinese() {
           </div>
         ) : (
           // Only render grid if not loading, no error, and we have creators
-          !loading && !error && (
+          !loading &&
+          !error && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                 {creators.map((creator) => (
@@ -430,29 +492,39 @@ export default function FindCreatorsChinese() {
                             {creator.user.image ? (
                               <ErrorHandlingImage
                                 src={creator.user.image}
-                                alt={creator.user.name || '创作者'}
+                                alt={creator.user.name || "创作者"}
                                 fill
                                 className="rounded-full object-cover"
                                 sizes="64px"
                                 fallback={
                                   <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
-                                    <span className="text-gray-500">{creator.user.name?.[0] || '?'}</span>
+                                    <span className="text-gray-500">
+                                      {creator.user.name?.[0] || "?"}
+                                    </span>
                                   </div>
                                 }
                               />
                             ) : (
                               <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
-                                <span className="text-gray-500">{creator.user.name?.[0] || '?'}</span>
+                                <span className="text-gray-500">
+                                  {creator.user.name?.[0] || "?"}
+                                </span>
                               </div>
                             )}
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-gray-900">{creator.user.name || '未知创作者'}</h3>
-                            <p className="text-sm text-gray-500">{creator.location || '抖音国际版创作者'}</p>
+                            <h3 className="text-lg font-bold text-gray-900">
+                              {creator.user.name || "未知创作者"}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              {creator.location || "抖音国际版创作者"}
+                            </p>
                           </div>
                         </div>
 
-                        <p className="mt-4 text-gray-600 line-clamp-2">{creator.bio || '暂无简介'}</p>
+                        <p className="mt-4 text-gray-600 line-clamp-2">
+                          {creator.bio || "暂无简介"}
+                        </p>
 
                         <div className="mt-4 flex flex-wrap gap-2">
                           {creator.categories && creator.categories.length > 0 ? (
@@ -473,7 +545,7 @@ export default function FindCreatorsChinese() {
                           <div className="flex space-x-2">
                             {creator.platforms.map((platform, index) => (
                               <div key={index} className="flex items-center">
-                                {platform.platform.name === 'tiktok' && (
+                                {platform.platform.name === "tiktok" && (
                                   <Image
                                     src="/icons/tiktok.svg"
                                     alt="抖音国际版"
@@ -485,7 +557,7 @@ export default function FindCreatorsChinese() {
                             ))}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {creator.platforms[0]?.followers?.toLocaleString() || '0'} 粉丝
+                            {creator.platforms[0]?.followers?.toLocaleString() || "0"} 粉丝
                           </div>
                         </div>
 
@@ -503,68 +575,91 @@ export default function FindCreatorsChinese() {
               {/* Pagination UI */}
               {totalPages > 1 && (
                 <div className="mt-10 flex justify-center">
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="分页">
+                  <nav
+                    className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                    aria-label="分页"
+                  >
                     {/* Previous page button */}
                     <button
                       onClick={handlePreviousPage}
                       disabled={currentPage === 1}
                       className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
-                        currentPage === 1 
-                          ? 'text-gray-300 cursor-not-allowed' 
-                          : 'text-gray-500 hover:bg-gray-50'
+                        currentPage === 1
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "text-gray-500 hover:bg-gray-50"
                       }`}
                     >
                       <span className="sr-only">上一页</span>
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                      <svg
+                        className="h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </button>
-                    
+
                     {/* Page number buttons */}
                     {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
                       // Show current page and nearby pages
                       let pageToShow = currentPage - 2 + i;
-                      
+
                       // Adjustments for edges
                       if (currentPage < 3) {
                         pageToShow = i + 1;
                       } else if (currentPage > totalPages - 2) {
                         pageToShow = totalPages - 4 + i;
                       }
-                      
+
                       // Ensure page is in valid range
                       if (pageToShow < 1 || pageToShow > totalPages) {
                         return null;
                       }
-                      
+
                       return (
                         <button
                           key={pageToShow}
                           onClick={() => handlePageChange(pageToShow)}
                           className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium ${
                             currentPage === pageToShow
-                              ? 'z-10 bg-purple-50 border-purple-500 text-purple-600'
-                              : 'bg-white text-gray-500 hover:bg-gray-50'
+                              ? "z-10 bg-purple-50 border-purple-500 text-purple-600"
+                              : "bg-white text-gray-500 hover:bg-gray-50"
                           }`}
                         >
                           {pageToShow}
                         </button>
                       );
                     })}
-                    
+
                     {/* Next page button */}
                     <button
                       onClick={handleNextPage}
                       disabled={!hasMorePages}
                       className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
                         !hasMorePages
-                          ? 'text-gray-300 cursor-not-allowed' 
-                          : 'text-gray-500 hover:bg-gray-50'
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "text-gray-500 hover:bg-gray-50"
                       }`}
                     >
                       <span className="sr-only">下一页</span>
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      <svg
+                        className="h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </button>
                   </nav>

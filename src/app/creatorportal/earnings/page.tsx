@@ -1,64 +1,64 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { DollarSign, TrendingUp, CreditCard, Download } from 'lucide-react';
+import { useState } from "react";
+import { DollarSign, TrendingUp, CreditCard, Download } from "lucide-react";
 
 const mockEarnings = {
   overview: {
-    totalEarnings: '$12,450',
-    pendingPayments: '$2,800',
-    averagePerPost: '$485',
-    monthlyGrowth: '+15%'
+    totalEarnings: "$12,450",
+    pendingPayments: "$2,800",
+    averagePerPost: "$485",
+    monthlyGrowth: "+15%",
   },
   transactions: [
     {
       id: 1,
-      brand: 'StyleCo',
-      campaign: 'Spring Collection Launch',
-      date: '2024-01-28',
-      amount: '$800',
-      status: 'Paid',
-      platform: 'Instagram',
-      content: '1 Post, 2 Stories'
+      brand: "StyleCo",
+      campaign: "Spring Collection Launch",
+      date: "2024-01-28",
+      amount: "$800",
+      status: "Paid",
+      platform: "Instagram",
+      content: "1 Post, 2 Stories",
     },
     {
       id: 2,
-      brand: 'BeautyBrand',
-      campaign: 'Skincare Routine',
-      date: '2024-01-25',
-      amount: '$1,200',
-      status: 'Pending',
-      platform: 'Instagram, TikTok',
-      content: '1 Reel, 1 TikTok'
+      brand: "BeautyBrand",
+      campaign: "Skincare Routine",
+      date: "2024-01-25",
+      amount: "$1,200",
+      status: "Pending",
+      platform: "Instagram, TikTok",
+      content: "1 Reel, 1 TikTok",
     },
     {
       id: 3,
-      brand: 'FitLife',
-      campaign: 'Workout Challenge',
-      date: '2024-01-20',
-      amount: '$2,000',
-      status: 'Paid',
-      platform: 'All Platforms',
-      content: '7 Posts, Stories'
-    }
-  ]
+      brand: "FitLife",
+      campaign: "Workout Challenge",
+      date: "2024-01-20",
+      amount: "$2,000",
+      status: "Paid",
+      platform: "All Platforms",
+      content: "7 Posts, Stories",
+    },
+  ],
 };
 
 const monthlyEarnings = [
-  { month: 'Jan', amount: 12450 },
-  { month: 'Dec', amount: 10800 },
-  { month: 'Nov', amount: 9500 },
-  { month: 'Oct', amount: 8200 },
-  { month: 'Sep', amount: 7800 },
-  { month: 'Aug', amount: 7200 }
+  { month: "Jan", amount: 12450 },
+  { month: "Dec", amount: 10800 },
+  { month: "Nov", amount: 9500 },
+  { month: "Oct", amount: 8200 },
+  { month: "Sep", amount: 7800 },
+  { month: "Aug", amount: 7200 },
 ];
 
 export default function CreatorEarnings() {
-  const [timeFilter, setTimeFilter] = useState('6months');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [timeFilter, setTimeFilter] = useState("6months");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const filteredTransactions = mockEarnings.transactions.filter(transaction => {
-    if (statusFilter === 'all') return true;
+  const filteredTransactions = mockEarnings.transactions.filter((transaction) => {
+    if (statusFilter === "all") return true;
     return transaction.status.toLowerCase() === statusFilter.toLowerCase();
   });
 
@@ -68,9 +68,7 @@ export default function CreatorEarnings() {
       <div className="bg-white shadow rounded-lg">
         <div className="p-6">
           <h1 className="text-2xl font-bold text-gray-900">Earnings</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Track your earnings and payment history
-          </p>
+          <p className="mt-2 text-sm text-gray-600">Track your earnings and payment history</p>
         </div>
       </div>
 
@@ -83,7 +81,9 @@ export default function CreatorEarnings() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Earnings</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockEarnings.overview.totalEarnings}</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {mockEarnings.overview.totalEarnings}
+              </p>
             </div>
           </div>
         </div>
@@ -95,7 +95,9 @@ export default function CreatorEarnings() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Pending Payments</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockEarnings.overview.pendingPayments}</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {mockEarnings.overview.pendingPayments}
+              </p>
             </div>
           </div>
         </div>
@@ -107,7 +109,9 @@ export default function CreatorEarnings() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Average Per Post</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockEarnings.overview.averagePerPost}</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {mockEarnings.overview.averagePerPost}
+              </p>
             </div>
           </div>
         </div>
@@ -119,7 +123,9 @@ export default function CreatorEarnings() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Monthly Growth</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockEarnings.overview.monthlyGrowth}</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {mockEarnings.overview.monthlyGrowth}
+              </p>
             </div>
           </div>
         </div>
@@ -143,7 +149,7 @@ export default function CreatorEarnings() {
           <div className="flex h-full items-end space-x-6">
             {monthlyEarnings.map((month) => (
               <div key={month.month} className="flex-1 flex flex-col items-center">
-                <div 
+                <div
                   className="w-full bg-blue-100 rounded-t"
                   style={{ height: `${(month.amount / 15000) * 100}%` }}
                 >
@@ -183,26 +189,52 @@ export default function CreatorEarnings() {
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Brand
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Campaign
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Content
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredTransactions.map((transaction) => (
                   <tr key={transaction.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{transaction.brand}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{transaction.campaign}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.content}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{transaction.amount}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {transaction.brand}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {transaction.campaign}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {transaction.date}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {transaction.content}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {transaction.amount}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded ${
-                        transaction.status === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded ${
+                          transaction.status === "Paid"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
                         {transaction.status}
                       </span>
                     </td>

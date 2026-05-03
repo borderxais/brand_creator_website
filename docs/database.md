@@ -82,6 +82,7 @@ Hook error output will reference this anchor:
 ## When to Update
 
 Update this file when:
+
 - A new Prisma model is added or an existing one is significantly changed.
 - The migration workflow changes (e.g., shadow database configuration).
 - Connection environment variable names change.

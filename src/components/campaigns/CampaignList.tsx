@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { Platform, PLATFORMS, PLATFORM_LABELS } from '@/types/platform';
-import { Category, CATEGORIES, CATEGORY_LABELS } from '@/types/category';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Image from 'next/image';
+import { useState } from "react";
+import { Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Platform, PLATFORMS, PLATFORM_LABELS } from "@/types/platform";
+import { Category, CATEGORIES, CATEGORY_LABELS } from "@/types/category";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Image from "next/image";
 
 interface Brand {
   name: string;
@@ -39,27 +39,26 @@ interface CampaignListProps {
 }
 
 export function CampaignList({ currentCampaigns, availableCampaigns }: CampaignListProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [platformFilter, setPlatformFilter] = useState<'all' | Platform>('all');
-  const [categoryFilter, setCategoryFilter] = useState<'all' | Category>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [platformFilter, setPlatformFilter] = useState<"all" | Platform>("all");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | Category>("all");
 
   const filterCampaigns = (campaigns: Campaign[]): Campaign[] => {
-    return campaigns.filter(campaign => {
-      const matchesSearch = 
+    return campaigns.filter((campaign) => {
+      const matchesSearch =
         campaign.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         campaign.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         campaign.brand.name.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesPlatform =
-        platformFilter === 'all' ||
-        campaign.platformIds.includes(platformFilter);
-      
+        platformFilter === "all" || campaign.platformIds.includes(platformFilter);
+
       const matchesCategory =
-        categoryFilter === 'all' ||
+        categoryFilter === "all" ||
         (() => {
           try {
             const categories = JSON.parse(campaign.categories);
-            return Array.isArray(categories) 
+            return Array.isArray(categories)
               ? categories.includes(categoryFilter)
               : categories === categoryFilter;
           } catch (_e) {
@@ -95,10 +94,10 @@ export function CampaignList({ currentCampaigns, availableCampaigns }: CampaignL
             <select
               className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 bg-white"
               value={platformFilter}
-              onChange={(e) => setPlatformFilter(e.target.value as 'all' | Platform)}
+              onChange={(e) => setPlatformFilter(e.target.value as "all" | Platform)}
             >
               <option value="all">All Platforms</option>
-              {PLATFORMS.map(platform => (
+              {PLATFORMS.map((platform) => (
                 <option key={platform} value={platform}>
                   {PLATFORM_LABELS[platform]}
                 </option>
@@ -107,10 +106,10 @@ export function CampaignList({ currentCampaigns, availableCampaigns }: CampaignL
             <select
               className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 bg-white"
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value as 'all' | Category)}
+              onChange={(e) => setCategoryFilter(e.target.value as "all" | Category)}
             >
               <option value="all">All Categories</option>
-              {CATEGORIES.map(category => (
+              {CATEGORIES.map((category) => (
                 <option key={category} value={category}>
                   {CATEGORY_LABELS[category]}
                 </option>
@@ -124,8 +123,18 @@ export function CampaignList({ currentCampaigns, availableCampaigns }: CampaignL
       <div className="bg-white rounded-lg shadow-sm p-6">
         <Tabs defaultValue="available" className="space-y-4">
           <TabsList className="bg-gray-100/80 p-1 rounded-lg">
-            <TabsTrigger value="current" className="rounded-md px-6 py-2 data-[state=active]:bg-white">My Campaigns</TabsTrigger>
-            <TabsTrigger value="available" className="rounded-md px-6 py-2 data-[state=active]:bg-white">Available Campaigns</TabsTrigger>
+            <TabsTrigger
+              value="current"
+              className="rounded-md px-6 py-2 data-[state=active]:bg-white"
+            >
+              My Campaigns
+            </TabsTrigger>
+            <TabsTrigger
+              value="available"
+              className="rounded-md px-6 py-2 data-[state=active]:bg-white"
+            >
+              Available Campaigns
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="current" className="space-y-4">
@@ -136,11 +145,7 @@ export function CampaignList({ currentCampaigns, availableCampaigns }: CampaignL
             ) : (
               <div className="space-y-4">
                 {filteredCurrentCampaigns.map((campaign) => (
-                  <CampaignCard 
-                    key={campaign.id} 
-                    campaign={campaign}
-                    type="current"
-                  />
+                  <CampaignCard key={campaign.id} campaign={campaign} type="current" />
                 ))}
               </div>
             )}
@@ -154,11 +159,7 @@ export function CampaignList({ currentCampaigns, availableCampaigns }: CampaignL
             ) : (
               <div className="space-y-4">
                 {filteredAvailableCampaigns.map((campaign) => (
-                  <CampaignCard 
-                    key={campaign.id} 
-                    campaign={campaign}
-                    type="available"
-                  />
+                  <CampaignCard key={campaign.id} campaign={campaign} type="available" />
                 ))}
               </div>
             )}
@@ -169,7 +170,7 @@ export function CampaignList({ currentCampaigns, availableCampaigns }: CampaignL
   );
 }
 
-function CampaignCard({ campaign, type }: { campaign: Campaign, type: 'current' | 'available' }) {
+function CampaignCard({ campaign, type }: { campaign: Campaign; type: "current" | "available" }) {
   const router = useRouter();
   const [isApplying, setIsApplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -178,26 +179,26 @@ function CampaignCard({ campaign, type }: { campaign: Campaign, type: 'current' 
     try {
       setIsApplying(true);
       setError(null);
-      
-      const response = await fetch('/api/creator/campaigns/apply', {
-        method: 'POST',
+
+      const response = await fetch("/api/creator/campaigns/apply", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          campaignId: campaign.id
+          campaignId: campaign.id,
         }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to apply for campaign');
+        throw new Error(data.error || "Failed to apply for campaign");
       }
 
       router.refresh();
     } catch (error) {
-      console.error('Error applying for campaign:', error);
-      setError(error instanceof Error ? error.message : 'Failed to apply for campaign');
+      console.error("Error applying for campaign:", error);
+      setError(error instanceof Error ? error.message : "Failed to apply for campaign");
     } finally {
       setIsApplying(false);
     }
@@ -220,15 +221,20 @@ function CampaignCard({ campaign, type }: { campaign: Campaign, type: 'current' 
             <p className="text-sm font-medium text-indigo-600">{campaign.brand.name}</p>
           </div>
         </div>
-        {type === 'current' ? (
+        {type === "current" ? (
           <div className="flex items-center gap-2">
             {campaign.status && (
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                campaign.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                campaign.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
-                campaign.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  campaign.status === "APPROVED"
+                    ? "bg-green-100 text-green-800"
+                    : campaign.status === "IN_PROGRESS"
+                      ? "bg-blue-100 text-blue-800"
+                      : campaign.status === "PENDING"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-gray-100 text-gray-800"
+                }`}
+              >
                 {campaign.status.charAt(0) + campaign.status.slice(1).toLowerCase()}
               </span>
             )}
@@ -240,15 +246,13 @@ function CampaignCard({ campaign, type }: { campaign: Campaign, type: 'current' 
               disabled={isApplying}
               className={`px-4 py-2 rounded-md text-sm font-medium text-white ${
                 isApplying
-                  ? 'bg-indigo-400 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700'
+                  ? "bg-indigo-400 cursor-not-allowed"
+                  : "bg-indigo-600 hover:bg-indigo-700"
               }`}
             >
-              {isApplying ? 'Applying...' : 'Apply Now'}
+              {isApplying ? "Applying..." : "Apply Now"}
             </button>
-            {error && (
-              <p className="text-sm text-red-600">{error}</p>
-            )}
+            {error && <p className="text-sm text-red-600">{error}</p>}
           </div>
         )}
       </div>

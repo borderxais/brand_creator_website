@@ -1,107 +1,120 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Search, Instagram, Youtube, Image as ImageIcon, TrendingUp, DollarSign, MessageSquare } from 'lucide-react';
+import { useState } from "react";
+import {
+  Search,
+  Instagram,
+  Youtube,
+  Image as ImageIcon,
+  TrendingUp,
+  DollarSign,
+  MessageSquare,
+} from "lucide-react";
 
 const mockPosts = [
   {
     id: 1,
-    platform: 'Instagram',
-    type: 'Post',
-    title: 'Spring Collection Showcase',
-    image: '/images/placeholder-400.svg',
-    caption: 'Loving this new collection from @StyleCo! The quality is amazing 🌟 #ad #StyleCoPartner',
-    publishDate: '2024-01-28',
+    platform: "Instagram",
+    type: "Post",
+    title: "Spring Collection Showcase",
+    image: "/images/placeholder-400.svg",
+    caption:
+      "Loving this new collection from @StyleCo! The quality is amazing 🌟 #ad #StyleCoPartner",
+    publishDate: "2024-01-28",
     metrics: {
       likes: 1520,
       comments: 89,
       shares: 45,
-      reach: '15.2K',
-      engagement: '4.8%',
-      earnings: '$450'
+      reach: "15.2K",
+      engagement: "4.8%",
+      earnings: "$450",
     },
-    campaign: 'StyleCo Spring Collection',
-    status: 'Published'
+    campaign: "StyleCo Spring Collection",
+    status: "Published",
   },
   {
     id: 2,
-    platform: 'TikTok',
-    type: 'Video',
-    title: 'Summer Vibes',
-    image: '/images/placeholder-400.svg',
-    caption: 'How I style these amazing pieces from @BeautyBrand ✨ #sponsored #BeautyBrandPartner',
-    publishDate: '2024-01-25',
+    platform: "TikTok",
+    type: "Video",
+    title: "Summer Vibes",
+    image: "/images/placeholder-400.svg",
+    caption: "How I style these amazing pieces from @BeautyBrand ✨ #sponsored #BeautyBrandPartner",
+    publishDate: "2024-01-25",
     metrics: {
       likes: 2250,
       comments: 156,
       shares: 89,
-      reach: '22.5K',
-      engagement: '5.2%',
-      earnings: '$600'
+      reach: "22.5K",
+      engagement: "5.2%",
+      earnings: "$600",
     },
-    campaign: 'BeautyBrand Summer Launch',
-    status: 'Published'
+    campaign: "BeautyBrand Summer Launch",
+    status: "Published",
   },
   {
     id: 3,
-    platform: 'Instagram',
-    type: 'Reel',
-    title: 'Autumn Lookbook',
-    image: '/images/placeholder-400.svg',
-    caption: 'Quick morning routine with @BeautyBrand new skincare line! 💫 #ad',
-    publishDate: '2024-01-20',
+    platform: "Instagram",
+    type: "Reel",
+    title: "Autumn Lookbook",
+    image: "/images/placeholder-400.svg",
+    caption: "Quick morning routine with @BeautyBrand new skincare line! 💫 #ad",
+    publishDate: "2024-01-20",
     metrics: {
       likes: 1850,
       comments: 134,
       shares: 67,
-      reach: '18.7K',
-      engagement: '4.5%',
-      earnings: '$550'
+      reach: "18.7K",
+      engagement: "4.5%",
+      earnings: "$550",
     },
-    campaign: 'BeautyBrand Skincare',
-    status: 'Published'
+    campaign: "BeautyBrand Skincare",
+    status: "Published",
   },
   {
     id: 4,
-    platform: 'Instagram',
-    type: 'Story',
-    title: 'Winter Collection',
-    image: '/images/placeholder-400.svg',
+    platform: "Instagram",
+    type: "Story",
+    title: "Winter Collection",
+    image: "/images/placeholder-400.svg",
     caption: "Behind the scenes of today's shoot! 📸 #comingsoon",
-    publishDate: 'Draft',
+    publishDate: "Draft",
     metrics: {
       likes: 0,
       comments: 0,
       shares: 0,
-      reach: '-',
-      engagement: '-',
-      earnings: '$0'
+      reach: "-",
+      engagement: "-",
+      earnings: "$0",
     },
-    campaign: 'FitLife Challenge',
-    status: 'Draft'
-  }
+    campaign: "FitLife Challenge",
+    status: "Draft",
+  },
 ];
 
 export default function CreatorPosts() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [platformFilter, setPlatformFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [platformFilter, setPlatformFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const filteredPosts = mockPosts.filter(post => {
-    const matchesSearch = post.caption.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.campaign.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesPlatform = platformFilter === 'all' || post.platform.toLowerCase() === platformFilter.toLowerCase();
-    const matchesType = typeFilter === 'all' || post.type.toLowerCase() === typeFilter.toLowerCase();
-    const matchesStatus = statusFilter === 'all' || post.status.toLowerCase() === statusFilter.toLowerCase();
+  const filteredPosts = mockPosts.filter((post) => {
+    const matchesSearch =
+      post.caption.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.campaign.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesPlatform =
+      platformFilter === "all" || post.platform.toLowerCase() === platformFilter.toLowerCase();
+    const matchesType =
+      typeFilter === "all" || post.type.toLowerCase() === typeFilter.toLowerCase();
+    const matchesStatus =
+      statusFilter === "all" || post.status.toLowerCase() === statusFilter.toLowerCase();
     return matchesSearch && matchesPlatform && matchesType && matchesStatus;
   });
 
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
-      case 'instagram':
+      case "instagram":
         return Instagram;
-      case 'youtube':
+      case "youtube":
         return Youtube;
       default:
         return ImageIcon;
@@ -186,9 +199,13 @@ export default function CreatorPosts() {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-4 left-4 flex items-center space-x-2">
-                  <span className={`px-2 py-1 text-xs font-semibold rounded ${
-                    post.status === 'Published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                  }`}>
+                  <span
+                    className={`px-2 py-1 text-xs font-semibold rounded ${
+                      post.status === "Published"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
                     {post.status}
                   </span>
                 </div>
@@ -201,12 +218,8 @@ export default function CreatorPosts() {
               <div className="p-4">
                 <div className="mb-4">
                   <p className="text-sm text-gray-900 line-clamp-2">{post.caption}</p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Campaign: {post.campaign}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {post.publishDate}
-                  </p>
+                  <p className="mt-1 text-xs text-gray-500">Campaign: {post.campaign}</p>
+                  <p className="text-xs text-gray-500">{post.publishDate}</p>
                 </div>
 
                 {/* Metrics */}
@@ -218,12 +231,16 @@ export default function CreatorPosts() {
                   </div>
                   <div className="text-center">
                     <MessageSquare className="h-4 w-4 mx-auto text-gray-400" />
-                    <p className="mt-1 text-xs font-medium text-gray-900">{post.metrics.engagement}</p>
+                    <p className="mt-1 text-xs font-medium text-gray-900">
+                      {post.metrics.engagement}
+                    </p>
                     <p className="text-xs text-gray-500">Engagement</p>
                   </div>
                   <div className="text-center">
                     <DollarSign className="h-4 w-4 mx-auto text-gray-400" />
-                    <p className="mt-1 text-xs font-medium text-gray-900">{post.metrics.earnings}</p>
+                    <p className="mt-1 text-xs font-medium text-gray-900">
+                      {post.metrics.earnings}
+                    </p>
                     <p className="text-xs text-gray-500">Earnings</p>
                   </div>
                 </div>
@@ -235,9 +252,7 @@ export default function CreatorPosts() {
 
       {/* Create Post Button */}
       <div className="fixed bottom-8 right-8">
-        <button
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
+        <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <ImageIcon className="h-5 w-5 mr-2" />
           Create Post
         </button>
