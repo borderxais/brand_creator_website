@@ -57,3 +57,6 @@ backend/app.yaml
 
 # Artifacts
 AGENTS.md
+playwright-report/
+test-results/
+coverage/
