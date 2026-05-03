@@ -5,7 +5,6 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Clock, DollarSign, Tag, Filter, Search, Calendar, X, Link as LinkIcon, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 
 interface Platform {
   id: string;
@@ -66,7 +65,7 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
                     (parsed.list && Array.isArray(parsed.list)) ? parsed.list : 
                     [String(parsed)];
     }
-  } catch (e) {
+  } catch (_e) {
     requirements = campaign.requirements ? [campaign.requirements] : [];
   }
 
@@ -75,7 +74,7 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
     if (!dateString) return 'Not set';
     try {
       return new Date(dateString).toLocaleDateString();
-    } catch (e) {
+    } catch (_e) {
       return String(dateString);
     }
   };
@@ -85,7 +84,7 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
     if (!field) return [];
     try {
       return JSON.parse(field);
-    } catch (e) {
+    } catch (_e) {
       return field.split(',').map(item => item.trim());
     }
   };
@@ -296,7 +295,7 @@ export default function Campaigns() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const [_platforms, setPlatforms] = useState<Platform[]>([]);
   
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -442,7 +441,7 @@ export default function Campaigns() {
   };
 
   // Server-side filtering
-  const filteredCampaigns = campaigns;
+  const _filteredCampaigns = campaigns;
 
   if (status === 'loading' || isLoading) {
     return (
@@ -592,7 +591,7 @@ export default function Campaigns() {
               {deleteConfirm === campaign.id && (
                 <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-red-800 text-sm mb-2">
-                    Are you sure you want to delete "{campaign.title}"? This action cannot be undone.
+                    Are you sure you want to delete &quot;{campaign.title}&quot;? This action cannot be undone.
                   </p>
                   <div className="flex space-x-2">
                     <button

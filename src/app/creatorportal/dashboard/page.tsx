@@ -96,7 +96,7 @@ export default function CreatorDashboard() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Welcome back, {session.user.name}!</h1>
-          <p className="text-gray-600">Here's what's happening with your content</p>
+          <p className="text-gray-600">Here&apos;s what&apos;s happening with your content</p>
         </div>
         <div className="flex space-x-4">
           <button className="bg-white p-2 rounded-full text-gray-600 hover:bg-gray-100">
@@ -172,7 +172,7 @@ export default function CreatorDashboard() {
           
           {/* Show empty state instead of mock posts */}
           <div className="text-center py-10">
-            <p className="text-gray-500">You haven't created any posts yet.</p>
+            <p className="text-gray-500">You haven&apos;t created any posts yet.</p>
             <Link
               href="/creatorportal/posts/create"
               className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700"
@@ -197,7 +197,7 @@ export default function CreatorDashboard() {
           
           {recentApplications.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500">You haven't applied to any campaigns yet.</p>
+              <p className="text-gray-500">You haven&apos;t applied to any campaigns yet.</p>
               <Link
                 href="/campaigns"
                 className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700"

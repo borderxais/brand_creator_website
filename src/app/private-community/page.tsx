@@ -581,7 +581,7 @@ export default function PrivateCommunityPage() {
         <div className="bg-white rounded-lg shadow-lg p-8 mb-16">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Service Comparison</h2>
-            <p className="text-lg text-gray-600 mb-2">Complete breakdown of what's included in each plan</p>
+            <p className="text-lg text-gray-600 mb-2">Complete breakdown of what&apos;s included in each plan</p>
             <p className="text-gray-500">
               Everything you need to build and manage your private domain community
             </p>
@@ -1010,7 +1010,7 @@ export default function PrivateCommunityPage() {
 
             {/* What's Included Summary */}
             <div className="bg-blue-50 rounded-lg p-6">
-              <h4 className="font-semibold text-blue-800 mb-3">What's Included in Your Package</h4>
+              <h4 className="font-semibold text-blue-800 mb-3">What&apos;s Included in Your Package</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <h5 className="font-medium text-blue-700 mb-2">Core Services</h5>

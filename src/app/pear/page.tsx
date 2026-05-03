@@ -138,7 +138,7 @@ export default function PearPage() {
           {/* Secondary description */}
           <div className="max-w-3xl mx-auto">
             <p className="text-xl text-gray-600 mb-4">
-              Discover amazing stores and brands powered by Pear's social commerce platform
+              Discover amazing stores and brands powered by Pear&apos;s social commerce platform
             </p>
             <p className="text-gray-500">
               Explore curated stores with unique products and services, all enhanced with social selling capabilities
@@ -309,7 +309,7 @@ export default function PearPage() {
               </h2>
               
               <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
-                Start your journey with Pear's social commerce platform and earn while you grow your community. 
+                Start your journey with Pear&apos;s social commerce platform and earn while you grow your community. 
                 Join thousands of successful affiliates already building their networks.
               </p>
               
@@ -359,7 +359,7 @@ export default function PearPage() {
               {!isLoggedIn && (
                 <div className="mt-6 text-center">
                   <p className="text-gray-600 text-sm">
-                    Don't have an account? Join as{' '}
+                    Don&apos;t have an account? Join as{' '}
                     <Link
                       href="/join-creator"
                       className="text-purple-600 hover:text-purple-700 font-medium underline transition-colors"

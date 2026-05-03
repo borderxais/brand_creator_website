@@ -151,7 +151,7 @@ export default function BrandDashboard() {
               Welcome back, {session?.user?.name}! <Smile className="inline h-10 w-10 mx-1" />
             </h1>
             <p className="mt-1 text-sm text-gray-600">
-              Here's what's happening with your campaigns today
+              Here&apos;s what&apos;s happening with your campaigns today
             </p>
           </div>
           <Link 

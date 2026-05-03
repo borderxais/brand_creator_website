@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { SocialLinks } from '@/components/ui/SocialLinks';
 import { Stats } from '@/components/ui/Stats';
-import { PortfolioGallery } from '@/components/ui/PortfolioGallery';
 import ErrorHandlingImage from '@/components/ui/ErrorHandlingImage';
 import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
@@ -79,7 +78,7 @@ function parseCategories(categoriesStr: string | null): string[] {
     } else {
       return [];
     }
-  } catch (e) {
+  } catch (_e) {
     // If JSON parsing fails, split by comma and trim
     return categoriesStr.split(',').map(cat => cat.trim()).filter(Boolean);
   }
@@ -401,7 +400,7 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
                   <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-3 bg-green-50 rounded-md">
                       <p className="text-sm text-green-800">
-                        <span className="font-semibold">Engagement Analysis:</span> This creator's {(Number(creator?.engagement_rate) || 0).toFixed(2)}% engagement rate is {creator?.engagement_rate && Number(creator.engagement_rate) > 2.7 ? 'above' : 'below'} the platform average of 2.7%.
+                        <span className="font-semibold">Engagement Analysis:</span> This creator&apos;s {(Number(creator?.engagement_rate) || 0).toFixed(2)}% engagement rate is {creator?.engagement_rate && Number(creator.engagement_rate) > 2.7 ? 'above' : 'below'} the platform average of 2.7%.
                       </p>
                     </div>
                     <div className="p-3 bg-teal-50 rounded-md">

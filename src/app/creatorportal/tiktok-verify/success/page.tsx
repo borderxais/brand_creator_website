@@ -29,7 +29,7 @@ export default function VerificationSuccess() {
             <h2 className="font-medium text-purple-800">What happens next?</h2>
             <ul className="mt-2 text-sm text-purple-700 space-y-1 list-disc list-inside">
               <li>Our team will review your application</li>
-              <li>You'll receive an email confirmation shortly</li>
+              <li>You&apos;ll receive an email confirmation shortly</li>
               <li>Processing typically takes 5-7 business days</li>
               <li>You may be contacted for additional information</li>
             </ul>

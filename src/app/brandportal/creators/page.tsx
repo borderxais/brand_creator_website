@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Filter, MessageSquare } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
 
 const creators = [
@@ -168,7 +168,7 @@ export default function CreatorsPage() {
     <div className="space-y-6">
       {/* Description */}
       <p className="text-gray-600">
-        Discover and connect with talented creators who align with your brand's vision and values.
+        Discover and connect with talented creators who align with your brand&apos;s vision and values.
       </p>
 
       {/* Search and Filters */}

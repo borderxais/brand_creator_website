@@ -387,7 +387,7 @@ function CareerPageContent() {
                       onChange={handleInputChange}
                     >
                       <option value="passport">Passport</option>
-                      <option value="driverLicense">Driver's License</option>
+                      <option value="driverLicense">Driver&apos;s License</option>
                       <option value="nationalId">National ID Card</option>
                       <option value="other">Other Government ID</option>
                     </select>

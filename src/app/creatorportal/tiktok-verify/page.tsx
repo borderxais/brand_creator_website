@@ -40,7 +40,7 @@ export default function TikTokVerify() {
   
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitSuccess, _setSubmitSuccess] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   
   // Upload progress state
@@ -430,7 +430,7 @@ export default function TikTokVerify() {
                   onChange={handleChange}
                 >
                   <option value="passport">Passport</option>
-                  <option value="driverLicense">Driver's License</option>
+                  <option value="driverLicense">Driver&apos;s License</option>
                   <option value="nationalId">National ID Card</option>
                   <option value="other">Other Government ID</option>
                 </select>

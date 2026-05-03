@@ -123,7 +123,7 @@ export default function PrivateDomainDataService() {
               Private Domain Data Service
             </h1>
             <p className="text-gray-600">
-              Download targeted customer data from our database. Select your filters below and we'll email you a CSV file with the requested information including personal address, city, children status, gender, homeowner status, marital status, and more.
+              Download targeted customer data from our database. Select your filters below and we&apos;ll email you a CSV file with the requested information including personal address, city, children status, gender, homeowner status, marital status, and more.
             </p>
           </div>
 

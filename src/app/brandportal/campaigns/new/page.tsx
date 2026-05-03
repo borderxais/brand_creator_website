@@ -117,7 +117,7 @@ export default function NewCampaign() {
     'No geographic preference'
   ];
 
-  const creatorTiers = [
+  const _creatorTiers = [
     'L1 Estimated 1 – 10 orders/month, or new creators',
     'L2 Estimated 10 – 50 orders/month, some experience',
     'L3 Estimated 50 – 200 orders/month, avg. 10 k – 30 k views/video',
@@ -504,7 +504,7 @@ export default function NewCampaign() {
                         className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
                       />
                       <label htmlFor="ad-disable" className="ml-2 text-sm text-gray-700">
-                        Disable (videos won't go through ad-review)
+                        Disable (videos won&apos;t go through ad-review)
                       </label>
                     </div>
                     <div className="flex items-center">

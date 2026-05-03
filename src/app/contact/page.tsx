@@ -266,7 +266,7 @@ export default function ContactPage() {
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">Contact Us</h1>
           <p className="mt-4 text-xl text-gray-600">
-            We're here to help you succeed
+            We&apos;re here to help you succeed
           </p>
           <p className="mt-2 text-gray-500">
             Get in touch with our team for support, partnerships, or any questions
@@ -336,7 +336,7 @@ export default function ContactPage() {
                     </div>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Thank you for contacting us!</h3>
                     <p className="text-gray-600 mb-4">
-                      We've received your message and will get back to you within 24 hours.
+                      We&apos;ve received your message and will get back to you within 24 hours.
                     </p>
                     <button
                       onClick={resetForm}
@@ -409,7 +409,7 @@ export default function ContactPage() {
                         {errors.email ? (
                           <p className="mt-1 text-sm text-red-600">{errors.email}</p>
                         ) : (
-                          <p className="mt-1 text-sm text-gray-500">We'll use this to respond to you</p>
+                          <p className="mt-1 text-sm text-gray-500">We&apos;ll use this to respond to you</p>
                         )}
                       </div>
                     </div>
@@ -562,7 +562,7 @@ export default function ContactPage() {
                 <div>
                   <h4 className="text-sm font-medium text-gray-700">Can I schedule a call?</h4>
                   <p className="text-sm text-gray-600">
-                    Yes! Mention your preferred time in the message and we'll coordinate.
+                    Yes! Mention your preferred time in the message and we&apos;ll coordinate.
                   </p>
                 </div>
                 <div>
