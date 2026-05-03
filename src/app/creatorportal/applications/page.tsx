@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, Clock, Eye, ArrowRight, Calendar, DollarSign } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Eye, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 

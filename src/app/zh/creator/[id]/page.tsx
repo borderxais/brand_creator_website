@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { SocialLinks } from '@/components/ui/SocialLinks';
 import { Stats } from '@/components/ui/Stats';
-import { PortfolioGallery } from '@/components/ui/PortfolioGallery';
 import ErrorHandlingImage from '@/components/ui/ErrorHandlingImage';
 import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
@@ -79,7 +78,7 @@ function parseCategories(categoriesStr: string | null): string[] {
     } else {
       return [];
     }
-  } catch (e) {
+  } catch (_e) {
     // If JSON parsing fails, split by comma and trim
     return categoriesStr.split(',').map(cat => cat.trim()).filter(Boolean);
   }

@@ -90,7 +90,7 @@ export default function Campaigns() {
                 : typeof categories === 'string' 
                   ? categories 
                   : 'General';
-            } catch (e) {
+            } catch (_e) {
               return 'General';
             }
           })(),

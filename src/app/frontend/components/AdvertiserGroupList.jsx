@@ -56,7 +56,7 @@ const AdvertiserGroupList = ({ advertiserId }) => {
   const sendNotification = async () => {
     setNotificationLoading(true);
     try {
-      const response = await axios.post('/api/advertiser/send-notification', {
+      const _response = await axios.post('/api/advertiser/send-notification', {
         advertiser_id: advertiserId
       });
       message.success('Notification process triggered successfully');

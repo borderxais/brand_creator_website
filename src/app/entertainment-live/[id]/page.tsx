@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { 
-  ArrowLeft, Calendar, Users, DollarSign, Clock, MapPin, Star, 
+  ArrowLeft, Calendar, Users, DollarSign, MapPin,
   Target, FileText, AlertTriangle, CheckCircle, Tag, Globe,
   Award, TrendingUp, Shield, Zap
 } from 'lucide-react';
@@ -39,7 +39,6 @@ interface DetailedMission {
 
 export default function MissionDetail() {
   const params = useParams();
-  const router = useRouter();
   const [mission, setMission] = useState<DetailedMission | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -5,7 +5,6 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { loginAttemptsLimiter } from "@/lib/rate-limiter";
 import { getSession } from "next-auth/react";
 
 function LoginForm() {
@@ -16,8 +15,8 @@ function LoginForm() {
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [showResendButton, setShowResendButton] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
-  const [isRateLimited, setIsRateLimited] = useState(false);
-  const [rateLimitTime, setRateLimitTime] = useState(0);
+  const [_isRateLimited, setIsRateLimited] = useState(false);
+  const [_rateLimitTime, setRateLimitTime] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -49,7 +48,7 @@ function LoginForm() {
     try {
       // Check if the user is rate limited (client-side check)
       const ip = "client"; // We'll use a placeholder since we can't get IP on client
-      const key = `login-attempt:${ip}:${email}`;
+      const _key = `login-attempt:${ip}:${email}`;
 
       // Actually check on the server side through the API
       const rateLimitCheck = await fetch("/api/auth/check-rate-limit", {

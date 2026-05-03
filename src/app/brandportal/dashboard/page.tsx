@@ -1,17 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { MessageSquare } from 'lucide-react';
 import { DollarSign, Users, ShoppingBag, TrendingUp, Plus, Target, Smile } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Link from 'next/link';
 
-interface Platform {
-  id: string;
-  name: string;
-  displayName: string;
-}
 
 const revenueData = [
   { name: 'Jan', revenue: 4000 },

@@ -23,13 +23,6 @@ interface TikTokCreatorResponse {
   };
 }
 
-// Helper for converting to proper numeric types
-const safeFloat = (value: any): number | null => {
-  if (value === null || value === undefined) return null;
-  const parsed = parseFloat(String(value));
-  return isNaN(parsed) ? null : parsed;
-};
-
 // Helper for handling text fields
 const safeText = (value: any): string | null => {
   if (value === null || value === undefined) return null;

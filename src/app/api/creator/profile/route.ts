@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authConfig } from '@/app/api/auth/[...nextauth]/auth.config';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Check authentication
     const session = await getServerSession(authConfig);
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     let categories = [];
     try {
       categories = JSON.parse(creatorProfile.categories || '[]');
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to parse categories:', creatorProfile.categories);
       categories = [];
     }

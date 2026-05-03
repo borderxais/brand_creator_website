@@ -8,7 +8,6 @@ import {
   DollarSign, 
   Users, 
   CheckCircle, 
-  Layers, 
   Award, 
   ChevronLeft, 
   Clock,
@@ -130,7 +129,7 @@ export default function CampaignDetail() {
         if (requirements.includes('\n')) return requirements.split('\n').map(r => r.trim());
         return [requirements];
       }
-    } catch (e) {
+    } catch (_e) {
       return [String(requirements)];
     }
   };

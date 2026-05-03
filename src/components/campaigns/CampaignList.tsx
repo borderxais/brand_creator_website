@@ -62,7 +62,7 @@ export function CampaignList({ currentCampaigns, availableCampaigns }: CampaignL
             return Array.isArray(categories) 
               ? categories.includes(categoryFilter)
               : categories === categoryFilter;
-          } catch (e) {
+          } catch (_e) {
             return false;
           }
         })();

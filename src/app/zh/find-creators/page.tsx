@@ -219,7 +219,7 @@ export default function FindCreatorsChinese() {
   };
 
   // Function to refresh the page and check for new creators
-  const handleRefreshCreators = async () => {
+  const _handleRefreshCreators = async () => {
     const creatorsData = await checkForCreators(true);
     if (creatorsData.hasNewCreators) {
       await syncCreators(false); // Only sync new creators by default

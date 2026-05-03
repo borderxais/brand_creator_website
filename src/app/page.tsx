@@ -244,7 +244,7 @@ export default function Home() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                       {tiktokVideos
                         .slice(slideIndex * videosPerSlide, (slideIndex + 1) * videosPerSlide)
-                        .map((video, index) => (
+                        .map((video, _index) => (
                           <div key={video.id} className="group">
                             <div className="relative bg-white rounded-2xl p-4 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-purple-200 transform hover:-translate-y-2">
                               <div className="relative w-full h-96 rounded-xl overflow-hidden bg-gray-100">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DollarSign, TrendingUp, CreditCard, Download, Calendar, Filter } from 'lucide-react';
+import { DollarSign, TrendingUp, CreditCard, Download } from 'lucide-react';
 
 const mockEarnings = {
   overview: {

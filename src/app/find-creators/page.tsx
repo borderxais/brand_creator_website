@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useSession } from 'next-auth/react';
 import ErrorHandlingImage from '@/components/ui/ErrorHandlingImage';
 
 // Type definitions for creator data
@@ -220,7 +219,7 @@ export default function FindCreators() {
   };
 
   // Function to refresh the page and check for new creators
-  const handleRefreshCreators = async () => {
+  const _handleRefreshCreators = async () => {
     const creatorsData = await checkForCreators(true);
     if (creatorsData.hasNewCreators) {
       await syncCreators(false); // Only sync new creators by default

@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
-import { User, Mail, Instagram, Twitter, ShoppingCart, Heart, MessageCircle, Share2, ExternalLink, MapPin, Globe } from 'lucide-react';
+import { User, Mail, MapPin, Globe } from 'lucide-react';
 import Link from 'next/link';
 
 interface CreatorProfileData {
@@ -66,7 +66,7 @@ export default function CreatorProfile() {
   }, [session]);
 
   // Sample posts data - in real app, this would come from an API
-  const posts = [
+  const _posts = [
     {
       id: '1',
       content: {

@@ -240,7 +240,7 @@ export default function PrivateCommunityPage() {
   ];
 
   // Calculate total add-on cost estimate
-  const getAddOnCostEstimate = () => {
+  const _getAddOnCostEstimate = () => {
     if (selectedAddOns.length === 0) return null;
     
     const costs: string[] = [];

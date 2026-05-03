@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calendar, Users, DollarSign, Clock, MapPin, Star, Eye, Heart, MessageCircle } from 'lucide-react';
+import { Calendar, Users, DollarSign, Clock, MapPin, Star, Heart, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 
 // Mission data structure to match API response
@@ -38,7 +38,7 @@ function MissionCard({ mission }: { mission: Mission }) {
     try {
       const date = new Date(dateString);
       return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD format
-    } catch (error) {
+    } catch (_error) {
       return dateString;
     }
   };

@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
               error: tikTokData.message
             });
           }
-        } catch (error) {
+        } catch (_error) {
           errors.push({
             handle_name: user.creatorHandleName,
             error: 'Failed to fetch or save creator data'
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
                 error: tikTokData.message
               });
             }
-          } catch (error) {
+          } catch (_error) {
             errors.push({
               handle_name: handle,
               error: 'Failed to fetch or save creator data'

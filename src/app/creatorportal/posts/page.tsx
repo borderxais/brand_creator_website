@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Filter, Instagram, Youtube, Image as ImageIcon, TrendingUp, DollarSign, MessageSquare } from 'lucide-react';
+import { Search, Instagram, Youtube, Image as ImageIcon, TrendingUp, DollarSign, MessageSquare } from 'lucide-react';
 
 const mockPosts = [
   {

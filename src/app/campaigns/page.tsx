@@ -92,7 +92,7 @@ export default function Campaigns() {
   });
 
   // Open application modal
-  const openApplicationModal = (campaign: Campaign) => {
+  const _openApplicationModal = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
     setShowModal(true);
     setSampleText('');

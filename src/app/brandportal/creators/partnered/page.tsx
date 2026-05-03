@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Filter, MessageSquare, Calendar, DollarSign } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
 
 const partneredCreators = [

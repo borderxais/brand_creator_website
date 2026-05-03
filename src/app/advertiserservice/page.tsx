@@ -45,7 +45,7 @@ const mockAdGroups = [
 ];
 
 export default function AdvertiserService() {
-  const { data: session } = useSession();
+  useSession();
   const [searchTerm, setSearchTerm] = useState('');
   
   // Add the type annotation here

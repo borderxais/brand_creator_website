@@ -4,7 +4,7 @@ import { loginAttemptsLimiter } from "@/lib/rate-limiter";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email } = body;
+    const { email: _email } = body;
     
     // Use IP + email as key to prevent email enumeration while still limiting by IP
     const ip = request.headers.get('x-forwarded-for') || 'unknown';

@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 
 interface ScrollButtonsProps {
   onScrollLeft?: () => void;

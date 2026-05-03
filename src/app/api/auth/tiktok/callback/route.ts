@@ -247,13 +247,6 @@ async function fetchTikTokProfile(accessToken?: string, tokenScope?: string | nu
   }
 
   try {
-    const scopeSet = new Set(
-      (tokenScope ?? "")
-        .split(/[,\s]+/)
-        .map((s) => s.trim())
-        .filter(Boolean)
-    );
-
     // Keep the request minimal to avoid scope errors; these fields are supported by user.info.basic/profile + stats.
     const requestedFields = ["open_id", "avatar_url", "display_name", "follower_count"];
 

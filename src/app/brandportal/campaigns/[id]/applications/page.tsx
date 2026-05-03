@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { CheckCircle, XCircle, ChevronLeft, UserCircle, FileText, Link as LinkIcon } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
 
 // Types for our application data
 interface Creator {
@@ -271,7 +269,7 @@ export default function CampaignApplications() {
                     try {
                       const objectives = JSON.parse(campaign.primary_promotion_objectives);
                       return Array.isArray(objectives) ? objectives.join(', ') : campaign.primary_promotion_objectives;
-                    } catch (e) {
+                    } catch (_e) {
                       return campaign.primary_promotion_objectives;
                     }
                   })()}
@@ -310,7 +308,7 @@ export default function CampaignApplications() {
                     try {
                       const genders = JSON.parse(campaign.creator_profile_preferences_gender);
                       return Array.isArray(genders) ? genders.join(', ') : campaign.creator_profile_preferences_gender;
-                    } catch (e) {
+                    } catch (_e) {
                       return campaign.creator_profile_preferences_gender;
                     }
                   })()}
@@ -327,7 +325,7 @@ export default function CampaignApplications() {
                     try {
                       const ethnicities = JSON.parse(campaign.creator_profile_preference_ethnicity);
                       return Array.isArray(ethnicities) ? ethnicities.join(', ') : campaign.creator_profile_preference_ethnicity;
-                    } catch (e) {
+                    } catch (_e) {
                       return campaign.creator_profile_preference_ethnicity;
                     }
                   })()}
@@ -344,7 +342,7 @@ export default function CampaignApplications() {
                     try {
                       const niches = JSON.parse(campaign.creator_profile_preference_content_niche);
                       return Array.isArray(niches) ? niches.join(', ') : campaign.creator_profile_preference_content_niche;
-                    } catch (e) {
+                    } catch (_e) {
                       return campaign.creator_profile_preference_content_niche;
                     }
                   })()}
@@ -361,7 +359,7 @@ export default function CampaignApplications() {
                     try {
                       const locations = JSON.parse(campaign.preferred_creator_location);
                       return Array.isArray(locations) ? locations.join(', ') : campaign.preferred_creator_location;
-                    } catch (e) {
+                    } catch (_e) {
                       return campaign.preferred_creator_location;
                     }
                   })()}
@@ -386,7 +384,7 @@ export default function CampaignApplications() {
                     try {
                       const tiers = JSON.parse(campaign.creator_tier_requirement);
                       return Array.isArray(tiers) ? tiers.join(', ') : campaign.creator_tier_requirement;
-                    } catch (e) {
+                    } catch (_e) {
                       return campaign.creator_tier_requirement;
                     }
                   })()}

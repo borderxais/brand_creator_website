@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authConfig } from '@/app/api/auth/[...nextauth]/auth.config';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     // Get the authenticated user's session
     const session = await getServerSession(authConfig);

@@ -1,5 +1,4 @@
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import { NextApiRequest, NextApiResponse } from 'next';
 
 // Configure the proxy to your FastAPI backend
 const apiProxy = createProxyMiddleware({

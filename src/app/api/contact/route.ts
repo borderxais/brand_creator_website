@@ -65,7 +65,7 @@ export async function GET() {
 }
 
 // Add test endpoint for email configuration
-export async function PUT(request: NextRequest) {
+export async function PUT(_request: NextRequest) {
   try {
     console.log("Testing email configuration...");
     

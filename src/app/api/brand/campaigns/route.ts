@@ -182,7 +182,7 @@ export async function POST(request: Request) {
         if (value) {
           try {
             campaignData[field] = JSON.parse(value);
-          } catch (e) {
+          } catch (_e) {
             // If it's not valid JSON, treat as string
             campaignData[field] = value;
           }
