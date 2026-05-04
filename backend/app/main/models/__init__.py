@@ -26,4 +26,7 @@ __all__ = [
     "EntertainmentLive",
     "EntertainmentLiveCreate",
     "EntertainmentLiveResponse",
+    "TikTokVerification",
+    "TikTokVerificationCreate",
+    "TikTokVerificationResponse",
 ]

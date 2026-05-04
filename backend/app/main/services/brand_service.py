@@ -301,12 +301,7 @@ class BrandService:
 
             # Delete related campaign claims first (cascade delete)
             try:
-                claims_delete_response = (
-                    supabase.table("campaignclaims")
-                    .delete()
-                    .eq("campaign_id", campaign_id)
-                    .execute()
-                )
+                (supabase.table("campaignclaims").delete().eq("campaign_id", campaign_id).execute())
                 logger.info(f"Deleted campaign claims for campaign {campaign_id}")
             except Exception as claims_error:
                 logger.warning(
@@ -316,7 +311,7 @@ class BrandService:
 
             # Delete the campaign
             try:
-                campaign_delete_response = (
+                (
                     supabase.table("campaigns")
                     .delete()
                     .eq("id", campaign_id)

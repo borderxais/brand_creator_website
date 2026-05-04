@@ -67,14 +67,42 @@ At minimum you will need Supabase credentials and TikTok API keys in your `.env.
 python -m venv backend/.venv
 source backend/.venv/bin/activate   # Windows: backend\.venv\Scripts\activate
 
-# 2. Install runtime dependencies
-pip install -r backend/requirements.txt
+# 2. Install runtime dependencies + dev tooling (Ruff + mypy)
+pip install -r backend/requirements.txt -r backend/requirements-dev.txt
 
 # 3. Start the FastAPI server
 bash start_api_server.sh            # Windows: start_api_server.bat
 ```
 
-> **Dev tooling (linting + type checking):** A `backend/requirements-dev.txt` will be added in a later harness PR (PR 6). At that point, also run `pip install -r backend/requirements-dev.txt` to get Ruff and mypy.
+> **Harness requirement:** The dev harness calls tools via `backend/.venv/bin/ruff` and `backend/.venv/bin/mypy` explicitly, so you do **not** need to activate the venv before committing or pushing. You do need the venv to exist at `backend/.venv` with dev deps installed (`pip install -r backend/requirements-dev.txt`).
+
+> **Note on `requirements.txt` install failures:** Some runtime packages (e.g. `psycopg2-binary`) may fail to build in environments without system libraries. In that case, install dev deps alone: `pip install -r backend/requirements-dev.txt`. Ruff and mypy do not depend on FastAPI or database drivers and will work correctly. mypy's `ignore_missing_imports = true` setting in `backend/pyproject.toml` prevents errors from unresolved runtime imports.
+
+---
+
+## Lint and Type Check
+
+The harness wires two Python quality tools via `backend/pyproject.toml`:
+
+| Tool   | Purpose           | Command (from `backend/`)        |
+| ------ | ----------------- | -------------------------------- |
+| `ruff` | Lint + format     | `ruff check .` / `ruff format .` |
+| `mypy` | Static type check | `mypy app`                       |
+
+These run automatically:
+
+- **On commit** (via lint-staged): `ruff format`, `ruff check --fix`, and `mypy` run against staged `.py` files in `backend/`.
+- **On push** (via `harness:prepush`): `ruff check .`, `ruff format --check .`, and `mypy app` run against the full backend.
+
+To run manually:
+
+```bash
+source backend/.venv/bin/activate
+cd backend
+ruff check .
+ruff format --check .
+mypy app
+```
 
 ---
 
@@ -85,4 +113,4 @@ Update this file when:
 - A new run script is added or the existing ones move.
 - The entry point path changes.
 - Required environment variables change (also update `backend/README.md`).
-- The local dev setup steps change (e.g., when `requirements-dev.txt` lands in PR 6).
+- The local dev setup steps change.

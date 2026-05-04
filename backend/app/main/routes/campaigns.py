@@ -38,9 +38,7 @@ async def get_campaign_by_id(campaign_id: str = Path(..., description="The ID of
 async def get_brand_campaigns(
     brand_id: str = Path(..., description="The brand profile ID (not user ID)"),
     status: str | None = Query(None, description="Filter by campaign status"),
-    start_date: str | None = Query(
-        None, description="Filter by start date (format: YYYY-MM-DD)"
-    ),
+    start_date: str | None = Query(None, description="Filter by start date (format: YYYY-MM-DD)"),
     end_date: str | None = Query(None, description="Filter by end date (format: YYYY-MM-DD)"),
     search: str | None = Query(None, description="Search in campaign title or description"),
 ):

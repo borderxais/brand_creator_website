@@ -1,5 +1,2 @@
 # Husky v9: no shebang or husky.sh source needed.
-npm run typecheck
-npm run lint
-node scripts/harness/prisma-drift.js
-npm run test:run
+npm run harness:prepush

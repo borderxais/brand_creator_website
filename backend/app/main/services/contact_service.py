@@ -301,7 +301,7 @@ class ContactService:
 
         if supabase:
             try:
-                test_response = supabase.table("Contact").select("id").limit(1).execute()
+                supabase.table("Contact").select("id").limit(1).execute()
                 database_status = "connected"
             except Exception as e:
                 database_status = f"error: {str(e)}"

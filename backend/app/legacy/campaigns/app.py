@@ -163,7 +163,7 @@ async def check_table_exists(supabase_client: Client, table_name: str) -> bool:
     """Check if a table exists in Supabase."""
     try:
         # Try to select a single row with limit 0 to check if table exists
-        response = supabase_client.table(table_name).select("id").limit(1).execute()
+        supabase_client.table(table_name).select("id").limit(1).execute()
         return True
     except Exception as e:
         logger.error(f"Error checking if table '{table_name}' exists: {str(e)}")
@@ -713,9 +713,7 @@ async def get_brand_campaigns(
     status: str | None = Query(
         None, description="Filter by campaign status (e.g., DRAFT, ACTIVE, COMPLETED, CANCELLED)"
     ),
-    start_date: str | None = Query(
-        None, description="Filter by start date (format: YYYY-MM-DD)"
-    ),
+    start_date: str | None = Query(None, description="Filter by start date (format: YYYY-MM-DD)"),
     end_date: str | None = Query(None, description="Filter by end date (format: YYYY-MM-DD)"),
     search: str | None = Query(None, description="Search in campaign title or description"),
 ):
@@ -1227,7 +1225,7 @@ async def delete_campaign(
             logger.warning(f"Error deleting campaign claims: {str(e)}")
 
         # Delete the campaign using actual brand_id
-        response = (
+        (
             supabase.table("campaigns")
             .delete()
             .eq("id", campaign_id)

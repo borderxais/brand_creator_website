@@ -244,7 +244,7 @@ class UploadService:
             campaigns_bucket_status = "not_found"
             try:
                 # Try to list files in campaigns bucket
-                files_response = supabase.storage.from_("campaigns").list()
+                supabase.storage.from_("campaigns").list()
                 campaigns_bucket_status = "accessible"
             except Exception as access_err:
                 campaigns_bucket_status = f"error: {str(access_err)}"

@@ -18,7 +18,7 @@ def validate_uuid(uuid_string: str) -> bool:
 async def check_table_exists(supabase_client: Client, table_name: str) -> bool:
     """Check if a table exists in Supabase."""
     try:
-        response = supabase_client.table(table_name).select("id").limit(1).execute()
+        supabase_client.table(table_name).select("id").limit(1).execute()
         return True
     except Exception as e:
         logger.error(f"Error checking if table '{table_name}' exists: {str(e)}")
@@ -32,7 +32,7 @@ async def validate_supabase_connection(supabase_client: Client) -> tuple[bool, s
 
     try:
         # Try a simple query that should work with minimal permissions
-        response = supabase_client.table("campaigns").select("id").limit(1).execute()
+        supabase_client.table("campaigns").select("id").limit(1).execute()
         logger.info("Supabase connection test successful")
         return True, "Connection successful"
     except Exception as e:

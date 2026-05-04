@@ -2,7 +2,11 @@
 Database module for Campaign API
 """
 
+import logging
+
 from .connection import create_supabase_client, supabase
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["supabase", "create_supabase_client"]
 

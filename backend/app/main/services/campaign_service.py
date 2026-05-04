@@ -194,7 +194,7 @@ class CampaignService:
                             f"Found brand profile by ID instead of userId: {direct_brand_response.data[0]}"
                         )
                         actual_brand_id = brand_id  # Use the ID directly
-                        brand_info = direct_brand_response.data[0]
+                        direct_brand_response.data[0]
                     else:
                         # Create a brand profile automatically if none exists
                         logger.info(f"Creating brand profile for user ID: {brand_id}")
@@ -226,7 +226,7 @@ class CampaignService:
                     )
             else:
                 actual_brand_id = brand_profile_response.data[0]["id"]
-                brand_info = brand_profile_response.data[0]
+                brand_profile_response.data[0]
                 logger.info(f"Found brand profile ID: {actual_brand_id} for user ID: {brand_id}")
 
         except Exception as lookup_error:
@@ -381,7 +381,7 @@ class CampaignService:
         except Exception as e:
             logger.warning(f"Error deleting campaign claims: {str(e)}")
 
-        response = (
+        (
             supabase.table("campaigns")
             .delete()
             .eq("id", campaign_id)

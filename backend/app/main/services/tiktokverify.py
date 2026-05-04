@@ -236,9 +236,7 @@ class TikTokVerificationService:
         try:
             # Check if table exists by trying a simple query
             try:
-                result = (
-                    self.supabase.table("influencer_verifications").select("id").limit(1).execute()
-                )
+                (self.supabase.table("influencer_verifications").select("id").limit(1).execute())
                 table_exists = True
                 table_structure = "Table accessible via Supabase API"
             except Exception as table_error:

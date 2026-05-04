@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, File, Form, Query, UploadFile
 
 from ..models.ai_video import AiVideoGenerateResponse, AiVideoLibraryItem

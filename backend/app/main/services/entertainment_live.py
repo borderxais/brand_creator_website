@@ -352,7 +352,7 @@ class EntertainmentLiveService:
         if not existing_mission.data or len(existing_mission.data) == 0:
             raise HTTPException(404, "Mission not found or access denied")
 
-        response = (
+        (
             supabase.table("entertainment_live")
             .delete()
             .eq("id", mission_id)
