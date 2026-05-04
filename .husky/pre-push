@@ -1,3 +1,4 @@
 # Husky v9: no shebang or husky.sh source needed.
 npm run typecheck
 npm run lint
+npm run test:run
