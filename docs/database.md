@@ -69,6 +69,8 @@ Schema drift occurs when `prisma/schema.prisma` has been edited but no correspon
 
 A pre-commit hook (added in a later harness PR) runs `prisma migrate diff` to detect schema-vs-migrations drift. If drift is detected, run `npm run prisma:migrate` to create a migration that captures the change, then commit the new migration files.
 
+**Shadow database setup.** The drift hook requires `SHADOW_DATABASE_URL` set to a non-production Postgres instance (local Postgres, Supabase branch, or any throwaway DB). Without it, the hook skips with an advisory message — drift is NOT enforced. Never point `SHADOW_DATABASE_URL` at production: Prisma performs schema create/apply/drop operations on the shadow DB during `migrate diff`. For local development, the simplest setup is `postgresql://localhost:5432/_shadow` against a local Postgres instance. The hook also requires Node ≥20.12 for `.env` autoloading.
+
 Hook error output will reference this anchor:
 
 ```
