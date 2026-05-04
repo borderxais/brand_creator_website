@@ -37,6 +37,7 @@ class UploadRequest(BaseModel):
     access_token: str
     videos: List[UploadVideo]
 
+
 class PublishStatusRequest(BaseModel):
     access_token: str
     publish_ids: List[str] = Field(default_factory=list)
@@ -246,7 +247,9 @@ async def upload_ai_video(body: UploadRequest):
                 results.append({"id": video.id, "status": "error", "error": exc.detail})
             except Exception as exc:  # pragma: no cover - unexpected
                 logger.error("Unexpected TikTok upload error: %s", exc)
-                results.append({"id": video.id, "status": "error", "error": "Unexpected server error"})
+                results.append(
+                    {"id": video.id, "status": "error", "error": "Unexpected server error"}
+                )
 
     return {"results": results}
 
@@ -261,11 +264,19 @@ async def publish_status(body: PublishStatusRequest):
         for publish_id in body.publish_ids:
             try:
                 status_payload = await _fetch_publish_status(client, body.access_token, publish_id)
-                results.append({"publish_id": publish_id, "status": "ok", "payload": status_payload})
+                results.append(
+                    {"publish_id": publish_id, "status": "ok", "payload": status_payload}
+                )
             except HTTPException as exc:
                 results.append({"publish_id": publish_id, "status": "error", "error": exc.detail})
             except Exception as exc:  # pragma: no cover
                 logger.error("Unexpected publish status error: %s", exc)
-                results.append({"publish_id": publish_id, "status": "error", "error": "Unexpected server error"})
+                results.append(
+                    {
+                        "publish_id": publish_id,
+                        "status": "error",
+                        "error": "Unexpected server error",
+                    }
+                )
 
     return {"results": results}

@@ -1,8 +1,9 @@
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict
 
+
 class Campaign(BaseModel):
-    model_config = ConfigDict(extra='allow')
+    model_config = ConfigDict(extra="allow")
     id: str
     brand_id: Optional[str] = None
     title: str
@@ -45,8 +46,9 @@ class Campaign(BaseModel):
     video_buyout_budget_range: Optional[str] = None
     base_fee_budget_range: Optional[str] = None
 
+
 class CampaignCreate(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra="forbid")
     brand_id: str
     title: str
     brief: Optional[str] = None
@@ -86,9 +88,11 @@ class CampaignCreate(BaseModel):
     video_buyout_budget_range: Optional[str] = None
     base_fee_budget_range: Optional[str] = None
 
+
 class CampaignApplication(BaseModel):
     """Represents a campaign application along with optional creator metadata."""
-    model_config = ConfigDict(extra='allow')
+
+    model_config = ConfigDict(extra="allow")
     id: Optional[str] = None
     campaign_id: Optional[str] = None
     creator_id: Optional[str] = None
@@ -98,19 +102,24 @@ class CampaignApplication(BaseModel):
     created_at: Optional[str] = None
     creator: Optional[Dict[str, Any]] = None
 
+
 class CampaignWithApplications(Campaign):
     applications: List[CampaignApplication] = []
     brand: Optional[Dict[str, Any]] = None
 
+
 class CampaignMutationResponse(BaseModel):
     """Standard response envelope for campaign create/update/delete operations."""
+
     success: bool
     message: str
     campaign_id: Optional[str] = None
     campaign_title: Optional[str] = None
 
+
 class BrandProfileStatus(BaseModel):
     """Represents the result of ensuring a brand profile exists."""
+
     exists: bool
     created: Optional[bool] = None
     brand_profile: Optional[Dict[str, Any]] = None

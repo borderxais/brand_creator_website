@@ -6,6 +6,7 @@ from .connection import supabase, create_supabase_client
 
 __all__ = ["supabase", "create_supabase_client"]
 
+
 def get_supabase_client():
     """Get Supabase client instance."""
     try:

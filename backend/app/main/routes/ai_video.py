@@ -31,7 +31,9 @@ async def create_ai_video_request(
 
 
 @router.get("/library", response_model=List[AiVideoLibraryItem])
-async def list_ai_videos(creator_id: Optional[str] = Query(None, description="Filter by creator ID")):
+async def list_ai_videos(
+    creator_id: Optional[str] = Query(None, description="Filter by creator ID"),
+):
     """
     Fetch generated AI videos for the creator portal grid.
     """
