@@ -1,14 +1,14 @@
 import logging
 import smtplib
 from datetime import datetime
-from typing import Optional, Dict, Any
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from email.utils import formataddr
+
 from fastapi import HTTPException
 
-from ..database.connection import supabase
 from ..config.settings import settings
+from ..database.connection import supabase
 from ..models.career import CareerApplicationData, CareerApplicationResponse
 
 logger = logging.getLogger(__name__)
@@ -144,7 +144,7 @@ class CareerService:
         """
 
     @staticmethod
-    async def store_application(application_data: CareerApplicationData) -> Optional[str]:
+    async def store_application(application_data: CareerApplicationData) -> str | None:
         """Store career application in Supabase database."""
         try:
             if not supabase:

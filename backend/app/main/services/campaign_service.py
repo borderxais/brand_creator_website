@@ -1,11 +1,13 @@
 import json
 import logging
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any
+
 from fastapi import HTTPException
+
 from ..database.connection import supabase
-from ..utils.validators import validate_uuid, check_table_exists
 from ..models.campaign import Campaign, CampaignCreate
+from ..utils.validators import check_table_exists, validate_uuid
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +15,8 @@ logger = logging.getLogger(__name__)
 class CampaignService:
     @staticmethod
     async def get_campaigns(
-        search: Optional[str] = None, platform: Optional[str] = None, category: Optional[str] = None
-    ) -> List[Campaign]:
+        search: str | None = None, platform: str | None = None, category: str | None = None
+    ) -> list[Campaign]:
         """Get all campaigns with optional filtering."""
         logger.info(
             f"Getting campaigns with params: search={search}, platform={platform}, category={category}"
@@ -91,7 +93,7 @@ class CampaignService:
             return []
 
     @staticmethod
-    async def get_campaign_by_id(campaign_id: str) -> Dict[str, Any]:
+    async def get_campaign_by_id(campaign_id: str) -> dict[str, Any]:
         """Get a specific campaign by ID for public viewing."""
         logger.info(f"Fetching public campaign details for ID: {campaign_id}")
 
@@ -141,7 +143,7 @@ class CampaignService:
         return campaign
 
     @staticmethod
-    async def create_campaign(brand_id: str, campaign: CampaignCreate) -> Dict[str, Any]:
+    async def create_campaign(brand_id: str, campaign: CampaignCreate) -> dict[str, Any]:
         """Create a new campaign for a specific brand."""
         logger.info(f"Creating campaign for user ID {brand_id}: {campaign.title}")
 
@@ -274,7 +276,7 @@ class CampaignService:
     @staticmethod
     async def update_campaign(
         brand_id: str, campaign_id: str, campaign_update: CampaignCreate
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Update an existing campaign for a specific brand."""
         logger.info(f"Updating campaign {campaign_id} for user ID {brand_id}")
 
@@ -345,7 +347,7 @@ class CampaignService:
             raise HTTPException(500, f"Database error: {str(db_error)}")
 
     @staticmethod
-    async def delete_campaign(brand_id: str, campaign_id: str) -> Dict[str, Any]:
+    async def delete_campaign(brand_id: str, campaign_id: str) -> dict[str, Any]:
         """Delete a campaign for a specific brand."""
         logger.info(f"Deleting campaign {campaign_id} for user ID {brand_id}")
 

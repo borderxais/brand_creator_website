@@ -1,16 +1,13 @@
-from fastapi import FastAPI, Query, HTTPException, Request, Path, Body, File, UploadFile, Form
-from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional
-from pydantic import BaseModel
-from supabase import create_client, Client
-from dotenv import load_dotenv
-from datetime import datetime
-from typing import Dict, Any
-import os
-import logging
 import json
-import platform
-import uuid
+import logging
+import os
+from datetime import datetime
+
+from dotenv import load_dotenv
+from fastapi import Body, FastAPI, HTTPException, Path, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from supabase import Client, create_client
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -59,96 +56,96 @@ else:
 # Update the data models
 class Campaign(BaseModel):
     id: str
-    brand_id: Optional[str] = None
+    brand_id: str | None = None
     title: str
-    brief: Optional[str] = None
-    requirements: Optional[str] = None
-    budget_range: Optional[str] = None
-    budget_unit: Optional[str] = "total"
-    commission: Optional[str] = None
-    platform: Optional[str] = None
-    deadline: Optional[str] = None
-    max_creators: Optional[int] = 10
+    brief: str | None = None
+    requirements: str | None = None
+    budget_range: str | None = None
+    budget_unit: str | None = "total"
+    commission: str | None = None
+    platform: str | None = None
+    deadline: str | None = None
+    max_creators: int | None = 10
     is_open: bool = True
-    created_at: Optional[str] = None
-    brand_name: Optional[str] = None
-    sample_video_url: Optional[str] = None
+    created_at: str | None = None
+    brand_name: str | None = None
+    sample_video_url: str | None = None
     # Add new fields
-    industry_category: Optional[str] = None
-    primary_promotion_objectives: Optional[List[str] | str] = None
-    ad_placement: Optional[str] = "disable"
-    campaign_execution_mode: Optional[str] = "direct"
-    creator_profile_preferences_gender: Optional[List[str] | str] = None
-    creator_profile_preference_ethnicity: Optional[List[str] | str] = None
-    creator_profile_preference_content_niche: Optional[List[str] | str] = None
-    preferred_creator_location: Optional[List[str] | str] = None
-    language_requirement_for_creators: Optional[str] = "english"
-    creator_tier_requirement: Optional[List[str] | str] = None
-    send_to_creator: Optional[str] = "yes"
-    approved_by_brand: Optional[str] = "yes"
-    kpi_reference_target: Optional[str] = None
-    prohibited_content_warnings: Optional[str] = None
-    posting_requirements: Optional[str] = None
-    product_photo: Optional[str] = None
+    industry_category: str | None = None
+    primary_promotion_objectives: list[str] | str | None = None
+    ad_placement: str | None = "disable"
+    campaign_execution_mode: str | None = "direct"
+    creator_profile_preferences_gender: list[str] | str | None = None
+    creator_profile_preference_ethnicity: list[str] | str | None = None
+    creator_profile_preference_content_niche: list[str] | str | None = None
+    preferred_creator_location: list[str] | str | None = None
+    language_requirement_for_creators: str | None = "english"
+    creator_tier_requirement: list[str] | str | None = None
+    send_to_creator: str | None = "yes"
+    approved_by_brand: str | None = "yes"
+    kpi_reference_target: str | None = None
+    prohibited_content_warnings: str | None = None
+    posting_requirements: str | None = None
+    product_photo: str | None = None
     # New frontend fields
-    script_required: Optional[str] = "no"
-    product_name: Optional[str] = None
-    product_highlight: Optional[str] = None
-    product_price: Optional[str] = None
-    product_sold_number: Optional[str] = None
-    paid_promotion_type: Optional[str] = "commission_based"
-    video_buyout_budget_range: Optional[str] = None
-    base_fee_budget_range: Optional[str] = None
+    script_required: str | None = "no"
+    product_name: str | None = None
+    product_highlight: str | None = None
+    product_price: str | None = None
+    product_sold_number: str | None = None
+    paid_promotion_type: str | None = "commission_based"
+    video_buyout_budget_range: str | None = None
+    base_fee_budget_range: str | None = None
 
 
 # Model for campaign creation - update with new fields
 class CampaignCreate(BaseModel):
     brand_id: str
     title: str
-    brief: Optional[str] = None
-    requirements: Optional[str] = None
-    budget_range: Optional[str] = None
-    budget_unit: Optional[str] = "total"
-    commission: Optional[str] = None
-    platform: Optional[str] = None
-    deadline: Optional[str] = None
-    max_creators: Optional[int] = 10
-    is_open: Optional[bool] = True
-    sample_video_url: Optional[str] = None
+    brief: str | None = None
+    requirements: str | None = None
+    budget_range: str | None = None
+    budget_unit: str | None = "total"
+    commission: str | None = None
+    platform: str | None = None
+    deadline: str | None = None
+    max_creators: int | None = 10
+    is_open: bool | None = True
+    sample_video_url: str | None = None
     # Add new fields
-    industry_category: Optional[str] = None
-    primary_promotion_objectives: Optional[List[str] | str] = None
-    ad_placement: Optional[str] = "disable"
-    campaign_execution_mode: Optional[str] = "direct"
-    creator_profile_preferences_gender: Optional[List[str] | str] = None
-    creator_profile_preference_ethnicity: Optional[List[str] | str] = None
-    creator_profile_preference_content_niche: Optional[List[str] | str] = None
-    preferred_creator_location: Optional[List[str] | str] = None
-    language_requirement_for_creators: Optional[str] = "english"
-    creator_tier_requirement: Optional[List[str] | str] = None
-    send_to_creator: Optional[str] = "yes"
-    approved_by_brand: Optional[str] = "yes"
-    kpi_reference_target: Optional[str] = None
-    prohibited_content_warnings: Optional[str] = None
-    posting_requirements: Optional[str] = None
-    product_photo: Optional[str] = None
+    industry_category: str | None = None
+    primary_promotion_objectives: list[str] | str | None = None
+    ad_placement: str | None = "disable"
+    campaign_execution_mode: str | None = "direct"
+    creator_profile_preferences_gender: list[str] | str | None = None
+    creator_profile_preference_ethnicity: list[str] | str | None = None
+    creator_profile_preference_content_niche: list[str] | str | None = None
+    preferred_creator_location: list[str] | str | None = None
+    language_requirement_for_creators: str | None = "english"
+    creator_tier_requirement: list[str] | str | None = None
+    send_to_creator: str | None = "yes"
+    approved_by_brand: str | None = "yes"
+    kpi_reference_target: str | None = None
+    prohibited_content_warnings: str | None = None
+    posting_requirements: str | None = None
+    product_photo: str | None = None
     # New frontend fields
-    script_required: Optional[str] = "no"
-    product_name: Optional[str] = None
-    product_highlight: Optional[str] = None
-    product_price: Optional[str] = None
-    product_sold_number: Optional[str] = None
-    paid_promotion_type: Optional[str] = "commission_based"
-    video_buyout_budget_range: Optional[str] = None
-    base_fee_budget_range: Optional[str] = None
+    script_required: str | None = "no"
+    product_name: str | None = None
+    product_highlight: str | None = None
+    product_price: str | None = None
+    product_sold_number: str | None = None
+    paid_promotion_type: str | None = "commission_based"
+    video_buyout_budget_range: str | None = None
+    base_fee_budget_range: str | None = None
 
 
 # Update the model for campaign claims
 class CampaignClaimCreate(BaseModel):
     campaign_id: str
     user_id: str  # Changed from creator_id to user_id
-    sample_text: Optional[str] = None
-    sample_video_url: Optional[str] = None
+    sample_text: str | None = None
+    sample_video_url: str | None = None
 
 
 class CampaignClaimResponse(BaseModel):
@@ -156,8 +153,8 @@ class CampaignClaimResponse(BaseModel):
     campaign_id: str
     creator_id: str
     status: str
-    sample_text: Optional[str] = None
-    sample_video_url: Optional[str] = None
+    sample_text: str | None = None
+    sample_video_url: str | None = None
     created_at: str
 
 
@@ -258,12 +255,12 @@ async def validate_supabase_connection():
             return False, f"Connection failed: {error_msg}"
 
 
-@app.get("/", response_model=List[Campaign])
+@app.get("/", response_model=list[Campaign])
 async def get_campaigns(
     request: Request,
-    search: Optional[str] = Query(None, description="Search term for title or brand"),
-    platform: Optional[str] = Query(None, description="Filter by platform"),
-    category: Optional[str] = Query(None, description="Filter by category"),
+    search: str | None = Query(None, description="Search term for title or brand"),
+    platform: str | None = Query(None, description="Filter by platform"),
+    category: str | None = Query(None, description="Filter by category"),
 ):
     logger.info(
         f"Received request with params: search={search}, platform={platform}, category={category}"
@@ -557,7 +554,7 @@ async def create_campaign_claim(request: Request, campaign_claim: CampaignClaimC
 
 
 # Update the endpoint to get claims for a creator using userId
-@app.get("/creator/{creator_id}/campaign-claims", response_model=List[dict])
+@app.get("/creator/{creator_id}/campaign-claims", response_model=list[dict])
 async def get_creator_campaign_claims(
     request: Request, creator_id: str, limit: int = Query(10, ge=1, le=100)
 ):
@@ -710,17 +707,17 @@ async def get_creator_campaign_claims(
         raise HTTPException(status_code=500, detail=f"Failed to fetch campaign claims: {str(e)}")
 
 
-@app.get("/brand-campaigns/{brand_id}", response_model=List[dict])
+@app.get("/brand-campaigns/{brand_id}", response_model=list[dict])
 async def get_brand_campaigns(
     brand_id: str = Path(..., description="The brand profile ID (not user ID)"),
-    status: Optional[str] = Query(
+    status: str | None = Query(
         None, description="Filter by campaign status (e.g., DRAFT, ACTIVE, COMPLETED, CANCELLED)"
     ),
-    start_date: Optional[str] = Query(
+    start_date: str | None = Query(
         None, description="Filter by start date (format: YYYY-MM-DD)"
     ),
-    end_date: Optional[str] = Query(None, description="Filter by end date (format: YYYY-MM-DD)"),
-    search: Optional[str] = Query(None, description="Search in campaign title or description"),
+    end_date: str | None = Query(None, description="Filter by end date (format: YYYY-MM-DD)"),
+    search: str | None = Query(None, description="Search in campaign title or description"),
 ):
     """
     Get all campaigns for a specific brand with optional filtering.
@@ -732,7 +729,7 @@ async def get_brand_campaigns(
     try:
         if not supabase:
             # Return empty list if no database connection
-            logger.warning(f"No Supabase connection, returning empty list")
+            logger.warning("No Supabase connection, returning empty list")
             return []
 
         # The brand_id passed here is already the actual brand profile ID, not user ID

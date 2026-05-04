@@ -1,8 +1,9 @@
 from fastapi import APIRouter
-from ..database.connection import supabase
-from ..utils.validators import validate_supabase_connection
+
 from ..config.settings import settings
+from ..database.connection import supabase
 from ..models.common import GenericStatusResponse, SQLScriptResponse
+from ..utils.validators import validate_supabase_connection
 
 router = APIRouter()
 

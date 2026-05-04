@@ -1,14 +1,15 @@
 import logging
 import smtplib
 from datetime import datetime
-from typing import Optional, Dict, Any, List
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from email.utils import formataddr
+from typing import Any
+
 from fastapi import HTTPException
 
-from ..database.connection import supabase
 from ..config.settings import settings
+from ..database.connection import supabase
 from ..models.contact import ContactFormData, ContactResponse
 
 logger = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ class ContactService:
 
     @staticmethod
     def create_admin_notification_email(
-        contact_data: ContactFormData, contact_id: Optional[str] = None
+        contact_data: ContactFormData, contact_id: str | None = None
     ) -> str:
         """Create HTML email template for admin notification."""
         return f"""
@@ -190,7 +191,7 @@ class ContactService:
         """
 
     @staticmethod
-    async def store_contact_message(contact_data: ContactFormData) -> Optional[str]:
+    async def store_contact_message(contact_data: ContactFormData) -> str | None:
         """Store contact message in Supabase database."""
         try:
             if not supabase:
@@ -294,7 +295,7 @@ class ContactService:
             )
 
     @staticmethod
-    async def get_health_status() -> Dict[str, Any]:
+    async def get_health_status() -> dict[str, Any]:
         """Health check for contact API including database status."""
         database_status = "connected" if supabase else "unavailable"
 
@@ -314,7 +315,7 @@ class ContactService:
         }
 
     @staticmethod
-    async def get_form_schema() -> Dict[str, Any]:
+    async def get_form_schema() -> dict[str, Any]:
         """Return the contact form schema for frontend validation."""
         return {
             "fields": {
@@ -333,7 +334,7 @@ class ContactService:
         }
 
     @staticmethod
-    async def test_email_configuration() -> Dict[str, Any]:
+    async def test_email_configuration() -> dict[str, Any]:
         """Test email configuration by sending a test email."""
         try:
             test_html = f"""
@@ -368,8 +369,8 @@ class ContactService:
 
     @staticmethod
     async def get_contact_messages(
-        status: Optional[str] = None, limit: int = 50, offset: int = 0
-    ) -> Dict[str, Any]:
+        status: str | None = None, limit: int = 50, offset: int = 0
+    ) -> dict[str, Any]:
         """Get contact messages from database (admin only)."""
         try:
             if not supabase:
@@ -394,7 +395,7 @@ class ContactService:
             raise HTTPException(status_code=500, detail="Failed to fetch messages")
 
     @staticmethod
-    async def update_message_status(message_id: int, status: str) -> Dict[str, Any]:
+    async def update_message_status(message_id: int, status: str) -> dict[str, Any]:
         """Update the status of a contact message."""
         try:
             if not supabase:

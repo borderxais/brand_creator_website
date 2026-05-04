@@ -1,16 +1,17 @@
-from fastapi import APIRouter, HTTPException, Request, Query, Path
-from typing import Optional
+import logging
+
+from fastapi import APIRouter, HTTPException, Path, Query, Request
+
 from ..models.contact import (
     ContactFormData,
     ContactFormSchema,
     ContactHealthStatus,
-    ContactMessageStatusResponse,
     ContactMessagesResponse,
+    ContactMessageStatusResponse,
     ContactResponse,
     EmailTestResponse,
 )
 from ..services.contact_service import ContactService
-import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -42,7 +43,7 @@ async def test_email_configuration():
 
 @router.get("/messages", response_model=ContactMessagesResponse)
 async def get_contact_messages(
-    status: Optional[str] = Query(None, description="Filter by status"),
+    status: str | None = Query(None, description="Filter by status"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of messages"),
     offset: int = Query(0, ge=0, description="Number of messages to skip"),
 ):

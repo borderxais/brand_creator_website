@@ -1,6 +1,6 @@
-import os
 import logging
-from typing import List
+import os
+
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class Settings:
     SUPABASE_SERVICE_KEY: str = os.environ.get("SUPABASE_SERVICE_KEY", "")
 
     # CORS settings - more permissive for App Engine
-    ALLOWED_ORIGINS: List[str] = [
+    ALLOWED_ORIGINS: list[str] = [
         "https://cricher.ai",
         "https://www.cricher.ai",
         "http://localhost:3000",

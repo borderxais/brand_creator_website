@@ -1,16 +1,18 @@
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any
+
 from fastapi import HTTPException
+
 from ..database.connection import supabase
-from ..utils.validators import validate_uuid
 from ..models.claim import CampaignClaimCreate
+from ..utils.validators import validate_uuid
 
 logger = logging.getLogger(__name__)
 
 
 class ClaimService:
     @staticmethod
-    async def check_campaign_claim(creator_id: str, campaign_id: str) -> Dict[str, bool]:
+    async def check_campaign_claim(creator_id: str, campaign_id: str) -> dict[str, bool]:
         """Check if a creator has already applied to a campaign."""
         try:
             if not supabase:
@@ -55,7 +57,7 @@ class ClaimService:
             raise HTTPException(status_code=500, detail=f"Failed to check campaign claim: {str(e)}")
 
     @staticmethod
-    async def create_campaign_claim(campaign_claim: CampaignClaimCreate) -> Dict[str, Any]:
+    async def create_campaign_claim(campaign_claim: CampaignClaimCreate) -> dict[str, Any]:
         """Create a new campaign claim (application) from a creator."""
         try:
             logger.info(
@@ -161,7 +163,7 @@ class ClaimService:
             )
 
     @staticmethod
-    async def get_creator_campaign_claims(creator_id: str, limit: int = 10) -> List[Dict[str, Any]]:
+    async def get_creator_campaign_claims(creator_id: str, limit: int = 10) -> list[dict[str, Any]]:
         """Get campaign claims for a specific creator using database function."""
         try:
             logger.info(f"Fetching campaign claims for creator with userId: {creator_id}")
@@ -325,8 +327,8 @@ class ClaimService:
 
     @staticmethod
     async def update_claim_status(
-        claim_id: str, status: str, brand_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        claim_id: str, status: str, brand_id: str | None = None
+    ) -> dict[str, Any]:
         """Update the status of a campaign claim."""
         try:
             logger.info(f"Updating claim {claim_id} status to {status}")

@@ -1,30 +1,31 @@
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, ConfigDict
 from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict
 
 
 class TikTokVerification(BaseModel):
     model_config = ConfigDict(extra="allow")
-    id: Optional[str] = None
-    created_at: Optional[datetime] = None
+    id: str | None = None
+    created_at: datetime | None = None
     passport_name: str
     real_name: str
     id_type: str
     gender: str
     nationality: str
-    stage_name: Optional[str] = None
+    stage_name: str | None = None
     id_number: str
     date_of_birth: str
     account_intro: str
     overseas_platform_url: str
     follower_count: int
-    other_platforms: Optional[str] = None
+    other_platforms: str | None = None
     agent_email: str
-    id_front_path: Optional[str] = None
-    handheld_id_path: Optional[str] = None
-    backend_ss_path: Optional[str] = None
-    authorization_path: Optional[str] = None
-    identity_video_path: Optional[str] = None
+    id_front_path: str | None = None
+    handheld_id_path: str | None = None
+    backend_ss_path: str | None = None
+    authorization_path: str | None = None
+    identity_video_path: str | None = None
 
 
 class TikTokVerificationCreate(BaseModel):
@@ -34,13 +35,13 @@ class TikTokVerificationCreate(BaseModel):
     id_type: str
     gender: str
     nationality: str
-    stage_name: Optional[str] = None
+    stage_name: str | None = None
     id_number: str
     date_of_birth: str
     account_intro: str
     overseas_platform_url: str
     follower_count: int
-    other_platforms: Optional[str] = None
+    other_platforms: str | None = None
     agent_email: str
 
 
@@ -51,39 +52,39 @@ class TikTokVerificationWithPaths(BaseModel):
     id_type: str
     gender: str
     nationality: str
-    stage_name: Optional[str] = None
+    stage_name: str | None = None
     id_number: str
     date_of_birth: str
     account_intro: str
     overseas_platform_url: str
     follower_count: int
-    other_platforms: Optional[str] = None
+    other_platforms: str | None = None
     agent_email: str
-    file_paths: Dict[str, Any]  # Contains the file paths from direct uploads
+    file_paths: dict[str, Any]  # Contains the file paths from direct uploads
 
 
 class TikTokVerificationResponse(BaseModel):
     success: bool
-    message: Optional[str] = None
-    data: Optional[dict] = None
+    message: str | None = None
+    data: dict | None = None
 
 
 class TikTokVerificationListResponse(BaseModel):
     success: bool
-    data: List[Dict[str, Any]]
-    pagination: Dict[str, Any]
+    data: list[dict[str, Any]]
+    pagination: dict[str, Any]
 
 
 class UploadUrlEntry(BaseModel):
     model_config = ConfigDict(extra="allow")
     upload_url: str
     file_path: str
-    token: Optional[str] = None
+    token: str | None = None
 
 
 class UploadUrlsResponse(BaseModel):
     success: bool
-    upload_urls: Dict[str, UploadUrlEntry]
+    upload_urls: dict[str, UploadUrlEntry]
 
 
 class TikTokHealthResponse(BaseModel):
@@ -92,22 +93,22 @@ class TikTokHealthResponse(BaseModel):
     timestamp: str
     service: str
     version: str
-    checks: Dict[str, Dict[str, Any]]
-    error: Optional[str] = None
+    checks: dict[str, dict[str, Any]]
+    error: str | None = None
 
 
 class TikTokDiagnosticsResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
     database_connected: bool
-    table_exists: Optional[bool] = None
-    table_structure: Optional[Any] = None
-    storage_buckets: Optional[Any] = None
-    error: Optional[str] = None
+    table_exists: bool | None = None
+    table_structure: Any | None = None
+    storage_buckets: Any | None = None
+    error: str | None = None
 
 
 class TikTokSetupResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
     message: str
-    status: Optional[str] = None
-    response: Optional[str] = None
-    error: Optional[str] = None
+    status: str | None = None
+    response: str | None = None
+    error: str | None = None

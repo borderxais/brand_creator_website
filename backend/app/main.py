@@ -6,7 +6,6 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, current_dir)
 
 # Import the app from main.main module
-from main.main import app
 
 # This ensures the app is available at module level for uvicorn
 # When using: uvicorn main:app

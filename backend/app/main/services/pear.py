@@ -1,5 +1,6 @@
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any
+
 from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
@@ -7,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class PearService:
     @staticmethod
-    async def get_all_stores(search: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    async def get_all_stores(search: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
         """Get all pear brand stores with optional search filtering."""
         try:
             logger.info(f"Starting get_all_stores with search='{search}', limit={limit}")
@@ -48,7 +49,7 @@ class PearService:
             return []
 
     @staticmethod
-    async def get_store_by_id(store_id: str) -> Dict[str, Any]:
+    async def get_store_by_id(store_id: str) -> dict[str, Any]:
         """Get a specific pear brand store by ID."""
         try:
             logger.info(f"Getting store by ID: {store_id}")
@@ -73,7 +74,7 @@ class PearService:
             raise HTTPException(status_code=500, detail=f"Failed to retrieve store: {str(e)}")
 
     @staticmethod
-    async def create_store(store_data) -> Dict[str, Any]:
+    async def create_store(store_data) -> dict[str, Any]:
         """Create a new pear brand store."""
         try:
             logger.info(f"Creating store: {store_data.store_name}")

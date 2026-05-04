@@ -1,7 +1,9 @@
-from fastapi import APIRouter, File, Form, UploadFile, HTTPException
-from typing import Optional, Union
+import logging
+from datetime import UTC, datetime
+
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
-from ..services.tiktokverify import TikTokVerificationService
+
 from ..models.common import GenericStatusResponse
 from ..models.tiktokverify import (
     TikTokDiagnosticsResponse,
@@ -13,8 +15,7 @@ from ..models.tiktokverify import (
     TikTokVerificationWithPaths,
     UploadUrlsResponse,
 )
-import logging
-from datetime import datetime, timezone
+from ..services.tiktokverify import TikTokVerificationService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -62,20 +63,20 @@ async def upload_verification(
     id_type: str = Form(...),
     gender: str = Form(...),
     nationality: str = Form(...),
-    stage_name: Optional[str] = Form(None),
+    stage_name: str | None = Form(None),
     id_number: str = Form(...),
     date_of_birth: str = Form(...),  # mm/dd/yy format
     account_intro: str = Form(...),
     overseas_platform_url: str = Form(...),
     follower_count: int = Form(...),
-    other_platforms: Optional[str] = Form(None),
+    other_platforms: str | None = Form(None),
     agent_email: str = Form(...),
     # ------------ files ------------
     id_front_file: UploadFile = File(...),
     handheld_id_file: UploadFile = File(...),
     backend_ss_file: UploadFile = File(...),
     signed_auth_file: UploadFile = File(...),
-    identity_video_file: Optional[UploadFile] = File(None),
+    identity_video_file: UploadFile | None = File(None),
 ):
     """Submit TikTok verification application"""
     try:
@@ -283,7 +284,7 @@ async def health_check():
 
         return {
             "status": overall_status,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "service": "TikTok Verification API",
             "version": "1.0.0",
             "checks": {
@@ -296,7 +297,7 @@ async def health_check():
         logger.error(f"Health check failed: {str(e)}")
         return {
             "status": "unhealthy",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "service": "TikTok Verification API",
             "version": "1.0.0",
             "error": str(e),

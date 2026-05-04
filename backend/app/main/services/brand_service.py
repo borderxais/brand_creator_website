@@ -1,7 +1,9 @@
 import logging
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any
+
 from fastapi import HTTPException
+
 from ..database.connection import supabase
 from ..utils.validators import validate_uuid
 
@@ -12,11 +14,11 @@ class BrandService:
     @staticmethod
     async def get_brand_campaigns(
         brand_id: str,
-        status: Optional[str] = None,
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
-        search: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+        status: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        search: str | None = None,
+    ) -> list[dict[str, Any]]:
         """Get all campaigns for a specific brand with optional filtering."""
         logger.info(
             f"Fetching campaigns for brand profile ID: {brand_id} with filters: status={status}, start_date={start_date}, end_date={end_date}, search={search}"
@@ -24,7 +26,7 @@ class BrandService:
 
         try:
             if not supabase:
-                logger.warning(f"No Supabase connection, returning empty list")
+                logger.warning("No Supabase connection, returning empty list")
                 return []
 
             logger.info(f"Using brand profile ID directly: {brand_id}")
@@ -129,7 +131,7 @@ class BrandService:
             )
 
     @staticmethod
-    async def get_brand_campaign(brand_id: str, campaign_id: str) -> Dict[str, Any]:
+    async def get_brand_campaign(brand_id: str, campaign_id: str) -> dict[str, Any]:
         """Get a specific campaign by ID with all its applications."""
         logger.info(f"Fetching campaign {campaign_id} for brand ID: {brand_id}")
 
@@ -244,7 +246,7 @@ class BrandService:
             )
 
     @staticmethod
-    async def delete_brand_campaign(brand_id: str, campaign_id: str) -> Dict[str, Any]:
+    async def delete_brand_campaign(brand_id: str, campaign_id: str) -> dict[str, Any]:
         """Delete a specific campaign for a brand."""
         logger.info(f"Deleting campaign {campaign_id} for brand ID: {brand_id}")
 

@@ -1,9 +1,8 @@
-from fastapi import FastAPI, HTTPException, Request
+import logging
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import logging
-import os
-import sys
 
 # Configure logging for production
 logging.basicConfig(
@@ -14,17 +13,17 @@ logger = logging.getLogger(__name__)
 try:
     from .config.settings import settings
     from .routes import (
+        ai_video,
         campaigns,
+        career,
         claims,
-        health,
-        upload,
         contact,
         entertainment,
+        health,
         pear,
-        tiktokverify,
-        ai_video,
-        career,
         tiktok_upload,
+        tiktokverify,
+        upload,
     )
 
     logger.info("Successfully imported all modules")

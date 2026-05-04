@@ -1,5 +1,8 @@
-from fastapi import APIRouter, Query, HTTPException, Path, Body
-from typing import List, Optional
+import logging
+from datetime import datetime
+
+from fastapi import APIRouter, Body, HTTPException, Path, Query
+
 from ..models.campaign import (
     BrandProfileStatus,
     Campaign,
@@ -7,20 +10,18 @@ from ..models.campaign import (
     CampaignMutationResponse,
     CampaignWithApplications,
 )
-from ..services.campaign_service import CampaignService
 from ..services.brand_service import BrandService
-import logging
-from datetime import datetime
+from ..services.campaign_service import CampaignService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/", response_model=List[Campaign])
+@router.get("/", response_model=list[Campaign])
 async def get_campaigns(
-    search: Optional[str] = Query(None, description="Search term for title or brand"),
-    platform: Optional[str] = Query(None, description="Filter by platform"),
-    category: Optional[str] = Query(None, description="Filter by category"),
+    search: str | None = Query(None, description="Search term for title or brand"),
+    platform: str | None = Query(None, description="Filter by platform"),
+    category: str | None = Query(None, description="Filter by category"),
 ):
     """Get all campaigns with optional filtering."""
     return await CampaignService.get_campaigns(search, platform, category)
@@ -33,15 +34,15 @@ async def get_campaign_by_id(campaign_id: str = Path(..., description="The ID of
 
 
 # Fix the brand campaigns routes to have proper paths
-@router.get("/brand/{brand_id}", response_model=List[CampaignWithApplications])
+@router.get("/brand/{brand_id}", response_model=list[CampaignWithApplications])
 async def get_brand_campaigns(
     brand_id: str = Path(..., description="The brand profile ID (not user ID)"),
-    status: Optional[str] = Query(None, description="Filter by campaign status"),
-    start_date: Optional[str] = Query(
+    status: str | None = Query(None, description="Filter by campaign status"),
+    start_date: str | None = Query(
         None, description="Filter by start date (format: YYYY-MM-DD)"
     ),
-    end_date: Optional[str] = Query(None, description="Filter by end date (format: YYYY-MM-DD)"),
-    search: Optional[str] = Query(None, description="Search in campaign title or description"),
+    end_date: str | None = Query(None, description="Filter by end date (format: YYYY-MM-DD)"),
+    search: str | None = Query(None, description="Search in campaign title or description"),
 ):
     """Get all campaigns for a specific brand with optional filtering."""
     return await BrandService.get_brand_campaigns(brand_id, status, start_date, end_date, search)

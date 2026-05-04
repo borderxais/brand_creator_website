@@ -1,11 +1,13 @@
 import json
 import logging
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any
+
 from fastapi import HTTPException
+
 from ..database.connection import supabase
-from ..utils.validators import validate_uuid, check_table_exists
-from ..models.entertainment_live import EntertainmentLive, EntertainmentLiveCreate
+from ..models.entertainment_live import EntertainmentLiveCreate
+from ..utils.validators import check_table_exists, validate_uuid
 
 logger = logging.getLogger(__name__)
 
@@ -13,12 +15,12 @@ logger = logging.getLogger(__name__)
 class EntertainmentLiveService:
     @staticmethod
     async def get_entertainment_live_missions(
-        search: Optional[str] = None,
-        platform: Optional[str] = None,
-        region: Optional[str] = None,
-        reward_model: Optional[str] = None,
+        search: str | None = None,
+        platform: str | None = None,
+        region: str | None = None,
+        reward_model: str | None = None,
         limit: int = 50,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get all entertainment live missions with optional filtering."""
         logger.info(
             f"Getting entertainment live missions with params: search={search}, platform={platform}, region={region}, reward_model={reward_model}"
@@ -114,7 +116,7 @@ class EntertainmentLiveService:
             raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
 
     @staticmethod
-    async def get_entertainment_live_mission_by_id(mission_id: str) -> Dict[str, Any]:
+    async def get_entertainment_live_mission_by_id(mission_id: str) -> dict[str, Any]:
         """Get a specific entertainment live mission by ID."""
         logger.info(f"Fetching entertainment live mission details for ID: {mission_id}")
 
@@ -174,7 +176,7 @@ class EntertainmentLiveService:
     @staticmethod
     async def create_entertainment_live_mission(
         brand_id: str, mission: EntertainmentLiveCreate
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a new entertainment live mission for a specific brand."""
         logger.info(
             f"Creating entertainment live mission for brand ID {brand_id}: {mission.task_title}"
@@ -256,7 +258,7 @@ class EntertainmentLiveService:
     @staticmethod
     async def update_entertainment_live_mission(
         brand_id: str, mission_id: str, mission_update: EntertainmentLiveCreate
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Update an existing entertainment live mission for a specific brand."""
         logger.info(f"Updating entertainment live mission {mission_id} for brand ID {brand_id}")
 
@@ -321,7 +323,7 @@ class EntertainmentLiveService:
             raise HTTPException(500, f"Database error: {str(db_error)}")
 
     @staticmethod
-    async def delete_entertainment_live_mission(brand_id: str, mission_id: str) -> Dict[str, Any]:
+    async def delete_entertainment_live_mission(brand_id: str, mission_id: str) -> dict[str, Any]:
         """Delete an entertainment live mission for a specific brand."""
         logger.info(f"Deleting entertainment live mission {mission_id} for brand ID {brand_id}")
 

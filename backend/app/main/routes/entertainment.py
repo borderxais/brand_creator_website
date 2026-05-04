@@ -1,25 +1,26 @@
-from fastapi import APIRouter, Query, HTTPException, Path, Body
-from typing import List, Optional
+import logging
+
+from fastapi import APIRouter, Body, HTTPException, Path, Query
+
 from ..models.entertainment_live import (
     EntertainmentLive,
     EntertainmentLiveCreate,
     EntertainmentLiveResponse,
 )
 from ..services.entertainment_live import EntertainmentLiveService
-import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/", response_model=List[EntertainmentLive])
+@router.get("/", response_model=list[EntertainmentLive])
 async def get_entertainment_live_missions(
-    search: Optional[str] = Query(
+    search: str | None = Query(
         None, description="Search term for task title or campaign objective"
     ),
-    platform: Optional[str] = Query(None, description="Filter by platform"),
-    region: Optional[str] = Query(None, description="Filter by region priority"),
-    reward_model: Optional[str] = Query(None, description="Filter by reward model"),
+    platform: str | None = Query(None, description="Filter by platform"),
+    region: str | None = Query(None, description="Filter by region priority"),
+    reward_model: str | None = Query(None, description="Filter by reward model"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of missions to return"),
 ):
     """Get all entertainment live missions with optional filtering."""

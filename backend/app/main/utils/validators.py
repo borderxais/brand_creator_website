@@ -1,6 +1,6 @@
-import uuid
 import logging
-from typing import Tuple
+import uuid
+
 from supabase import Client
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ async def check_table_exists(supabase_client: Client, table_name: str) -> bool:
         return False
 
 
-async def validate_supabase_connection(supabase_client: Client) -> Tuple[bool, str]:
+async def validate_supabase_connection(supabase_client: Client) -> tuple[bool, str]:
     """Test the Supabase connection and check permissions."""
     if not supabase_client:
         return False, "Supabase client not initialized"
@@ -33,7 +33,7 @@ async def validate_supabase_connection(supabase_client: Client) -> Tuple[bool, s
     try:
         # Try a simple query that should work with minimal permissions
         response = supabase_client.table("campaigns").select("id").limit(1).execute()
-        logger.info(f"Supabase connection test successful")
+        logger.info("Supabase connection test successful")
         return True, "Connection successful"
     except Exception as e:
         error_msg = str(e)

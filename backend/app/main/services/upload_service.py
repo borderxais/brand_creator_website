@@ -1,11 +1,13 @@
 import io
-import uuid
 import logging
+import uuid
 from datetime import datetime
+from typing import Any
+
 from fastapi import HTTPException, UploadFile
-from typing import Dict, Any
-from ..database.connection import supabase
+
 from ..config.settings import settings
+from ..database.connection import supabase
 from ..models.upload import UploadResponse
 
 logger = logging.getLogger(__name__)
@@ -177,7 +179,7 @@ class UploadService:
             raise HTTPException(500, f"An unexpected error occurred: {str(e)}")
 
     @staticmethod
-    async def setup_storage_bucket() -> Dict[str, Any]:
+    async def setup_storage_bucket() -> dict[str, Any]:
         """Setup campaigns storage bucket."""
         try:
             if not supabase:
@@ -212,7 +214,7 @@ class UploadService:
             raise HTTPException(500, f"Failed to set up storage: {str(e)}")
 
     @staticmethod
-    async def test_upload_service() -> Dict[str, Any]:
+    async def test_upload_service() -> dict[str, Any]:
         """Test endpoint to verify the upload service is working."""
         return {
             "status": "ok",
@@ -221,7 +223,7 @@ class UploadService:
         }
 
     @staticmethod
-    async def diagnose_storage() -> Dict[str, Any]:
+    async def diagnose_storage() -> dict[str, Any]:
         """Diagnose storage bucket status."""
         try:
             if not supabase:

@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Query, HTTPException, Request, Body, Path
-from typing import List, Dict, Any
+import logging
+
+from fastapi import APIRouter, HTTPException, Path, Query, Request
+
 from ..models.claim import (
     CampaignClaimCreate,
     CampaignClaimExistsResponse,
@@ -7,7 +9,6 @@ from ..models.claim import (
     CreatorCampaignClaim,
 )
 from ..services.claim_service import ClaimService
-import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -45,7 +46,7 @@ async def create_campaign_claim_alt(request: Request, campaign_claim: CampaignCl
     return await ClaimService.create_campaign_claim(campaign_claim)
 
 
-@router.get("/creator/{creator_id}/campaign-claims", response_model=List[CreatorCampaignClaim])
+@router.get("/creator/{creator_id}/campaign-claims", response_model=list[CreatorCampaignClaim])
 async def get_creator_campaign_claims(
     request: Request,
     creator_id: str = Path(..., description="Creator user ID"),

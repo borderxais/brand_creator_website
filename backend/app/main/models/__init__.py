@@ -5,7 +5,6 @@ Data models for Campaign API
 from .ai_video import AiVideoGenerateResponse
 from .campaign import Campaign, CampaignCreate
 from .claim import CampaignClaimCreate, CampaignClaimResponse
-from .upload import UploadResponse
 from .contact import ContactFormData, ContactResponse
 from .entertainment_live import (
     EntertainmentLive,
@@ -13,6 +12,7 @@ from .entertainment_live import (
     EntertainmentLiveResponse,
 )
 from .tiktokverify import TikTokVerification, TikTokVerificationCreate, TikTokVerificationResponse
+from .upload import UploadResponse
 
 __all__ = [
     "AiVideoGenerateResponse",

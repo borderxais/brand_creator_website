@@ -1,7 +1,9 @@
+import logging
+
 from fastapi import APIRouter, HTTPException
+
 from ..models.career import CareerApplicationData, CareerApplicationResponse
 from ..services.career_service import CareerService
-import logging
 
 logger = logging.getLogger(__name__)
 

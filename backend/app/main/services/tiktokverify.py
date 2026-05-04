@@ -1,10 +1,11 @@
 import io
+import logging
 from datetime import datetime
-from typing import Optional
-from fastapi import UploadFile, HTTPException
+
+from fastapi import HTTPException, UploadFile
+
 from ..database.connection import supabase
 from ..models.tiktokverify import TikTokVerificationCreate
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +164,7 @@ class TikTokVerificationService:
             logger.error(f"Database insert error: {str(e)}")
             raise HTTPException(500, f"Failed to save verification data: {str(e)}")
 
-    def get_verification_by_id(self, verification_id: str) -> Optional[dict]:
+    def get_verification_by_id(self, verification_id: str) -> dict | None:
         """Get verification by ID"""
         try:
             result = (
