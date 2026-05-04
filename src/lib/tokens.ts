@@ -16,9 +16,7 @@ export function generateToken(length: number = 32): string {
  * @returns Date object set to the future expiration time
  */
 export function generateExpirationDate(hours: number = 24): Date {
-  const date = new Date();
-  date.setHours(date.getHours() + hours);
-  return date;
+  return new Date(Date.now() + hours * 60 * 60 * 1000);
 }
 
 /**

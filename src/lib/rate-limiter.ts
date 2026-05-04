@@ -15,7 +15,7 @@ class RateLimiter {
     this.maxRequests = maxRequests;
 
     // Clean up expired entries every hour
-    setInterval(() => this.cleanup(), 60 * 60 * 1000);
+    setInterval(() => this.cleanup(), 60 * 60 * 1000).unref();
   }
 
   // Check if a key is rate limited

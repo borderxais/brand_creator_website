@@ -64,4 +64,24 @@ describe("loginAttemptsLimiter (10 requests per 15 minutes)", () => {
     // The window is 15 minutes; remaining time must be > 0 immediately after first call
     expect(loginAttemptsLimiter.getRemainingTime(key)).toBeGreaterThan(0);
   });
+
+  it("blocks after exceeding the 10-request limit", () => {
+    const key = uniqueKey("login-block");
+    // 10 allowed
+    for (let i = 0; i < 10; i++) {
+      expect(loginAttemptsLimiter.isRateLimited(key)).toBe(false);
+    }
+    // 11th blocked
+    expect(loginAttemptsLimiter.isRateLimited(key)).toBe(true);
+  });
+
+  it("resets the counter after the 15-minute window expires", () => {
+    const key = uniqueKey("login-reset");
+    for (let i = 0; i < 10; i++) {
+      loginAttemptsLimiter.isRateLimited(key);
+    }
+    expect(loginAttemptsLimiter.isRateLimited(key)).toBe(true);
+    vi.advanceTimersByTime(15 * 60 * 1000 + 1);
+    expect(loginAttemptsLimiter.isRateLimited(key)).toBe(false);
+  });
 });
