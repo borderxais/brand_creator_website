@@ -27,6 +27,10 @@
     "*.{ts,tsx}": [
       "tsc-files --noEmit"
     ],
+    "prisma/schema.prisma": [
+      "prisma format",
+      "node scripts/harness/prisma-drift.js"
+    ],
     "*.{json,md,yml,yaml,css}": [
       "prettier --write"
     ]
