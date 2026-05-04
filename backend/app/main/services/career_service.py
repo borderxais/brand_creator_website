@@ -21,7 +21,7 @@ class CareerService:
 
     @staticmethod
     async def send_email(
-        to_email: str, subject: str, html_content: str, from_email: str = None
+        to_email: str, subject: str, html_content: str, from_email: str | None = None
     ) -> bool:
         """Send email using SMTP configuration."""
         try:
@@ -39,15 +39,16 @@ class CareerService:
 
             logger.info(f"Connecting to SMTP server: {settings.SMTP_HOST}:{settings.SMTP_PORT}")
 
+            smtp_server: smtplib.SMTP_SSL | smtplib.SMTP
             if settings.SMTP_SECURE:
-                server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT)
+                smtp_server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT)
             else:
-                server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT)
-                server.starttls()
+                smtp_server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT)
+                smtp_server.starttls()
 
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.sendmail(settings.SMTP_USER, to_email, msg.as_string())
-            server.quit()
+            smtp_server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            smtp_server.sendmail(settings.SMTP_USER, to_email, msg.as_string())
+            smtp_server.quit()
 
             logger.info(f"Email sent successfully to {to_email}")
             return True

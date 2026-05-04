@@ -1261,6 +1261,8 @@ try:
     if os.path.exists(contact_app_path):
         # Load the module from the file path
         spec = importlib.util.spec_from_file_location("contact_app_module", contact_app_path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Could not create spec or loader for {contact_app_path}")
         contact_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(contact_module)
 

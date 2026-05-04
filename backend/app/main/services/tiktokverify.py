@@ -76,7 +76,7 @@ class TikTokVerificationService:
     def upload_files(self, id_number: str, files: dict) -> dict:
         """Upload all verification files and return their paths"""
         folder = f"{id_number}"
-        file_paths = {}
+        file_paths: dict[str, str] = {}
 
         try:
             # Upload each file with better error handling
@@ -111,8 +111,7 @@ class TikTokVerificationService:
                 self._upload_to_bucket(
                     file_paths["identity_video_path"], files["identity_video_file"]
                 )
-            else:
-                file_paths["identity_video_path"] = None
+            # identity_video_path is absent (not set) when no video file is provided
 
             logger.info("All files uploaded successfully")
             return file_paths

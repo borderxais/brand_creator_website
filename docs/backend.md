@@ -91,7 +91,7 @@ The harness wires two Python quality tools via `backend/pyproject.toml`:
 
 These run automatically:
 
-- **On commit** (via lint-staged): `ruff format`, `ruff check --fix`, and `mypy` run against staged `.py` files in `backend/`.
+- **On commit** (via lint-staged): `ruff format` and `ruff check --fix` run against staged `.py` files in `backend/`. mypy is intentionally excluded from per-file lint-staged because per-file invocation produces false positives on Pydantic models (the rest of the package is required for accurate type resolution); the full mypy check runs on push instead.
 - **On push** (via `harness:prepush`): `ruff check .`, `ruff format --check .`, and `mypy app` run against the full backend.
 
 To run manually:

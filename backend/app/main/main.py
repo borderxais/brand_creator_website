@@ -10,8 +10,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+# Fallback settings used when full config cannot be imported
+class MinimalSettings:
+    API_TITLE = "Campaign API"
+    API_VERSION = "1.0.0"
+    ALLOWED_ORIGINS = ["*"]  # Allow all origins as fallback
+
+
+settings: object = MinimalSettings()
+
 try:
-    from .config.settings import settings
+    from .config.settings import settings as _real_settings
     from .routes import (
         ai_video,
         campaigns,
@@ -26,17 +36,10 @@ try:
         upload,
     )
 
+    settings = _real_settings
     logger.info("Successfully imported all modules")
 except ImportError as e:
     logger.error(f"Import error: {e}")
-
-    # Create minimal settings if import fails
-    class MinimalSettings:
-        API_TITLE = "Campaign API"
-        API_VERSION = "1.0.0"
-        ALLOWED_ORIGINS = ["*"]  # Allow all origins as fallback
-
-    settings = MinimalSettings()
 
 # Initialize FastAPI app
 app = FastAPI(

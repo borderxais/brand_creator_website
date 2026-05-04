@@ -230,7 +230,8 @@ class UploadService:
                 return {"error": "Database connection not available"}
 
             # Check storage buckets
-            storage_buckets = []
+            storage_buckets: list[dict[str, Any]] = []
+            bucket_list_error = None
             try:
                 buckets_response = supabase.storage.list_buckets()
                 for bucket in buckets_response:
@@ -238,7 +239,7 @@ class UploadService:
                         {"name": bucket.name, "public": getattr(bucket, "public", "unknown")}
                     )
             except Exception as bucket_err:
-                storage_buckets = [f"Error listing buckets: {str(bucket_err)}"]
+                bucket_list_error = f"Error listing buckets: {str(bucket_err)}"
 
             # Check if campaigns bucket exists and is accessible
             campaigns_bucket_status = "not_found"
@@ -251,6 +252,7 @@ class UploadService:
 
             return {
                 "storage_buckets": storage_buckets,
+                "bucket_list_error": bucket_list_error,
                 "campaigns_bucket_status": campaigns_bucket_status,
                 "supabase_url": settings.SUPABASE_URL,
                 "has_service_key": bool(settings.SUPABASE_SERVICE_KEY),
