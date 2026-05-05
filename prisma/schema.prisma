@@ -39,11 +39,16 @@ model User {
   emailVerified     DateTime?
   password          String?
   image             String?
+  // role allowed values: CREATOR | BRAND | ADMIN | STUDIO_ADMIN (see src/features/ai-studio/types/roles.ts)
   role              String         @default("CREATOR")
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   creatorHandleName String         @map("creator_handle_name")
   TikTokAccount     TikTokAccount?
+  subscription      Subscription?  @relation("UserSubscription")
+  videoRequests     VideoRequest[] @relation("RequestCreator")
+  claimedRequests   VideoRequest[] @relation("RequestClaimer")
+  uploadedSamples   Sample[]       @relation("SampleUploader")
 }
 
 model VerificationToken {
@@ -460,4 +465,111 @@ model pear_brand {
   store_intro String?
   store_logo  String?
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+}
+
+// ─── AI Video Studio ──────────────────────────────────────────────────────────
+
+enum PlanTier {
+  FREE
+  STARTER
+  PRO
+}
+
+enum VideoRequestStatus {
+  PENDING
+  IN_PROGRESS
+  DELIVERED
+  REJECTED
+  FAILED
+}
+
+enum SampleCategory {
+  VERTICAL_DRAMA
+  EMOTION_STORY
+  LIFESTYLE_VLOG
+  SUSPENSE_THRILLER
+  OTHER
+}
+
+model Sample {
+  id           String         @id @default(cuid())
+  title        String
+  description  String?
+  category     SampleCategory
+  hook         String?
+  previewUrl   String
+  thumbnailUrl String?
+  durationSec  Int            @default(90)
+  isActive     Boolean        @default(true)
+  uploadedById String
+  uploadedBy   User           @relation("SampleUploader", fields: [uploadedById], references: [id])
+  requests     VideoRequest[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([category, isActive])
+}
+
+model VideoRequest {
+  id        String  @id @default(cuid())
+  creatorId String
+  creator   User    @relation("RequestCreator", fields: [creatorId], references: [id])
+  sampleId  String?
+  sample    Sample? @relation(fields: [sampleId], references: [id])
+
+  prompt         String
+  styleNotes     String?
+  targetCategory SampleCategory
+
+  status            VideoRequestStatus @default(PENDING)
+  outputUrl         String?
+  outputDurationSec Int?
+  rejectionReason   String?
+
+  claimedById String?
+  claimedBy   User?     @relation("RequestClaimer", fields: [claimedById], references: [id])
+  claimedAt   DateTime?
+  deliveredAt DateTime?
+
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  quotaConsumed  Boolean       @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([creatorId, status])
+  @@index([status, createdAt])
+}
+
+model Subscription {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation("UserSubscription", fields: [userId], references: [id])
+
+  tier                 PlanTier @default(FREE)
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+  stripePriceId        String?
+
+  periodStart DateTime @default(now())
+  periodEnd   DateTime
+  quotaLimit  Int      @default(1)
+  quotaUsed   Int      @default(0)
+
+  cancelAtPeriodEnd Boolean   @default(false)
+  canceledAt        DateTime?
+
+  requests  VideoRequest[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([periodEnd])
+}
+
+model StripeEventLog {
+  id         String   @id
+  type       String
+  receivedAt DateTime @default(now())
+  payload    Json
 }
