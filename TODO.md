@@ -6,15 +6,15 @@ A more granular implementation plan will be produced via the writing-plans skill
 
 ## Sprint 0 — Foundation & Blockers
 
-- [ ] Resolve E2E hard blocker 1 — dev-only `/api/dev/login` route gated by `NODE_ENV !== 'production'`
-- [ ] Resolve E2E hard blocker 2 — dev-only `POST /api/dev/subscription` to set tier/quota directly
-- [ ] Resolve E2E hard blocker 3 — dev-only `POST /api/dev/quota/advance` for period rollover
-- [ ] Resolve E2E hard blocker 4 — add `webServer` config to `playwright.config.ts`
-- [ ] Add `prisma/seed.dev.js` with creator/admin test users (`creator-free@test.local`, `creator-starter@test.local`, `creator-pro@test.local`, `admin@test.local`)
-- [ ] Commit `e2e/fixtures/sample-90s.mp4` (~100KB stub) and `e2e/fixtures/output-sample.mp4`
-- [ ] Add `EMAIL_DEV_NOOP` env flag handling in `src/lib/email.ts` (or shim if file lives only on `feat/dev-harness`)
-- [ ] Add `E2E_BYPASS_RATELIMIT` flag in `src/lib/rate-limiter.ts`
-- [ ] Confirm Stripe test-mode keys + create Starter / Pro Price IDs in Stripe dashboard
+- [x] Resolve E2E hard blocker 1 — dev-only `/api/dev/login` route gated by `NODE_ENV !== 'production'` (`6ef6634`)
+- [x] Resolve E2E hard blocker 2 — dev-only `POST /api/dev/subscription` to set tier/quota directly (`7169cec`)
+- [x] Resolve E2E hard blocker 3 — dev-only `POST /api/dev/quota/advance` for period rollover (`bc55fe0`)
+- [x] Resolve E2E hard blocker 4 — add `webServer` config to `playwright.config.ts` + Mobile Safari + Pixel 5 projects (`79ec0dc`)
+- [x] Add `prisma/seed.dev.js` with creator/admin test users (`df84503`)
+- [x] Commit `e2e/fixtures/sample-90s.mp4` and `e2e/fixtures/output-sample.mp4` (`590558d`)
+- [x] Add `EMAIL_DEV_NOOP` env flag handling in `src/lib/email.ts` (`54864b2`)
+- [x] Add `E2E_BYPASS_RATELIMIT` flag in `src/lib/rate-limiter.ts` (`5de812e`)
+- [ ] Confirm Stripe test-mode keys + create Starter / Pro Price IDs in Stripe dashboard (deferred to Plan B)
 
 ## Sprint 1 — Data model & schema
 
@@ -26,7 +26,7 @@ A more granular implementation plan will be produced via the writing-plans skill
 
 ### Sprint 1 follow-ups (deferred from Task 3)
 
-- [ ] **Apply migration `20260505131009_add_ai_video_studio` to dev DB.** `prisma migrate dev` failed with `FATAL: Tenant or user not found` from Supabase pooler. Resolve via one of: (a) fix DATABASE_URL connection mode for migrations (use direct port, not pooler), (b) run `migration.sql` manually in Supabase Studio SQL Editor then `npx prisma migrate resolve --applied 20260505131009_add_ai_video_studio`, (c) refresh expired Supabase credentials.
+- [x] **Apply migration `20260505131009_add_ai_video_studio` to dev DB.** Old Supabase project `ldlxyyctxylgmstfqlzh` was paused (>90 days). Backup `db_cluster-02-01-2026@07-56-36.backup.gz` restored (public schema only, 26 tables, 2560 rows including User=58, CreatorProfile=54, CreatorPlatform=306, avocadata=1000, creator_test=1000) into NEW Supabase project `loesykbqlhynbjmqxfxc` (region `us-east-2`). New `DATABASE_URL` / `DIRECT_URL` set in `.env`. `npx prisma migrate deploy` succeeded — Studio schema (Sample, VideoRequest, Subscription, StripeEventLog + 3 enums) live on new DB.
 - [ ] **Cascade refactor (code-review follow-up).** Make foreign-key cascade behavior explicit on Studio relations:
   - `Subscription.user`: `onDelete: Cascade` (delete sub when user deleted)
   - `Sample.uploadedBy`: `onDelete: Restrict` + comment "preserve uploader audit trail"
@@ -35,6 +35,8 @@ A more granular implementation plan will be produced via the writing-plans skill
   - `VideoRequest.subscription`: `onDelete: SetNull`
   - `VideoRequest.sample`: `onDelete: SetNull` (sample archive shouldn't break history)
 - [ ] **Schema intent comments** on `VideoRequest.subscriptionId`, `VideoRequest.quotaConsumed`, and `StripeEventLog.id` clarifying nullability/defaults/external-id semantics.
+- [ ] **Restore Supabase service role key** in `.env` (`SUPABASE_SERVICE_KEY`) — fetch from Supabase Dashboard → Settings → API → service_role for new project `loesykbqlhynbjmqxfxc`. Required if any server-side code uses supabase-js with admin privileges.
+- [ ] **Storage buckets recreation** — old project had 7 storage buckets with 148 file objects. Original blob files are gone with the paused project. Manually recreate any buckets needed (TikTok video uploads, profile images) on new project as use-cases re-emerge.
 
 ## Sprint 2 — Core services (server-side)
 
