@@ -28,20 +28,28 @@ export interface EmailOptions {
 /**
  * Send an email using the configured SMTP transport
  */
-export async function sendEmail({ to, subject, html, from }: EmailOptions): Promise<boolean> {
+export async function sendEmail(
+  options: EmailOptions
+): Promise<{ ok: true; noop?: boolean } | { ok: false; error: string }> {
+  if (process.env.EMAIL_DEV_NOOP === "1") {
+    console.log(`[email-noop] skipping send to=${options.to} subject=${options.subject}`);
+    return { ok: true as const, noop: true as const };
+  }
+
   try {
     const info = await transporter.sendMail({
-      from: from || `"${defaultSender.name}" <${defaultSender.email}>`,
-      to,
-      subject,
-      html,
+      from: options.from || `"${defaultSender.name}" <${defaultSender.email}>`,
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
     });
 
     console.log("Email sent:", info.messageId);
-    return true;
+    return { ok: true };
   } catch (error) {
     console.error("Error sending email:", error);
-    return false;
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return { ok: false, error: errorMessage };
   }
 }
 
@@ -52,7 +60,7 @@ export async function sendVerificationEmail(
   email: string,
   token: string,
   baseUrl: string
-): Promise<boolean> {
+): Promise<{ ok: true; noop?: boolean } | { ok: false; error: string }> {
   const verificationLink = `${baseUrl}/api/auth/verify-email?token=${token}`;
 
   const html = `
@@ -74,7 +82,7 @@ export async function sendVerificationEmail(
                   <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">Brand Creator Platform</h1>
                 </td>
               </tr>
-              
+
               <!-- Content -->
               <tr>
                 <td style="padding: 40px;">
@@ -82,35 +90,35 @@ export async function sendVerificationEmail(
                   <p style="color: #4b5563; font-size: 16px; line-height: 1.5; margin-bottom: 24px;">
                     Thank you for signing up! To complete your registration and access all features, please verify your email address.
                   </p>
-                  
+
                   <div style="text-align: center; margin: 30px 0;">
                     <a href="${verificationLink}" target="_blank" style="background-color: #6d28d9; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 16px;">
                       Verify Email Address
                     </a>
                   </div>
-                  
+
                   <p style="color: #4b5563; font-size: 16px; line-height: 1.5; margin-bottom: 24px;">
                     If the button doesn't work, you can copy and paste this link into your browser:
                   </p>
-                  
+
                   <p style="color: #4b5563; font-size: 14px; line-height: 1.5; margin-bottom: 24px; background-color: #f3f4f6; padding: 12px; border-radius: 4px; word-break: break-all;">
                     ${verificationLink}
                   </p>
-                  
+
                   <p style="color: #4b5563; font-size: 16px; line-height: 1.5; margin-bottom: 24px;">
                     <strong>Important:</strong> This link will expire in 24 hours for security reasons.
                   </p>
-                  
+
                   <p style="color: #4b5563; font-size: 16px; line-height: 1.5; margin-bottom: 24px;">
                     After verification, you'll be able to log in and start using all platform features.
                   </p>
-                  
+
                   <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
                     If you didn't create an account with us, you can safely ignore this email.
                   </p>
                 </td>
               </tr>
-              
+
               <!-- Footer -->
               <tr>
                 <td style="padding: 20px 40px; text-align: center; background-color: #f9fafb; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
@@ -127,9 +135,15 @@ export async function sendVerificationEmail(
     </html>
   `;
 
-  return sendEmail({
+  const result = await sendEmail({
     to: email,
     subject: "Verify Your Email Address",
     html,
   });
+
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
+
+  return result;
 }
