@@ -18,6 +18,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "node prisma/seed.js",
     "db:seed": "node prisma/seed.js",
+    "db:seed:dev": "node prisma/seed.dev.js",
     "lint:strict": "eslint . --max-warnings=0",
     "test": "vitest",
     "test:run": "vitest run",
