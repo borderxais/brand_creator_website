@@ -4,7 +4,7 @@ interface RateLimitEntry {
 }
 
 // Simple in-memory rate limiter
-class RateLimiter {
+export class RateLimiter {
   private cache: Map<string, RateLimitEntry>;
   private readonly windowMs: number;
   private readonly maxRequests: number;
@@ -20,6 +20,9 @@ class RateLimiter {
 
   // Check if a key is rate limited
   isRateLimited(key: string): boolean {
+    if (process.env.E2E_BYPASS_RATELIMIT === "1") {
+      return false;
+    }
     const now = Date.now();
     const entry = this.cache.get(key);
 
