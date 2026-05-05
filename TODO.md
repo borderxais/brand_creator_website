@@ -18,11 +18,23 @@ A more granular implementation plan will be produced via the writing-plans skill
 
 ## Sprint 1 — Data model & schema
 
-- [ ] Prisma migration: add `Sample`, `VideoRequest`, `Subscription`, `StripeEventLog` models + enums (`PlanTier`, `VideoRequestStatus`, `SampleCategory`)
-- [ ] Patch `User` model with new relations
-- [ ] Document `STUDIO_ADMIN` allowed value in `src/features/ai-studio/types/roles.ts`
+- [x] Prisma migration: add `Sample`, `VideoRequest`, `Subscription`, `StripeEventLog` models + enums (`PlanTier`, `VideoRequestStatus`, `SampleCategory`) — committed `1f2ba04`, **NOT applied to DB yet** (see follow-ups)
+- [x] Patch `User` model with new relations
+- [x] Document `STUDIO_ADMIN` allowed value in `src/features/ai-studio/types/roles.ts`
 - [ ] Run migration locally; update `prisma/seed.dev.js` to backfill default `Subscription` for seeded users
 - [ ] Add `prisma-drift.js` check passes
+
+### Sprint 1 follow-ups (deferred from Task 3)
+
+- [ ] **Apply migration `20260505131009_add_ai_video_studio` to dev DB.** `prisma migrate dev` failed with `FATAL: Tenant or user not found` from Supabase pooler. Resolve via one of: (a) fix DATABASE_URL connection mode for migrations (use direct port, not pooler), (b) run `migration.sql` manually in Supabase Studio SQL Editor then `npx prisma migrate resolve --applied 20260505131009_add_ai_video_studio`, (c) refresh expired Supabase credentials.
+- [ ] **Cascade refactor (code-review follow-up).** Make foreign-key cascade behavior explicit on Studio relations:
+  - `Subscription.user`: `onDelete: Cascade` (delete sub when user deleted)
+  - `Sample.uploadedBy`: `onDelete: Restrict` + comment "preserve uploader audit trail"
+  - `VideoRequest.creator`: `onDelete: Restrict` + comment "preserve creator audit trail"
+  - `VideoRequest.claimedBy`: `onDelete: SetNull`
+  - `VideoRequest.subscription`: `onDelete: SetNull`
+  - `VideoRequest.sample`: `onDelete: SetNull` (sample archive shouldn't break history)
+- [ ] **Schema intent comments** on `VideoRequest.subscriptionId`, `VideoRequest.quotaConsumed`, and `StripeEventLog.id` clarifying nullability/defaults/external-id semantics.
 
 ## Sprint 2 — Core services (server-side)
 
