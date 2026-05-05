@@ -13,5 +13,19 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  webServer: process.env.PLAYWRIGHT_BASE_URL
+    ? undefined
+    : {
+        command: "npm run dev",
+        url: "http://localhost:3000",
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "Mobile Safari", use: { ...devices["iPhone 13"] } },
+    { name: "Pixel 5", use: { ...devices["Pixel 5"] } },
+  ],
 });
