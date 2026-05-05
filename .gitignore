@@ -25,6 +25,12 @@
 *.pem
 *.Identifier
 
+# database dumps / backups (contain user data — never commit)
+*.backup
+*.backup.gz
+*.sql.gz
+db_cluster-*
+
 # debug
 npm-debug.log*
 yarn-debug.log*
