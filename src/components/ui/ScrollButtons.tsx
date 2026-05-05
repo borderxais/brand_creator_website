@@ -1,16 +1,19 @@
-'use client';
-
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+"use client";
 
 interface ScrollButtonsProps {
   onScrollLeft?: () => void;
   onScrollRight?: () => void;
-  direction?: 'left' | 'right';
+  direction?: "left" | "right";
   className?: string;
 }
 
-export function ScrollButtons({ onScrollLeft, onScrollRight, direction, className = '' }: ScrollButtonsProps) {
-  if (direction === 'left') {
+export function ScrollButtons({
+  onScrollLeft,
+  onScrollRight,
+  direction,
+  className = "",
+}: ScrollButtonsProps) {
+  if (direction === "left") {
     return (
       <button
         onClick={onScrollLeft}
@@ -24,18 +27,13 @@ export function ScrollButtons({ onScrollLeft, onScrollRight, direction, classNam
           viewBox="0 0 24 24"
           stroke="black"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
       </button>
     );
   }
 
-  if (direction === 'right') {
+  if (direction === "right") {
     return (
       <button
         onClick={onScrollRight}
@@ -49,12 +47,7 @@ export function ScrollButtons({ onScrollLeft, onScrollRight, direction, classNam
           viewBox="0 0 24 24"
           stroke="black"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </button>
     );
@@ -75,12 +68,7 @@ export function ScrollButtons({ onScrollLeft, onScrollRight, direction, classNam
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
       </button>
       <button
@@ -95,12 +83,7 @@ export function ScrollButtons({ onScrollLeft, onScrollRight, direction, classNam
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </button>
     </div>

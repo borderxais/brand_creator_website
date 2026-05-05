@@ -1,56 +1,56 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authConfig } from '@/app/api/auth/[...nextauth]/auth.config';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authConfig } from "@/app/api/auth/[...nextauth]/auth.config";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authConfig);
 
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get the user and ensure they are a creator
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { id: true, role: true }
+      select: { id: true, role: true },
     });
 
-    if (!user || user.role !== 'CREATOR') {
-      return NextResponse.json({ error: 'Unauthorized - Creator access only' }, { status: 403 });
+    if (!user || user.role !== "CREATOR") {
+      return NextResponse.json({ error: "Unauthorized - Creator access only" }, { status: 403 });
     }
 
     const creatorProfile = await prisma.creatorProfile.findUnique({
       where: { userId: user.id },
-      select: { id: true }
+      select: { id: true },
     });
 
     if (!creatorProfile) {
-      return NextResponse.json({ error: 'Unauthorized - Creator access only' }, { status: 403 });
+      return NextResponse.json({ error: "Unauthorized - Creator access only" }, { status: 403 });
     }
 
     const { campaignId } = await request.json();
 
     // Check if campaign exists
     const campaign = await prisma.campaigns.findUnique({
-      where: { id: campaignId }
+      where: { id: campaignId },
     });
 
     if (!campaign) {
-      return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+      return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
     }
 
     // Check if creator has already applied
     const existingApplication = await prisma.application.findFirst({
       where: {
         campaignId,
-        creatorId: creatorProfile.id
-      }
+        creatorId: creatorProfile.id,
+      },
     });
 
     if (existingApplication) {
-      return NextResponse.json({ error: 'Already applied to this campaign' }, { status: 400 });
+      return NextResponse.json({ error: "Already applied to this campaign" }, { status: 400 });
     }
 
     // Create application
@@ -58,13 +58,13 @@ export async function POST(request: Request) {
       data: {
         campaignId,
         creatorId: creatorProfile.id,
-        status: 'PENDING'
-      }
+        status: "PENDING",
+      },
     });
 
     return NextResponse.json(application);
   } catch (error) {
-    console.error('Error applying to campaign:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error("Error applying to campaign:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

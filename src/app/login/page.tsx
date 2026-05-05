@@ -5,7 +5,6 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { loginAttemptsLimiter } from "@/lib/rate-limiter";
 import { getSession } from "next-auth/react";
 
 function LoginForm() {
@@ -16,8 +15,8 @@ function LoginForm() {
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [showResendButton, setShowResendButton] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
-  const [isRateLimited, setIsRateLimited] = useState(false);
-  const [rateLimitTime, setRateLimitTime] = useState(0);
+  const [_isRateLimited, setIsRateLimited] = useState(false);
+  const [_rateLimitTime, setRateLimitTime] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -25,11 +24,11 @@ function LoginForm() {
   useEffect(() => {
     if (status === "authenticated" && session?.user?.role) {
       // Check if there's a redirect URL from career application
-      const redirectUrl = searchParams?.get('redirect');
-      const fromApply = searchParams?.get('from');
-      const positionId = searchParams?.get('position');
-      
-      if (redirectUrl && fromApply === 'apply' && positionId && session.user.role === "CREATOR") {
+      const redirectUrl = searchParams?.get("redirect");
+      const fromApply = searchParams?.get("from");
+      const positionId = searchParams?.get("position");
+
+      if (redirectUrl && fromApply === "apply" && positionId && session.user.role === "CREATOR") {
         // Redirect back to career page with parameters to open modal
         router.push(`${redirectUrl}?from=apply&position=${positionId}`);
       } else if (session.user.role === "BRAND") {
@@ -49,7 +48,7 @@ function LoginForm() {
     try {
       // Check if the user is rate limited (client-side check)
       const ip = "client"; // We'll use a placeholder since we can't get IP on client
-      const key = `login-attempt:${ip}:${email}`;
+      const _key = `login-attempt:${ip}:${email}`;
 
       // Actually check on the server side through the API
       const rateLimitCheck = await fetch("/api/auth/check-rate-limit", {
@@ -65,7 +64,9 @@ function LoginForm() {
       if (rateLimitData.limited) {
         setIsRateLimited(true);
         setRateLimitTime(rateLimitData.remainingTime);
-        setError(`Too many login attempts. Please try again in ${rateLimitData.remainingTime} seconds.`);
+        setError(
+          `Too many login attempts. Please try again in ${rateLimitData.remainingTime} seconds.`
+        );
         setIsLoading(false);
         return;
       }
@@ -85,17 +86,21 @@ function LoginForm() {
           setError("Invalid email or password");
         }
       } else {
-        
         // Use getSession() to get the latest session
         const session = await getSession();
-        console.log('Session after login:', session);
+        console.log("Session after login:", session);
 
         // Check if there's a redirect URL from career application
-        const redirectUrl = searchParams?.get('redirect');
-        const fromApply = searchParams?.get('from');
-        const positionId = searchParams?.get('position');
-        
-        if (redirectUrl && fromApply === 'apply' && positionId && session?.user?.role === "CREATOR") {
+        const redirectUrl = searchParams?.get("redirect");
+        const fromApply = searchParams?.get("from");
+        const positionId = searchParams?.get("position");
+
+        if (
+          redirectUrl &&
+          fromApply === "apply" &&
+          positionId &&
+          session?.user?.role === "CREATOR"
+        ) {
           // Redirect back to career page with parameters to open modal
           router.push(`${redirectUrl}?from=apply&position=${positionId}`);
         } else if (session?.user?.role === "BRAND") {
@@ -103,8 +108,8 @@ function LoginForm() {
         } else if (session?.user?.role === "CREATOR") {
           router.push("/creatorportal/dashboard");
         } else {
-          console.error('No valid role found in session');
-          setError('Invalid user role');
+          console.error("No valid role found in session");
+          setError("Invalid user role");
         }
       }
     } catch (error) {
@@ -153,9 +158,7 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-bold text-black">
-          Sign in to your account
-        </h2>
+        <h2 className="mt-6 text-center text-3xl font-bold text-black">Sign in to your account</h2>
         <p className="mt-2 text-center text-sm text-black">
           Or{" "}
           <Link href="/join-creator" className="font-medium text-purple-600 hover:text-purple-500">
@@ -227,13 +230,13 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ${isLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 {isLoading ? "Signing in..." : "Sign in"}
               </button>
             </div>
-
 
             {showResendButton && (
               <div className="mt-4">
@@ -258,10 +261,7 @@ function SearchParamsHandler() {
   const searchParams = useSearchParams();
   const justRegistered = searchParams?.get("registered") === "true";
   const justVerified = searchParams?.get("verified") === "true";
-  const oauthError =
-    searchParams?.get("provider") === "tiktok"
-      ? searchParams?.get("error")
-      : null;
+  const oauthError = searchParams?.get("provider") === "tiktok" ? searchParams?.get("error") : null;
 
   if (justVerified) {
     return (
@@ -274,7 +274,8 @@ function SearchParamsHandler() {
   if (justRegistered) {
     return (
       <div className="mb-4 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-        Account created successfully! Please check your email to verify your account before logging in.
+        Account created successfully! Please check your email to verify your account before logging
+        in.
       </div>
     );
   }
@@ -292,7 +293,9 @@ function SearchParamsHandler() {
 
 export default function Login() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense
+      fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}
+    >
       <LoginForm />
     </Suspense>
   );

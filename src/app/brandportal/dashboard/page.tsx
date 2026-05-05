@@ -1,141 +1,142 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { MessageSquare } from 'lucide-react';
-import { DollarSign, Users, ShoppingBag, TrendingUp, Plus, Target, Smile } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import Link from 'next/link';
-
-interface Platform {
-  id: string;
-  name: string;
-  displayName: string;
-}
+import { useSession } from "next-auth/react";
+import { MessageSquare } from "lucide-react";
+import { DollarSign, Users, ShoppingBag, TrendingUp, Plus, Target, Smile } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import Link from "next/link";
 
 const revenueData = [
-  { name: 'Jan', revenue: 4000 },
-  { name: 'Feb', revenue: 3000 },
-  { name: 'Mar', revenue: 5000 },
-  { name: 'Apr', revenue: 4500 },
-  { name: 'May', revenue: 6000 },
-  { name: 'Jun', revenue: 5500 },
-  { name: 'Jul', revenue: 7000 },
+  { name: "Jan", revenue: 4000 },
+  { name: "Feb", revenue: 3000 },
+  { name: "Mar", revenue: 5000 },
+  { name: "Apr", revenue: 4500 },
+  { name: "May", revenue: 6000 },
+  { name: "Jun", revenue: 5500 },
+  { name: "Jul", revenue: 7000 },
 ];
 
 const stats = [
-  { name: 'Total Revenue', value: '$45,231', change: '+20.1%', trend: 'up', icon: DollarSign },
-  { name: 'Active Creators', value: '2,345', change: '+15.2%', trend: 'up', icon: Users },
-  { name: 'Products Promoted', value: '12,543', change: '+12.3%', trend: 'up', icon: ShoppingBag },
-  { name: 'Conversion Rate', value: '3.8%', change: '-2.1%', trend: 'down', icon: TrendingUp },
+  { name: "Total Revenue", value: "$45,231", change: "+20.1%", trend: "up", icon: DollarSign },
+  { name: "Active Creators", value: "2,345", change: "+15.2%", trend: "up", icon: Users },
+  { name: "Products Promoted", value: "12,543", change: "+12.3%", trend: "up", icon: ShoppingBag },
+  { name: "Conversion Rate", value: "3.8%", change: "-2.1%", trend: "down", icon: TrendingUp },
 ];
 
 const topCreators = [
   {
-    name: 'Sarah Johnson',
-    handle: '@sarahjstyle',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-    engagement: '4.8%',
-    followers: '125K',
-    category: 'Fashion & Lifestyle',
-    recentPost: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200'
+    name: "Sarah Johnson",
+    handle: "@sarahjstyle",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
+    engagement: "4.8%",
+    followers: "125K",
+    category: "Fashion & Lifestyle",
+    recentPost: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200",
   },
   {
-    name: 'Michael Chen',
-    handle: '@techreviewmike',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-    engagement: '5.2%',
-    followers: '89K',
-    category: 'Tech Reviews',
-    recentPost: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200'
+    name: "Michael Chen",
+    handle: "@techreviewmike",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
+    engagement: "5.2%",
+    followers: "89K",
+    category: "Tech Reviews",
+    recentPost: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200",
   },
   {
-    name: 'Emma Rodriguez',
-    handle: '@emmafitness',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100',
-    engagement: '6.1%',
-    followers: '250K',
-    category: 'Fitness & Health',
-    recentPost: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=200'
+    name: "Emma Rodriguez",
+    handle: "@emmafitness",
+    avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100",
+    engagement: "6.1%",
+    followers: "250K",
+    category: "Fitness & Health",
+    recentPost: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=200",
   },
   {
-    name: 'David Kim',
-    handle: '@davidtravels',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
-    engagement: '4.5%',
-    followers: '180K',
-    category: 'Travel & Adventure',
-    recentPost: 'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=200'
-  }
+    name: "David Kim",
+    handle: "@davidtravels",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100",
+    engagement: "4.5%",
+    followers: "180K",
+    category: "Travel & Adventure",
+    recentPost: "https://images.unsplash.com/photo-1488085061387-422e29b40080?w=200",
+  },
 ];
 
 const activeCampaigns = [
   {
-    title: 'Summer Collection Launch',
-    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=200',
-    status: 'Active',
+    title: "Summer Collection Launch",
+    image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=200",
+    status: "Active",
     progress: 75,
     creators: 12,
-    budget: '$5,000',
-    endDate: '2024-03-15'
+    budget: "$5,000",
+    endDate: "2024-03-15",
   },
   {
-    title: 'Tech Gadget Review Series',
-    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200',
-    status: 'Active',
+    title: "Tech Gadget Review Series",
+    image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200",
+    status: "Active",
     progress: 45,
     creators: 8,
-    budget: '$3,500',
-    endDate: '2024-03-20'
+    budget: "$3,500",
+    endDate: "2024-03-20",
   },
   {
-    title: 'Fitness Challenge Campaign',
-    image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=200',
-    status: 'Active',
+    title: "Fitness Challenge Campaign",
+    image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=200",
+    status: "Active",
     progress: 60,
     creators: 15,
-    budget: '$4,200',
-    endDate: '2024-03-25'
-  }
+    budget: "$4,200",
+    endDate: "2024-03-25",
+  },
 ];
 
 const topCategories = [
   {
-    name: 'Fashion & Style',
-    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=200',
-    growth: '+25%',
-    engagement: '4.8%',
+    name: "Fashion & Style",
+    image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=200",
+    growth: "+25%",
+    engagement: "4.8%",
     creators: 856,
     campaigns: 12,
-    revenue: '$25.2K'
+    revenue: "$25.2K",
   },
   {
-    name: 'Tech & Gaming',
-    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200',
-    growth: '+18%',
-    engagement: '5.2%',
+    name: "Tech & Gaming",
+    image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200",
+    growth: "+18%",
+    engagement: "5.2%",
     creators: 634,
     campaigns: 8,
-    revenue: '$18.7K'
+    revenue: "$18.7K",
   },
   {
-    name: 'Health & Fitness',
-    image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=200',
-    growth: '+22%',
-    engagement: '4.5%',
+    name: "Health & Fitness",
+    image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=200",
+    growth: "+22%",
+    engagement: "4.5%",
     creators: 742,
     campaigns: 10,
-    revenue: '$21.5K'
+    revenue: "$21.5K",
   },
   {
-    name: 'Travel & Adventure',
-    image: 'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=200',
-    growth: '+15%',
-    engagement: '4.2%',
+    name: "Travel & Adventure",
+    image: "https://images.unsplash.com/photo-1488085061387-422e29b40080?w=200",
+    growth: "+15%",
+    engagement: "4.2%",
     creators: 528,
     campaigns: 6,
-    revenue: '$15.8K'
-  }
+    revenue: "$15.8K",
+  },
 ];
 
 export default function BrandDashboard() {
@@ -151,10 +152,10 @@ export default function BrandDashboard() {
               Welcome back, {session?.user?.name}! <Smile className="inline h-10 w-10 mx-1" />
             </h1>
             <p className="mt-1 text-sm text-gray-600">
-              Here's what's happening with your campaigns today
+              Here&apos;s what&apos;s happening with your campaigns today
             </p>
           </div>
-          <Link 
+          <Link
             href="/brandportal/campaigns/new"
             className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
           >
@@ -173,7 +174,7 @@ export default function BrandDashboard() {
               <dt className="text-sm font-medium text-gray-600 truncate">{stat.name}</dt>
               <dd className="mt-1 text-3xl font-semibold text-gray-900">{stat.value}</dd>
               <div className="mt-2 flex items-center text-sm">
-                <span className={stat.trend === 'up' ? 'text-green-600' : 'text-red-600'}>
+                <span className={stat.trend === "up" ? "text-green-600" : "text-red-600"}>
                   {stat.change}
                 </span>
                 <span className="ml-2 text-gray-600">from last month</span>
@@ -190,8 +191,8 @@ export default function BrandDashboard() {
               <AreaChart data={revenueData}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -232,9 +233,7 @@ export default function BrandDashboard() {
                 <div className="relative p-4">
                   <div className="flex flex-col h-full justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">
-                        {category.name}
-                      </h3>
+                      <h3 className="text-lg font-semibold text-white mb-2">{category.name}</h3>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         {category.growth} growth
                       </span>
@@ -269,11 +268,19 @@ export default function BrandDashboard() {
           <div className="overflow-hidden rounded-2xl backdrop-blur-xl bg-white/50 border border-white/20 p-6 shadow-lg">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Top Creators</h2>
-              <Link href="/brandportal/creators/partnered" className="text-sm text-blue-600 hover:text-blue-700">View All</Link>
+              <Link
+                href="/brandportal/creators/partnered"
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                View All
+              </Link>
             </div>
             <div className="space-y-4">
               {topCreators.map((creator) => (
-                <div key={creator.handle} className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                <div
+                  key={creator.handle}
+                  className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                >
                   <img
                     src={creator.avatar}
                     alt={creator.name}
@@ -303,11 +310,19 @@ export default function BrandDashboard() {
           <div className="overflow-hidden rounded-2xl backdrop-blur-xl bg-white/50 border border-white/20 p-6 shadow-lg">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Active Campaigns</h2>
-              <Link href="/brandportal/campaigns" className="text-sm text-blue-600 hover:text-blue-700">View All</Link>
+              <Link
+                href="/brandportal/campaigns"
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                View All
+              </Link>
             </div>
             <div className="space-y-4">
               {activeCampaigns.map((campaign) => (
-                <div key={campaign.title} className="flex space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                <div
+                  key={campaign.title}
+                  className="flex space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                >
                   <img
                     src={campaign.image}
                     alt={campaign.title}

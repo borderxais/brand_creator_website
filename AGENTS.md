@@ -1,10 +1,12 @@
 # Repository Guidelines
 
+> **Canonical reference:** see [docs/README.md](docs/README.md). The doc tree is the source of truth; this file lists guidelines.
+
 This guide outlines expectations for contributors working on the brand creator platform. The app uses the Next.js App Router (15.x) with TypeScript and Tailwind.
 
 ## Project Structure & Module Organization
 
-The Next.js app lives in `src/app` (App Router) with route groups like `brandportal`, `creatorportal`, `find-creators`, and `login`. Shared UI is in `src/components`, utilities in `src/lib`, global styles in `src/styles`, and static assets in `public`. Prisma schema and migrations live under `prisma/` (PostgreSQL via `DATABASE_URL` / `DIRECT_URL`; `prisma/dev.db` is legacy). Legacy error fallbacks remain in `pages/`. FastAPI services live in `backend/app/main` (see `backend/README.md`); use `backend_local.sh` or `start_api_server.bat` to run locally after installing `backend/requirements.txt`.
+The Next.js app lives in `src/app` (App Router) with route groups like `brandportal`, `creatorportal`, `find-creators`, and `login`. Shared UI is in `src/components`, utilities in `src/lib`, global styles in `src/styles`, and static assets in `public`. Prisma schema and migrations live under `prisma/` (PostgreSQL via `DATABASE_URL` / `DIRECT_URL`; `prisma/dev.db` is legacy). Legacy error fallbacks remain in `pages/`. FastAPI services live in `backend/app/main` (see `backend/README.md`); use `start_api_server.sh` or `start_api_server.bat` to run locally after installing `backend/requirements.txt`.
 
 ## Build, Test, and Development Commands
 

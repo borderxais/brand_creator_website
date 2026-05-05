@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useSession } from 'next-auth/react';
-import { useState, useEffect } from 'react';
-import { User, Mail, Instagram, Twitter, ShoppingCart, Heart, MessageCircle, Share2, ExternalLink, MapPin, Globe } from 'lucide-react';
-import Link from 'next/link';
+import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { User, Mail, MapPin, Globe } from "lucide-react";
+import Link from "next/link";
 
 interface CreatorProfileData {
   user: {
@@ -44,21 +44,21 @@ export default function CreatorProfile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch('/api/creator/profile');
+        const response = await fetch("/api/creator/profile");
         if (!response.ok) {
-          throw new Error('Failed to fetch profile data');
+          throw new Error("Failed to fetch profile data");
         }
         const data = await response.json();
         setProfileData(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load profile');
-        console.error('Error fetching profile:', err);
+        setError(err instanceof Error ? err.message : "Failed to load profile");
+        console.error("Error fetching profile:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (session?.user?.role === 'CREATOR') {
+    if (session?.user?.role === "CREATOR") {
       fetchProfile();
     } else {
       setLoading(false);
@@ -66,54 +66,56 @@ export default function CreatorProfile() {
   }, [session]);
 
   // Sample posts data - in real app, this would come from an API
-  const posts = [
+  const _posts = [
     {
-      id: '1',
+      id: "1",
       content: {
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800',
-        caption: "My favorite summer outfit essentials! Check out these amazing pieces I've handpicked for you 🌞 #SummerStyle #Fashion"
+        type: "image",
+        url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800",
+        caption:
+          "My favorite summer outfit essentials! Check out these amazing pieces I've handpicked for you 🌞 #SummerStyle #Fashion",
       },
       products: [
         {
-          id: 'p1',
-          name: 'Summer Breeze Dress',
-          price: '$89.99',
-          image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200',
-          url: '/product/summer-dress'
+          id: "p1",
+          name: "Summer Breeze Dress",
+          price: "$89.99",
+          image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200",
+          url: "/product/summer-dress",
         },
         {
-          id: 'p2',
-          name: 'Straw Beach Hat',
-          price: '$34.99',
-          image: 'https://images.unsplash.com/photo-1572307480813-ceb0e59d8325?w=200',
-          url: '/product/beach-hat'
-        }
+          id: "p2",
+          name: "Straw Beach Hat",
+          price: "$34.99",
+          image: "https://images.unsplash.com/photo-1572307480813-ceb0e59d8325?w=200",
+          url: "/product/beach-hat",
+        },
       ],
       likes: 1234,
       comments: 56,
-      timestamp: '2h ago'
+      timestamp: "2h ago",
     },
     {
-      id: '2',
+      id: "2",
       content: {
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800',
-        caption: 'Obsessed with these new jewelry pieces! Perfect for any occasion ✨ #Accessories #Style'
+        type: "image",
+        url: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800",
+        caption:
+          "Obsessed with these new jewelry pieces! Perfect for any occasion ✨ #Accessories #Style",
       },
       products: [
         {
-          id: 'p3',
-          name: 'Pearl Necklace Set',
-          price: '$79.99',
-          image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200',
-          url: '/product/pearl-necklace'
-        }
+          id: "p3",
+          name: "Pearl Necklace Set",
+          price: "$79.99",
+          image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200",
+          url: "/product/pearl-necklace",
+        },
       ],
       likes: 892,
       comments: 34,
-      timestamp: '5h ago'
-    }
+      timestamp: "5h ago",
+    },
   ];
 
   if (loading) {
@@ -139,7 +141,7 @@ export default function CreatorProfile() {
         {session?.user?.image && (
           <img
             src={session.user.image}
-            alt={session.user.name || ''}
+            alt={session.user.name || ""}
             className="h-24 w-24 rounded-full ring-4 ring-purple-100"
           />
         )}
@@ -175,9 +177,9 @@ export default function CreatorProfile() {
                 {profileData?.profile.website && (
                   <div className="flex items-center space-x-3">
                     <Globe className="h-5 w-5 text-purple-400" />
-                    <a 
-                      href={profileData.profile.website} 
-                      target="_blank" 
+                    <a
+                      href={profileData.profile.website}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="text-purple-600 hover:text-purple-800"
                     >
@@ -194,7 +196,7 @@ export default function CreatorProfile() {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Content Niches</h2>
                 <div className="flex flex-wrap gap-2">
                   {profileData.profile.categories.map((category, index) => (
-                    <span 
+                    <span
                       key={index}
                       className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm"
                     >
@@ -210,9 +212,12 @@ export default function CreatorProfile() {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Connected Platforms</h2>
               <div className="space-y-3">
                 {profileData?.platforms
-                  .filter(platform => platform.handle) // Only show platforms with handles
+                  .filter((platform) => platform.handle) // Only show platforms with handles
                   .map((platform) => (
-                    <div key={platform.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div
+                      key={platform.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
                           <span className="text-sm font-medium text-purple-600">
@@ -220,12 +225,16 @@ export default function CreatorProfile() {
                           </span>
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{platform.platformDisplayName}</p>
+                          <p className="font-medium text-gray-900">
+                            {platform.platformDisplayName}
+                          </p>
                           <p className="text-sm text-gray-600">@{platform.handle}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium text-gray-900">{platform.followers.toLocaleString()}</p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {platform.followers.toLocaleString()}
+                        </p>
                         <p className="text-xs text-gray-500">followers</p>
                       </div>
                     </div>
@@ -269,27 +278,46 @@ export default function CreatorProfile() {
             <div className="text-center">
               {/* Empty State Icon */}
               <div className="mx-auto w-24 h-24 bg-purple-50 rounded-full flex items-center justify-center mb-6">
-                <svg className="w-12 h-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <svg
+                  className="w-12 h-12 text-purple-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
               </div>
-              
+
               {/* Empty State Content */}
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                No content yet
-              </h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">No content yet</h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Start your creator journey by applying to campaigns and creating amazing content. Your posts will appear here once you begin collaborating with brands.
+                Start your creator journey by applying to campaigns and creating amazing content.
+                Your posts will appear here once you begin collaborating with brands.
               </p>
-              
+
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link
                   href="/campaigns"
                   className="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
                 >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                   </svg>
                   Browse Campaigns
                 </Link>
@@ -297,8 +325,18 @@ export default function CreatorProfile() {
                   href="/creatorportal/applications"
                   className="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                   View Applications
                 </Link>
@@ -309,8 +347,18 @@ export default function CreatorProfile() {
           {/* Getting Started Tips */}
           <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-100">
             <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <svg className="w-5 h-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5 text-purple-600 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               Getting Started Tips
             </h4>
@@ -321,7 +369,9 @@ export default function CreatorProfile() {
                 </div>
                 <div>
                   <h5 className="font-medium text-gray-900">Complete your profile</h5>
-                  <p className="text-sm text-gray-600">Add your bio, social media handles, and content niches to attract brands.</p>
+                  <p className="text-sm text-gray-600">
+                    Add your bio, social media handles, and content niches to attract brands.
+                  </p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
@@ -330,7 +380,10 @@ export default function CreatorProfile() {
                 </div>
                 <div>
                   <h5 className="font-medium text-gray-900">Apply to campaigns</h5>
-                  <p className="text-sm text-gray-600">Browse active campaigns and submit compelling applications with sample content ideas.</p>
+                  <p className="text-sm text-gray-600">
+                    Browse active campaigns and submit compelling applications with sample content
+                    ideas.
+                  </p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
@@ -339,7 +392,9 @@ export default function CreatorProfile() {
                 </div>
                 <div>
                   <h5 className="font-medium text-gray-900">Create quality content</h5>
-                  <p className="text-sm text-gray-600">Once approved, create authentic content that resonates with your audience.</p>
+                  <p className="text-sm text-gray-600">
+                    Once approved, create authentic content that resonates with your audience.
+                  </p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
@@ -348,7 +403,9 @@ export default function CreatorProfile() {
                 </div>
                 <div>
                   <h5 className="font-medium text-gray-900">Track your progress</h5>
-                  <p className="text-sm text-gray-600">Monitor your earnings and campaign performance in your dashboard.</p>
+                  <p className="text-sm text-gray-600">
+                    Monitor your earnings and campaign performance in your dashboard.
+                  </p>
                 </div>
               </div>
             </div>
@@ -372,7 +429,7 @@ export default function CreatorProfile() {
               </div>
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">
-                  {profileData?.profile.followers.toLocaleString() || '0'}
+                  {profileData?.profile.followers.toLocaleString() || "0"}
                 </div>
                 <div className="text-sm text-gray-500">Total Followers</div>
               </div>

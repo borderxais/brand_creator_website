@@ -1,11 +1,21 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { Clock, DollarSign, Tag, Filter, Search, Calendar, X, Link as LinkIcon, Edit, Trash2 } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import {
+  Clock,
+  DollarSign,
+  Tag,
+  Filter,
+  Search,
+  Calendar,
+  X,
+  Link as LinkIcon,
+  Edit,
+  Trash2,
+} from "lucide-react";
+import Link from "next/link";
 
 interface Platform {
   id: string;
@@ -47,11 +57,15 @@ interface Campaign {
   posting_requirements: string | null;
   // Fix field name to match database
   product_photo: string | null;
-  applications?: Array<{ id: string; status: string; creator_id: string; }>;
+  applications?: Array<{ id: string; status: string; creator_id: string }>;
 }
 
-function CampaignCard({ campaign, onEdit, onDelete }: { 
-  campaign: Campaign; 
+function CampaignCard({
+  campaign,
+  onEdit,
+  onDelete,
+}: {
+  campaign: Campaign;
   onEdit: (campaignId: string) => void;
   onDelete: (campaignId: string) => void;
 }) {
@@ -62,20 +76,22 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
       requirements = [campaign.posting_requirements];
     } else if (campaign.requirements) {
       const parsed = JSON.parse(campaign.requirements);
-      requirements = Array.isArray(parsed) ? parsed : 
-                    (parsed.list && Array.isArray(parsed.list)) ? parsed.list : 
-                    [String(parsed)];
+      requirements = Array.isArray(parsed)
+        ? parsed
+        : parsed.list && Array.isArray(parsed.list)
+          ? parsed.list
+          : [String(parsed)];
     }
-  } catch (e) {
+  } catch (_e) {
     requirements = campaign.requirements ? [campaign.requirements] : [];
   }
 
   // Format dates safely
   const formatDate = (dateString: string | Date | undefined) => {
-    if (!dateString) return 'Not set';
+    if (!dateString) return "Not set";
     try {
       return new Date(dateString).toLocaleDateString();
-    } catch (e) {
+    } catch (_e) {
       return String(dateString);
     }
   };
@@ -85,8 +101,8 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
     if (!field) return [];
     try {
       return JSON.parse(field);
-    } catch (e) {
-      return field.split(',').map(item => item.trim());
+    } catch (_e) {
+      return field.split(",").map((item) => item.trim());
     }
   };
 
@@ -98,14 +114,16 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
     <div className="bg-white rounded-lg shadow-sm p-6 mb-4 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-xl font-semibold mb-2">{campaign.title || 'Untitled Campaign'}</h3>
-          <p className="text-gray-600 mb-2">{campaign.brief || 'No description provided'}</p>
+          <h3 className="text-xl font-semibold mb-2">{campaign.title || "Untitled Campaign"}</h3>
+          <p className="text-gray-600 mb-2">{campaign.brief || "No description provided"}</p>
           <p className="text-xs text-gray-500">Created: {formatDate(campaign.created_at)}</p>
         </div>
-        <span className={`px-3 py-1 rounded-full text-sm ${
-          campaign.is_open ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-        }`}>
-          {campaign.is_open ? 'Open' : 'Closed'}
+        <span
+          className={`px-3 py-1 rounded-full text-sm ${
+            campaign.is_open ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {campaign.is_open ? "Open" : "Closed"}
         </span>
       </div>
 
@@ -115,9 +133,7 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
           <Clock className="w-5 h-5 text-gray-400 mr-2" />
           <div>
             <p className="text-sm text-gray-600">Deadline</p>
-            <p className="font-medium">
-              {formatDate(campaign.deadline)}
-            </p>
+            <p className="font-medium">{formatDate(campaign.deadline)}</p>
           </div>
         </div>
         <div className="flex items-center">
@@ -125,13 +141,18 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
           <div>
             <p className="text-sm text-gray-600">Budget Range</p>
             <p className="font-medium">
-              {campaign.budget_range || 'Not specified'} 
+              {campaign.budget_range || "Not specified"}
               {campaign.budget_unit && (
                 <span className="text-xs text-gray-500 ml-1">
-                  ({campaign.budget_unit === 'total' ? 'Total' : 
-                    campaign.budget_unit === 'per_person' ? 'Per Person' : 
-                    campaign.budget_unit === 'per_video' ? 'Per Video' : 
-                    campaign.budget_unit})
+                  (
+                  {campaign.budget_unit === "total"
+                    ? "Total"
+                    : campaign.budget_unit === "per_person"
+                      ? "Per Person"
+                      : campaign.budget_unit === "per_video"
+                        ? "Per Video"
+                        : campaign.budget_unit}
+                  )
                 </span>
               )}
             </p>
@@ -141,7 +162,7 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
           <Tag className="w-5 h-5 text-gray-400 mr-2" />
           <div>
             <p className="text-sm text-gray-600">Platform</p>
-            <p className="font-medium">{campaign.platform || 'Not specified'}</p>
+            <p className="font-medium">{campaign.platform || "Not specified"}</p>
           </div>
         </div>
       </div>
@@ -169,7 +190,7 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
           {objectives.length > 0 && (
             <div className="col-span-2">
               <span className="text-sm font-medium text-gray-600">Objectives:</span>
-              <span className="ml-2 text-sm">{objectives.join(', ')}</span>
+              <span className="ml-2 text-sm">{objectives.join(", ")}</span>
             </div>
           )}
 
@@ -177,7 +198,7 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
           {contentNiches.length > 0 && (
             <div className="col-span-2">
               <span className="text-sm font-medium text-gray-600">Content Niches:</span>
-              <span className="ml-2 text-sm">{contentNiches.join(', ')}</span>
+              <span className="ml-2 text-sm">{contentNiches.join(", ")}</span>
             </div>
           )}
         </div>
@@ -187,7 +208,7 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
       {campaign.sample_video_url && (
         <div className="mb-4 py-2 px-2 bg-gray-50 rounded">
           <p className="text-sm text-gray-600 mb-1">Sample Video:</p>
-          <a 
+          <a
             href={campaign.sample_video_url}
             target="_blank"
             rel="noopener noreferrer"
@@ -203,21 +224,21 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
         <div className="mb-4 py-2 px-2 bg-gray-50 rounded">
           <p className="text-sm text-gray-600 mb-2">Product Photo:</p>
           <div className="flex items-center space-x-2">
-            <img 
+            <img
               src={campaign.product_photo}
               alt="Product"
               className="w-16 h-16 object-cover rounded border"
               onError={(e) => {
                 // Fallback if image fails to load
-                e.currentTarget.style.display = 'none';
+                e.currentTarget.style.display = "none";
                 const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                if (fallback) fallback.style.display = 'block';
+                if (fallback) fallback.style.display = "block";
               }}
             />
-            <div style={{ display: 'none' }} className="text-sm text-gray-500">
+            <div style={{ display: "none" }} className="text-sm text-gray-500">
               Image unavailable
             </div>
-            <a 
+            <a
               href={campaign.product_photo}
               target="_blank"
               rel="noopener noreferrer"
@@ -236,10 +257,12 @@ function CampaignCard({ campaign, onEdit, onDelete }: {
         </div>
         <div>
           <span className="text-sm text-gray-600">Status:</span>
-          <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-            campaign.is_open ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}>
-            {campaign.is_open ? 'ACTIVE' : 'CLOSED'}
+          <span
+            className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+              campaign.is_open ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+            }`}
+          >
+            {campaign.is_open ? "ACTIVE" : "CLOSED"}
           </span>
         </div>
       </div>
@@ -295,35 +318,35 @@ export default function Campaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [platforms, setPlatforms] = useState<Platform[]>([]);
-  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [_platforms, setPlatforms] = useState<Platform[]>([]);
+
   // Filter states
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [startDateFilter, setStartDateFilter] = useState<string>('');
-  const [endDateFilter, setEndDateFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [startDateFilter, setStartDateFilter] = useState<string>("");
+  const [endDateFilter, setEndDateFilter] = useState<string>("");
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  
+
   // Campaign status options
   const statusOptions = [
-    { value: '', label: 'All Statuses' },
-    { value: 'ACTIVE', label: 'Active' },
-    { value: 'DRAFT', label: 'Draft' },
-    { value: 'COMPLETED', label: 'Completed' },
-    { value: 'CANCELLED', label: 'Cancelled' }
+    { value: "", label: "All Statuses" },
+    { value: "ACTIVE", label: "Active" },
+    { value: "DRAFT", label: "Draft" },
+    { value: "COMPLETED", label: "Completed" },
+    { value: "CANCELLED", label: "Cancelled" },
   ];
 
   useEffect(() => {
-    if (status === 'loading') return;
-    
+    if (status === "loading") return;
+
     if (!session) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
-    if (session.user.role !== 'BRAND') {
-      router.push('/login');
+    if (session.user.role !== "BRAND") {
+      router.push("/login");
       return;
     }
 
@@ -333,14 +356,14 @@ export default function Campaigns() {
 
   const fetchPlatforms = async () => {
     try {
-      const response = await fetch('/api/platforms');
+      const response = await fetch("/api/platforms");
       if (!response.ok) {
-        throw new Error('Failed to fetch platforms');
+        throw new Error("Failed to fetch platforms");
       }
       const data = await response.json();
       setPlatforms(data);
     } catch (error) {
-      console.error('Error fetching platforms:', error);
+      console.error("Error fetching platforms:", error);
     }
   };
 
@@ -348,33 +371,33 @@ export default function Campaigns() {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       // Build query parameters for filtering
       const params = new URLSearchParams();
-      
+
       if (searchQuery) {
-        params.append('search', searchQuery);
+        params.append("search", searchQuery);
       }
-      
+
       // Your database doesn't have these status values; it only has is_open boolean
       if (statusFilter) {
-        params.append('status', statusFilter);
+        params.append("status", statusFilter);
       }
-      
+
       // Your database column names use snake_case but you're sending camelCase
       if (startDateFilter) {
-        params.append('startDate', startDateFilter); // Should be start_date to match Python API
+        params.append("startDate", startDateFilter); // Should be start_date to match Python API
       }
-      
+
       if (endDateFilter) {
-        params.append('endDate', endDateFilter); // Should be end_date to match Python API
+        params.append("endDate", endDateFilter); // Should be end_date to match Python API
       }
-      
-      const queryString = params.toString() ? `?${params.toString()}` : '';
-      
+
+      const queryString = params.toString() ? `?${params.toString()}` : "";
+
       // Direct fetch from the Python API via the Next.js API route
       const response = await fetch(`/api/brand/campaigns${queryString}`);
-      
+
       if (!response.ok) {
         console.error(`Failed to fetch campaigns: ${response.status}`);
         const data = await response.json();
@@ -382,19 +405,19 @@ export default function Campaigns() {
       }
 
       const data = await response.json();
-      console.log('Received campaigns data:', data);
-      
+      console.log("Received campaigns data:", data);
+
       // Handle both array and object with campaigns property
-      const campaignsData = Array.isArray(data) ? data : (data.campaigns || []);
+      const campaignsData = Array.isArray(data) ? data : data.campaigns || [];
       setCampaigns(campaignsData);
-      
+
       // If there's an error message but status was ok, show it as a warning
       if (!Array.isArray(data) && data.error) {
-        console.warn('API Warning:', data.error);
+        console.warn("API Warning:", data.error);
       }
     } catch (error) {
-      console.error('Error fetching campaigns:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load campaigns');
+      console.error("Error fetching campaigns:", error);
+      setError(error instanceof Error ? error.message : "Failed to load campaigns");
     } finally {
       setIsLoading(false);
     }
@@ -406,10 +429,10 @@ export default function Campaigns() {
   };
 
   const clearFilters = () => {
-    setStatusFilter('');
-    setStartDateFilter('');
-    setEndDateFilter('');
-    setSearchQuery('');
+    setStatusFilter("");
+    setStartDateFilter("");
+    setEndDateFilter("");
+    setSearchQuery("");
     fetchCampaigns();
   };
 
@@ -425,26 +448,26 @@ export default function Campaigns() {
 
     try {
       const response = await fetch(`/api/brand/campaigns/${campaignId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete campaign');
+        throw new Error("Failed to delete campaign");
       }
 
       // Refresh the campaigns list
       fetchCampaigns();
       setDeleteConfirm(null);
     } catch (error) {
-      console.error('Error deleting campaign:', error);
-      setError(error instanceof Error ? error.message : 'Failed to delete campaign');
+      console.error("Error deleting campaign:", error);
+      setError(error instanceof Error ? error.message : "Failed to delete campaign");
     }
   };
 
   // Server-side filtering
-  const filteredCampaigns = campaigns;
+  const _filteredCampaigns = campaigns;
 
-  if (status === 'loading' || isLoading) {
+  if (status === "loading" || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -454,8 +477,8 @@ export default function Campaigns() {
     );
   }
 
-  if (!session || session.user.role !== 'BRAND') {
-    router.push('/login');
+  if (!session || session.user.role !== "BRAND") {
+    router.push("/login");
     return null;
   }
 
@@ -500,21 +523,21 @@ export default function Campaigns() {
               placeholder="Search campaigns..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && fetchCampaigns()}
+              onKeyDown={(e) => e.key === "Enter" && fetchCampaigns()}
               className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
-          <button 
+
+          <button
             onClick={() => setIsFilterVisible(!isFilterVisible)}
             className="flex items-center px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
           >
             <Filter className="h-4 w-4 mr-2" />
             Filters
           </button>
-          
+
           {(statusFilter || startDateFilter || endDateFilter) && (
-            <button 
+            <button
               onClick={clearFilters}
               className="flex items-center px-3 py-2 text-red-600 hover:text-red-800"
             >
@@ -523,7 +546,7 @@ export default function Campaigns() {
             </button>
           )}
         </div>
-        
+
         {isFilterVisible && (
           <div className="mt-4 p-4 border rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -535,12 +558,14 @@ export default function Campaigns() {
                   className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {/* These options don't match your database schema */}
-                  {statusOptions.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
                   ))}
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
                 <div className="relative">
@@ -553,7 +578,7 @@ export default function Campaigns() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
                 <div className="relative">
@@ -567,7 +592,7 @@ export default function Campaigns() {
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-4 flex justify-end">
               <button
                 onClick={handleFilterApply}
@@ -584,15 +609,12 @@ export default function Campaigns() {
         {campaigns && campaigns.length > 0 ? (
           campaigns.map((campaign) => (
             <div key={campaign.id} className="cursor-default">
-              <CampaignCard 
-                campaign={campaign} 
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
+              <CampaignCard campaign={campaign} onEdit={handleEdit} onDelete={handleDelete} />
               {deleteConfirm === campaign.id && (
                 <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-red-800 text-sm mb-2">
-                    Are you sure you want to delete "{campaign.title}"? This action cannot be undone.
+                    Are you sure you want to delete &quot;{campaign.title}&quot;? This action cannot
+                    be undone.
                   </p>
                   <div className="flex space-x-2">
                     <button
@@ -616,8 +638,10 @@ export default function Campaigns() {
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <p className="text-gray-500 mb-2">No campaigns found</p>
             <p className="text-sm text-gray-400">
-              {statusFilter || startDateFilter || endDateFilter ? 
-                'Try adjusting your filters or' : 'Get started by'} creating a new campaign
+              {statusFilter || startDateFilter || endDateFilter
+                ? "Try adjusting your filters or"
+                : "Get started by"}{" "}
+              creating a new campaign
             </p>
           </div>
         )}

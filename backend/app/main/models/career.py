@@ -1,6 +1,4 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
-from datetime import datetime
 
 
 class IdentityInformation(BaseModel):
@@ -16,7 +14,7 @@ class InfluencerInformation(BaseModel):
     accountIntroduction: str
     profileUrl: str
     followerCount: str
-    otherPlatforms: Optional[str] = None
+    otherPlatforms: str | None = None
 
 
 class CareerApplicationData(BaseModel):
@@ -31,5 +29,5 @@ class CareerApplicationData(BaseModel):
 class CareerApplicationResponse(BaseModel):
     success: bool
     message: str
-    application_id: Optional[str] = None
+    application_id: str | None = None
     stored_in_database: bool = False

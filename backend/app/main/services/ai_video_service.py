@@ -1,7 +1,6 @@
+import json
 import logging
 import uuid
-import json
-from typing import List, Optional, Set
 
 from fastapi import HTTPException, UploadFile
 
@@ -18,8 +17,8 @@ class AiVideoService:
     BUCKET_NAME = "aivideogenerated"
     MAX_FILE_BYTES = 25 * 1024 * 1024  # 25 MB
 
-    IMAGE_MIME_TYPES: Set[str] = {"image/jpeg", "image/png", "image/webp"}
-    VOICE_MIME_TYPES: Set[str] = {
+    IMAGE_MIME_TYPES: set[str] = {"image/jpeg", "image/png", "image/webp"}
+    VOICE_MIME_TYPES: set[str] = {
         "audio/mpeg",
         "audio/mp3",
         "audio/wav",
@@ -47,8 +46,8 @@ class AiVideoService:
         cls,
         creator_id: str,
         prompt: str,
-        voice_sample: Optional[UploadFile],
-        image: Optional[UploadFile],
+        voice_sample: UploadFile | None,
+        image: UploadFile | None,
     ) -> AiVideoGenerateResponse:
         """Persist a new AI video request and organize assets in storage."""
         logger.info("Creating AI video request for creator_id=%s", creator_id)
@@ -108,7 +107,7 @@ class AiVideoService:
         )
 
     @classmethod
-    async def get_video_library(cls, creator_id: Optional[str] = None) -> List[AiVideoLibraryItem]:
+    async def get_video_library(cls, creator_id: str | None = None) -> list[AiVideoLibraryItem]:
         client = cls._require_supabase()
         query = client.table("AiVideo").select("*").order("generated_time", desc=True)
         if creator_id:
@@ -125,12 +124,14 @@ class AiVideoService:
             logger.error("Failed to fetch AiVideos: %s", exc)
             raise HTTPException(status_code=500, detail="Failed to load AI videos")
 
-        records: List[AiVideoLibraryItem] = []
+        records: list[AiVideoLibraryItem] = []
         for row in response.data or []:
             try:
                 video_url = cls._resolve_video_url(client, row)
                 if not video_url:
-                    logger.warning("Skipping AiVideos row %s due to missing video URL", row.get("id"))
+                    logger.warning(
+                        "Skipping AiVideos row %s due to missing video URL", row.get("id")
+                    )
                     continue
 
                 tags = cls._deserialize_tags(row.get("tag"))
@@ -160,12 +161,12 @@ class AiVideoService:
     async def _store_optional_asset(
         cls,
         client,
-        file: Optional[UploadFile],
+        file: UploadFile | None,
         folder: str,
         filename_prefix: str,
-        allowed_types: Set[str],
+        allowed_types: set[str],
         default_extension: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Upload the provided file to storage and return its public URL."""
         if not file:
             return None
@@ -184,7 +185,9 @@ class AiVideoService:
         return cls._get_public_url(client, storage_path)
 
     @classmethod
-    def _validate_content_type(cls, file: UploadFile, allowed_types: Set[str], asset_label: str) -> None:
+    def _validate_content_type(
+        cls, file: UploadFile, allowed_types: set[str], asset_label: str
+    ) -> None:
         if file.content_type and allowed_types and file.content_type not in allowed_types:
             readable = ", ".join(sorted(allowed_types))
             raise HTTPException(
@@ -201,12 +204,14 @@ class AiVideoService:
             raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
         if len(content) > cls.MAX_FILE_BYTES:
-            raise HTTPException(status_code=400, detail="File too large. Maximum size is 25MB per upload")
+            raise HTTPException(
+                status_code=400, detail="File too large. Maximum size is 25MB per upload"
+            )
 
         return content
 
     @classmethod
-    def _extract_extension(cls, filename: Optional[str], default_extension: str) -> str:
+    def _extract_extension(cls, filename: str | None, default_extension: str) -> str:
         if not filename or "." not in filename:
             return default_extension
         return filename.rsplit(".", 1)[1].lower()
@@ -226,7 +231,9 @@ class AiVideoService:
             return f"{base_url}/storage/v1/object/public/{cls.BUCKET_NAME}/{path}"
 
     @classmethod
-    def _upload_to_bucket(cls, client, path: str, content: bytes, file_options: dict, asset_label: str) -> None:
+    def _upload_to_bucket(
+        cls, client, path: str, content: bytes, file_options: dict, asset_label: str
+    ) -> None:
         """Mirror upload logic from UploadService for consistent behavior."""
         try:
             client.storage.from_(cls.BUCKET_NAME).upload(path, content, file_options)
@@ -251,7 +258,7 @@ class AiVideoService:
                 )
 
     @staticmethod
-    def _deserialize_tags(raw_value: Optional[str]) -> List[str]:
+    def _deserialize_tags(raw_value: str | None) -> list[str]:
         if not raw_value:
             return []
         try:
@@ -263,13 +270,15 @@ class AiVideoService:
         return [segment.strip() for segment in raw_value.split(",") if segment.strip()]
 
     @classmethod
-    def _generate_signed_url(cls, client, path: str, expires_in: int = 300) -> Optional[str]:
+    def _generate_signed_url(cls, client, path: str, expires_in: int = 300) -> str | None:
         if not path:
             return None
         try:
             # Extend signed URL lifetime to roughly one month for easier downloads from the portal.
             long_lived_expiry = 60 * 60 * 24 * 30
-            result = client.storage.from_(cls.BUCKET_NAME).create_signed_url(path, expires_in or long_lived_expiry)
+            result = client.storage.from_(cls.BUCKET_NAME).create_signed_url(
+                path, expires_in or long_lived_expiry
+            )
             if isinstance(result, dict):
                 return result.get("signedURL") or result.get("signed_url")
             if isinstance(result, str):
@@ -280,7 +289,7 @@ class AiVideoService:
             return None
 
     @classmethod
-    def _resolve_video_url(cls, client, row: dict) -> Optional[str]:
+    def _resolve_video_url(cls, client, row: dict) -> str | None:
         direct_url = row.get("video_url") or row.get("videoUrl")
         if direct_url:
             return direct_url
@@ -292,7 +301,7 @@ class AiVideoService:
         return None
 
     @classmethod
-    def _resolve_thumbnail_url(cls, client, row: dict) -> Optional[str]:
+    def _resolve_thumbnail_url(cls, client, row: dict) -> str | None:
         raw_value = row.get("thumbnail_url") or row.get("thumbnailUrl") or row.get("thumbnail")
         if not raw_value:
             return None

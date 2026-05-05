@@ -1,58 +1,58 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Save, Upload } from 'lucide-react';
+import { useState } from "react";
+import { Save, Upload } from "lucide-react";
 
 const mockProfile = {
   personalInfo: {
-    name: 'Sarah Johnson',
-    email: 'sarah@example.com',
-    phone: '+1 (555) 123-4567',
-    location: 'Los Angeles, CA',
-    bio: 'Lifestyle and fashion content creator passionate about sustainable fashion and mindful living.',
-    avatar: 'https://via.placeholder.com/150'
+    name: "Sarah Johnson",
+    email: "sarah@example.com",
+    phone: "+1 (555) 123-4567",
+    location: "Los Angeles, CA",
+    bio: "Lifestyle and fashion content creator passionate about sustainable fashion and mindful living.",
+    avatar: "https://via.placeholder.com/150",
   },
   contentPreferences: {
-    primaryNiche: 'Fashion & Style',
-    secondaryNiches: ['Beauty', 'Lifestyle'],
-    contentTypes: ['Photos', 'Reels', 'Stories'],
-    postingFrequency: 'Daily',
-    preferredBrands: ['Sustainable Fashion', 'Clean Beauty', 'Wellness']
+    primaryNiche: "Fashion & Style",
+    secondaryNiches: ["Beauty", "Lifestyle"],
+    contentTypes: ["Photos", "Reels", "Stories"],
+    postingFrequency: "Daily",
+    preferredBrands: ["Sustainable Fashion", "Clean Beauty", "Wellness"],
   },
   rateCard: {
     instagram: {
       post: 500,
       story: 250,
-      reel: 800
+      reel: 800,
     },
     tiktok: {
-      video: 600
+      video: 600,
     },
     youtube: {
-      video: 1200
-    }
+      video: 1200,
+    },
   },
   notifications: {
     email: {
       newCampaigns: true,
       messages: true,
-      paymentUpdates: true
+      paymentUpdates: true,
     },
     push: {
       newCampaigns: true,
       messages: true,
-      paymentUpdates: false
-    }
-  }
+      paymentUpdates: false,
+    },
+  },
 };
 
 export default function Settings() {
   const [profile, setProfile] = useState(mockProfile);
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState("profile");
 
   const handleSave = () => {
     // Handle saving profile changes
-    console.log('Saving profile:', profile);
+    console.log("Saving profile:", profile);
   };
 
   return (
@@ -71,14 +71,14 @@ export default function Settings() {
       <div className="bg-white shadow rounded-lg">
         <div className="border-b border-gray-200">
           <nav className="flex -mb-px">
-            {['profile', 'content', 'rates', 'notifications'].map((tab) => (
+            {["profile", "content", "rates", "notifications"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`${
                   activeTab === tab
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -89,7 +89,7 @@ export default function Settings() {
 
         <div className="p-6">
           {/* Profile Settings */}
-          {activeTab === 'profile' && (
+          {activeTab === "profile" && (
             <div className="space-y-6">
               <div className="flex items-center space-x-6">
                 <div className="relative">
@@ -120,7 +120,7 @@ export default function Settings() {
                     onChange={(e) =>
                       setProfile({
                         ...profile,
-                        personalInfo: { ...profile.personalInfo, name: e.target.value }
+                        personalInfo: { ...profile.personalInfo, name: e.target.value },
                       })
                     }
                   />
@@ -135,7 +135,7 @@ export default function Settings() {
                     onChange={(e) =>
                       setProfile({
                         ...profile,
-                        personalInfo: { ...profile.personalInfo, email: e.target.value }
+                        personalInfo: { ...profile.personalInfo, email: e.target.value },
                       })
                     }
                   />
@@ -150,7 +150,7 @@ export default function Settings() {
                     onChange={(e) =>
                       setProfile({
                         ...profile,
-                        personalInfo: { ...profile.personalInfo, phone: e.target.value }
+                        personalInfo: { ...profile.personalInfo, phone: e.target.value },
                       })
                     }
                   />
@@ -165,7 +165,7 @@ export default function Settings() {
                     onChange={(e) =>
                       setProfile({
                         ...profile,
-                        personalInfo: { ...profile.personalInfo, location: e.target.value }
+                        personalInfo: { ...profile.personalInfo, location: e.target.value },
                       })
                     }
                   />
@@ -180,7 +180,7 @@ export default function Settings() {
                     onChange={(e) =>
                       setProfile({
                         ...profile,
-                        personalInfo: { ...profile.personalInfo, bio: e.target.value }
+                        personalInfo: { ...profile.personalInfo, bio: e.target.value },
                       })
                     }
                   />
@@ -190,7 +190,7 @@ export default function Settings() {
           )}
 
           {/* Content Preferences */}
-          {activeTab === 'content' && (
+          {activeTab === "content" && (
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Primary Niche</label>
@@ -202,8 +202,8 @@ export default function Settings() {
                       ...profile,
                       contentPreferences: {
                         ...profile.contentPreferences,
-                        primaryNiche: e.target.value
-                      }
+                        primaryNiche: e.target.value,
+                      },
                     })
                   }
                 >
@@ -218,7 +218,7 @@ export default function Settings() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Content Types</label>
                 <div className="mt-2 space-y-2">
-                  {['Photos', 'Reels', 'Stories', 'Videos'].map((type) => (
+                  {["Photos", "Reels", "Stories", "Videos"].map((type) => (
                     <label key={type} className="inline-flex items-center mr-6">
                       <input
                         type="checkbox"
@@ -232,8 +232,8 @@ export default function Settings() {
                             ...profile,
                             contentPreferences: {
                               ...profile.contentPreferences,
-                              contentTypes: updatedTypes
-                            }
+                              contentTypes: updatedTypes,
+                            },
                           });
                         }}
                       />
@@ -253,8 +253,8 @@ export default function Settings() {
                       ...profile,
                       contentPreferences: {
                         ...profile.contentPreferences,
-                        postingFrequency: e.target.value
-                      }
+                        postingFrequency: e.target.value,
+                      },
                     })
                   }
                 >
@@ -269,7 +269,7 @@ export default function Settings() {
           )}
 
           {/* Rate Card */}
-          {activeTab === 'rates' && (
+          {activeTab === "rates" && (
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Instagram Rates</h3>
@@ -287,15 +287,17 @@ export default function Settings() {
                             ...profile.rateCard,
                             instagram: {
                               ...profile.rateCard.instagram,
-                              post: parseInt(e.target.value)
-                            }
-                          }
+                              post: parseInt(e.target.value),
+                            },
+                          },
                         })
                       }
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Story Rate ($)</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Story Rate ($)
+                    </label>
                     <input
                       type="number"
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -307,9 +309,9 @@ export default function Settings() {
                             ...profile.rateCard,
                             instagram: {
                               ...profile.rateCard.instagram,
-                              story: parseInt(e.target.value)
-                            }
-                          }
+                              story: parseInt(e.target.value),
+                            },
+                          },
                         })
                       }
                     />
@@ -327,9 +329,9 @@ export default function Settings() {
                             ...profile.rateCard,
                             instagram: {
                               ...profile.rateCard.instagram,
-                              reel: parseInt(e.target.value)
-                            }
-                          }
+                              reel: parseInt(e.target.value),
+                            },
+                          },
                         })
                       }
                     />
@@ -350,8 +352,8 @@ export default function Settings() {
                         ...profile,
                         rateCard: {
                           ...profile.rateCard,
-                          tiktok: { video: parseInt(e.target.value) }
-                        }
+                          tiktok: { video: parseInt(e.target.value) },
+                        },
                       })
                     }
                   />
@@ -371,8 +373,8 @@ export default function Settings() {
                         ...profile,
                         rateCard: {
                           ...profile.rateCard,
-                          youtube: { video: parseInt(e.target.value) }
-                        }
+                          youtube: { video: parseInt(e.target.value) },
+                        },
                       })
                     }
                   />
@@ -382,7 +384,7 @@ export default function Settings() {
           )}
 
           {/* Notification Settings */}
-          {activeTab === 'notifications' && (
+          {activeTab === "notifications" && (
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Email Notifications</h3>
@@ -400,16 +402,14 @@ export default function Settings() {
                               ...profile.notifications,
                               email: {
                                 ...profile.notifications.email,
-                                [key]: e.target.checked
-                              }
-                            }
+                                [key]: e.target.checked,
+                              },
+                            },
                           })
                         }
                       />
                       <span className="ml-2 text-sm text-gray-700">
-                        {key
-                          .replace(/([A-Z])/g, ' $1')
-                          .replace(/^./, (str) => str.toUpperCase())}
+                        {key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
                       </span>
                     </label>
                   ))}
@@ -432,16 +432,14 @@ export default function Settings() {
                               ...profile.notifications,
                               push: {
                                 ...profile.notifications.push,
-                                [key]: e.target.checked
-                              }
-                            }
+                                [key]: e.target.checked,
+                              },
+                            },
                           })
                         }
                       />
                       <span className="ml-2 text-sm text-gray-700">
-                        {key
-                          .replace(/([A-Z])/g, ' $1')
-                          .replace(/^./, (str) => str.toUpperCase())}
+                        {key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
                       </span>
                     </label>
                   ))}

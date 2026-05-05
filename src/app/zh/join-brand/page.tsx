@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowRight, CheckCircle } from 'lucide-react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, CheckCircle } from "lucide-react";
 
 interface FormData {
   companyName: string;
@@ -19,68 +19,68 @@ interface FormData {
 export default function JoinAsBrandChinese() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState<FormData>({
-    companyName: '',
-    website: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    industry: '',
-    size: '',
-    marketingBudget: '',
+    companyName: "",
+    website: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    industry: "",
+    size: "",
+    marketingBudget: "",
     goals: [],
   });
 
   const industries = [
-    '时尚与服装',
-    '美妆与化妆品',
-    '健康与保健',
-    '食品与饮料',
-    '旅游与酒店',
-    '科技',
-    '金融与金融科技',
-    '电子商务',
-    '娱乐',
-    '教育',
+    "时尚与服装",
+    "美妆与化妆品",
+    "健康与保健",
+    "食品与饮料",
+    "旅游与酒店",
+    "科技",
+    "金融与金融科技",
+    "电子商务",
+    "娱乐",
+    "教育",
   ] as const;
 
   const companySizes = [
-    '初创企业 (1-10人)',
-    '小型企业 (11-50人)',
-    '中型企业 (51-200人)',
-    '大型企业 (201-1000人)',
-    '超大型企业 (1000+人)',
+    "初创企业 (1-10人)",
+    "小型企业 (11-50人)",
+    "中型企业 (51-200人)",
+    "大型企业 (201-1000人)",
+    "超大型企业 (1000+人)",
   ] as const;
 
   const marketingBudgets = [
-    '5,000元/月以下',
-    '5,000元 - 10,000元/月',
-    '10,000元 - 25,000元/月',
-    '25,000元 - 50,000元/月',
-    '50,000元+/月',
+    "5,000元/月以下",
+    "5,000元 - 10,000元/月",
+    "10,000元 - 25,000元/月",
+    "25,000元 - 50,000元/月",
+    "50,000元+/月",
   ] as const;
 
   const goals = [
-    '品牌知名度',
-    '产品发布',
-    '销售与转化',
-    '社交媒体增长',
-    '内容创作',
-    '社区建设',
+    "品牌知名度",
+    "产品发布",
+    "销售与转化",
+    "社交媒体增长",
+    "内容创作",
+    "社区建设",
   ] as const;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleGoalToggle = (goal: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       goals: prev.goals.includes(goal)
-        ? prev.goals.filter(g => g !== goal)
-        : [...prev.goals, goal]
+        ? prev.goals.filter((g) => g !== goal)
+        : [...prev.goals, goal],
     }));
   };
 
@@ -92,35 +92,35 @@ export default function JoinAsBrandChinese() {
       try {
         // Validate passwords match
         if (formData.password !== formData.confirmPassword) {
-          setError('密码不匹配');
+          setError("密码不匹配");
           return;
         }
 
         // Register the user
-        const response = await fetch('/api/register', {
-          method: 'POST',
+        const response = await fetch("/api/register", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             email: formData.email,
             password: formData.password,
             name: formData.companyName,
-            role: 'BRAND'
+            role: "BRAND",
           }),
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || '注册失败');
+          throw new Error(data.error || "注册失败");
         }
 
         // Redirect to login with success message
-        router.push('/zh/login?registered=true');
+        router.push("/zh/login?registered=true");
       } catch (error) {
-        console.error('错误:', error);
-        setError(error instanceof Error ? error.message : '注册失败');
+        console.error("错误:", error);
+        setError(error instanceof Error ? error.message : "注册失败");
       }
     }
   };
@@ -135,16 +135,14 @@ export default function JoinAsBrandChinese() {
               <div key={num} className="flex items-center">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    step >= num ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'
+                    step >= num ? "bg-purple-600 text-white" : "bg-gray-200 text-gray-600"
                   }`}
                 >
                   {step > num ? <CheckCircle className="w-5 h-5" /> : num}
                 </div>
                 {num < 3 && (
                   <div
-                    className={`w-24 h-1 mx-2 ${
-                      step > num ? 'bg-purple-600' : 'bg-gray-200'
-                    }`}
+                    className={`w-24 h-1 mx-2 ${step > num ? "bg-purple-600" : "bg-gray-200"}`}
                   />
                 )}
               </div>
@@ -168,9 +166,7 @@ export default function JoinAsBrandChinese() {
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-black">公司信息</h2>
                 <div>
-                  <label className="block text-sm font-medium text-black">
-                    公司名称
-                  </label>
+                  <label className="block text-sm font-medium text-black">公司名称</label>
                   <input
                     type="text"
                     name="companyName"
@@ -268,9 +264,7 @@ export default function JoinAsBrandChinese() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-black">
-                    月度营销预算
-                  </label>
+                  <label className="block text-sm font-medium text-black">月度营销预算</label>
                   <select
                     name="marketingBudget"
                     value={formData.marketingBudget}
@@ -300,8 +294,8 @@ export default function JoinAsBrandChinese() {
                       onClick={() => handleGoalToggle(goal)}
                       className={`p-4 border rounded-lg flex items-center justify-between ${
                         formData.goals.includes(goal)
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-300'
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-300"
                       }`}
                     >
                       <span className="text-black">{goal}</span>
@@ -319,7 +313,7 @@ export default function JoinAsBrandChinese() {
                 type="submit"
                 className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
               >
-                {step === 3 ? '创建账户' : '下一步'}
+                {step === 3 ? "创建账户" : "下一步"}
                 <ArrowRight className="ml-2 w-4 h-4" />
               </button>
             </div>

@@ -11,10 +11,7 @@ export async function POST(request: Request) {
 
     // Validate input
     if (!email || !password || !name || !creatorHandleName) {
-      return NextResponse.json(
-        { message: "All fields are required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "All fields are required" }, { status: 400 });
     }
 
     // Add validation for creatorHandleName
@@ -31,10 +28,7 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { message: "Email already taken" },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "Email already taken" }, { status: 400 });
     }
 
     // Check if handle name is already taken
@@ -43,10 +37,7 @@ export async function POST(request: Request) {
     });
 
     if (existingHandleName) {
-      return NextResponse.json(
-        { message: "Creator handle name already taken" },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "Creator handle name already taken" }, { status: 400 });
     }
 
     // Hash password
@@ -60,23 +51,20 @@ export async function POST(request: Request) {
         password: hashedPassword,
         role: "CREATOR",
         creatorHandleName: creatorHandleName,
-        emailVerified: null // Explicitly set to null until verified
+        emailVerified: null, // Explicitly set to null until verified
       },
     });
 
     // Generate verification token
     const verificationToken = await createVerificationToken(email);
-    
+
     // Send verification email
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     await sendVerificationEmail(email, verificationToken, baseUrl);
 
     return NextResponse.json(user);
   } catch (error) {
     console.error("Error creating user:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Search, Send, MessageCircle, PlusCircle } from 'lucide-react';
+import { useState } from "react";
+import { Search, Send, MessageCircle, PlusCircle } from "lucide-react";
 
 // Mock data - replace with actual API calls
 const mockMessages = [
@@ -11,12 +11,12 @@ const mockMessages = [
       name: "Sarah Chen",
       image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
       platform: "Instagram",
-      followers: "50K"
+      followers: "50K",
     },
     lastMessage: "Hi! I'm interested in your summer campaign...",
     timestamp: "2024-01-30T10:30:00",
     unread: true,
-    campaign: "Summer Fashion Collection"
+    campaign: "Summer Fashion Collection",
   },
   {
     id: 2,
@@ -24,12 +24,12 @@ const mockMessages = [
       name: "Mike Johnson",
       image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100",
       platform: "TikTok",
-      followers: "100K"
+      followers: "100K",
     },
     lastMessage: "Thank you for considering my proposal",
     timestamp: "2024-01-29T15:45:00",
     unread: false,
-    campaign: "Healthy Living Challenge"
+    campaign: "Healthy Living Challenge",
   },
   {
     id: 3,
@@ -37,32 +37,33 @@ const mockMessages = [
       name: "Emma Liu",
       image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100",
       platform: "YouTube",
-      followers: "75K"
+      followers: "75K",
     },
     lastMessage: "Here's my content proposal for the campaign",
     timestamp: "2024-01-28T09:15:00",
     unread: false,
-    campaign: "Tech Review Series"
-  }
+    campaign: "Tech Review Series",
+  },
 ];
 
 export default function Messages() {
   const [selectedChat, setSelectedChat] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [newMessage, setNewMessage] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [newMessage, setNewMessage] = useState("");
 
-  const filteredMessages = mockMessages.filter(message =>
-    message.creator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    message.campaign.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMessages = mockMessages.filter(
+    (message) =>
+      message.creator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      message.campaign.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
-    
+
     // TODO: Implement message sending
-    console.log('Sending message:', newMessage);
-    setNewMessage('');
+    console.log("Sending message:", newMessage);
+    setNewMessage("");
   };
 
   return (
@@ -73,9 +74,7 @@ export default function Messages() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Messages
           </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Connect and collaborate with creators
-          </p>
+          <p className="mt-1 text-sm text-gray-600">Connect and collaborate with creators</p>
         </div>
         <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 flex items-center">
           <PlusCircle className="w-5 h-5 mr-2" />
@@ -107,9 +106,7 @@ export default function Messages() {
               <div
                 key={message.id}
                 className={`p-4 cursor-pointer transition-all duration-200 ${
-                  selectedChat === message.id
-                    ? 'bg-white/80'
-                    : 'hover:bg-white/60'
+                  selectedChat === message.id ? "bg-white/80" : "hover:bg-white/60"
                 }`}
                 onClick={() => setSelectedChat(message.id)}
               >
@@ -130,15 +127,14 @@ export default function Messages() {
                         {message.creator.name}
                       </p>
                       <span className="text-xs text-gray-500">
-                        {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(message.timestamp).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
                     </div>
-                    <p className="text-xs text-purple-600 font-medium mt-0.5">
-                      {message.campaign}
-                    </p>
-                    <p className="text-sm text-gray-500 truncate mt-0.5">
-                      {message.lastMessage}
-                    </p>
+                    <p className="text-xs text-purple-600 font-medium mt-0.5">{message.campaign}</p>
+                    <p className="text-sm text-gray-500 truncate mt-0.5">{message.lastMessage}</p>
                   </div>
                 </div>
               </div>
@@ -155,21 +151,22 @@ export default function Messages() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <img
-                      src={mockMessages.find(m => m.id === selectedChat)?.creator.image}
-                      alt={mockMessages.find(m => m.id === selectedChat)?.creator.name}
+                      src={mockMessages.find((m) => m.id === selectedChat)?.creator.image}
+                      alt={mockMessages.find((m) => m.id === selectedChat)?.creator.name}
                       className="h-12 w-12 rounded-xl object-cover"
                     />
                     <div>
                       <h2 className="text-lg font-semibold text-gray-900">
-                        {mockMessages.find(m => m.id === selectedChat)?.creator.name}
+                        {mockMessages.find((m) => m.id === selectedChat)?.creator.name}
                       </h2>
                       <div className="flex items-center space-x-2">
                         <span className="text-sm text-gray-600">
-                          {mockMessages.find(m => m.id === selectedChat)?.creator.platform}
+                          {mockMessages.find((m) => m.id === selectedChat)?.creator.platform}
                         </span>
                         <span className="text-gray-400">•</span>
                         <span className="text-sm text-gray-600">
-                          {mockMessages.find(m => m.id === selectedChat)?.creator.followers} followers
+                          {mockMessages.find((m) => m.id === selectedChat)?.creator.followers}{" "}
+                          followers
                         </span>
                       </div>
                     </div>

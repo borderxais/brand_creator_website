@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from "next/link";
 
 export default function NotFound() {
   return (
@@ -7,7 +7,7 @@ export default function NotFound() {
         <h1 className="text-6xl font-extrabold text-purple-600">404</h1>
         <h2 className="mt-2 text-3xl font-bold text-gray-900">Page Not Found</h2>
         <p className="mt-2 text-lg text-gray-500">
-          We couldn't find the page you're looking for.
+          We couldn&apos;t find the page you&apos;re looking for.
         </p>
         <div className="mt-6">
           <Link

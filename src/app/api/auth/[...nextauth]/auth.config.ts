@@ -1,9 +1,9 @@
-import { NextAuthOptions } from "next-auth"
-import CredentialsProvider from "next-auth/providers/credentials"
-import GoogleProvider from "next-auth/providers/google"
-import { PrismaAdapter } from "@next-auth/prisma-adapter"
-import prisma from "@/lib/prisma"
-import bcrypt from "bcryptjs"
+import { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export const authConfig: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -16,39 +16,39 @@ export const authConfig: NextAuthOptions = {
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         try {
           if (!credentials?.email || !credentials?.password) {
-            console.log('Missing credentials');
-            throw new Error('Please enter an email and password')
+            console.log("Missing credentials");
+            throw new Error("Please enter an email and password");
           }
 
-          console.log('Login attempt:', { email: credentials.email });
-          
+          console.log("Login attempt:", { email: credentials.email });
+
           // Find user
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
           });
 
           if (!user || !user.password) {
-            console.log('No user found:', credentials.email);
-            throw new Error('Invalid email or password')
+            console.log("No user found:", credentials.email);
+            throw new Error("Invalid email or password");
           }
 
           // Verify password
           const passwordMatch = await bcrypt.compare(credentials.password, user.password);
 
           if (!passwordMatch) {
-            console.log('Invalid password for user:', credentials.email);
-            throw new Error('Invalid email or password')
+            console.log("Invalid password for user:", credentials.email);
+            throw new Error("Invalid email or password");
           }
 
-          console.log('Login successful:', {
+          console.log("Login successful:", {
             id: user.id,
             email: user.email,
-            role: user.role
+            role: user.role,
           });
 
           return {
@@ -56,14 +56,14 @@ export const authConfig: NextAuthOptions = {
             email: user.email,
             name: user.name,
             role: user.role,
-            image: user.image
-          }
+            image: user.image,
+          };
         } catch (error) {
-          console.error('Auth error:', error);
+          console.error("Auth error:", error);
           return null;
         }
-      }
-    })
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -79,15 +79,15 @@ export const authConfig: NextAuthOptions = {
         session.user.id = token.id as string;
       }
       return session;
-    }
+    },
   },
   pages: {
-    signIn: '/login',
-    error: '/login',
+    signIn: "/login",
+    error: "/login",
   },
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
   },
-  secret: process.env.NEXTAUTH_SECRET
-}
+  secret: process.env.NEXTAUTH_SECRET,
+};

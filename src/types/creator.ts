@@ -9,4 +9,4 @@ export type Creator = {
     image: string | null;
     email: string | null;
   };
-}
+};

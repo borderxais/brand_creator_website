@@ -1,14 +1,13 @@
-import { createProxyMiddleware } from 'http-proxy-middleware';
-import { NextApiRequest, NextApiResponse } from 'next';
+import { createProxyMiddleware } from "http-proxy-middleware";
 
 // Configure the proxy to your FastAPI backend
 const apiProxy = createProxyMiddleware({
-  target: 'http://localhost:8000', // Change this to your FastAPI server address
+  target: "http://localhost:8000", // Change this to your FastAPI server address
   changeOrigin: true,
   pathRewrite: {
-    '^/api/advertiser': '/api/advertiser', // Keep the path the same
+    "^/api/advertiser": "/api/advertiser", // Keep the path the same
   },
-  logLevel: 'debug',
+  logLevel: "debug",
 });
 
 // Disable body parsing to let proxy handle it

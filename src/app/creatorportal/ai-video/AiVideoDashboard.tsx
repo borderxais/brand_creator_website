@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pause, Play, PlayCircle, RefreshCw, Sparkles, Upload, Video, X } from 'lucide-react';
-import { AiVideoRecord, TikTokBindingInfo, VideoStatus } from './types';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Pause, Play, PlayCircle, RefreshCw, Sparkles, Upload, Video, X } from "lucide-react";
+import { AiVideoRecord, TikTokBindingInfo, VideoStatus } from "./types";
 
 interface DashboardProps {
   videos: AiVideoRecord[];
@@ -12,15 +12,15 @@ interface DashboardProps {
 }
 
 const generatedFormatter = new Intl.DateTimeFormat(undefined, {
-  month: 'short',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: 'numeric',
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
 });
 
 const downloadWindowFormatter = new Intl.DateTimeFormat(undefined, {
-  month: 'short',
-  day: 'numeric',
+  month: "short",
+  day: "numeric",
 });
 
 type VideoPreviewCardProps = {
@@ -32,8 +32,8 @@ type VideoPreviewCardProps = {
 };
 
 const statusTokens: Record<VideoStatus, { label: string; tone: string }> = {
-  ready: { label: 'Ready to download', tone: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
-  expired: { label: 'Expired', tone: 'bg-slate-100 text-slate-500 ring-slate-200' },
+  ready: { label: "Ready to download", tone: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
+  expired: { label: "Expired", tone: "bg-slate-100 text-slate-500 ring-slate-200" },
 };
 
 function VideoPreviewCard({
@@ -44,8 +44,8 @@ function VideoPreviewCard({
   onPreview,
 }: VideoPreviewCardProps) {
   const expiresLabel =
-    video.status === 'expired'
-      ? 'Expired'
+    video.status === "expired"
+      ? "Expired"
       : downloadWindowFormatter.format(new Date(video.expiresAt));
   const statusToken = statusTokens[video.status];
 
@@ -68,7 +68,9 @@ function VideoPreviewCard({
               </span>
             ))
           ) : (
-            <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-300">Untagged</span>
+            <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-300">
+              Untagged
+            </span>
           )}
         </div>
       </div>
@@ -98,7 +100,7 @@ function VideoPreviewCard({
             </button>
           ) : (
             <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-1 text-xs font-semibold text-slate-600">
-              {video.status === 'expired' ? (
+              {video.status === "expired" ? (
                 <>
                   <X className="h-3.5 w-3.5 text-rose-500" />
                   Expired
@@ -129,8 +131,10 @@ function VideoPreviewCard({
 
       <label
         className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-semibold transition ${
-          selected ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-600'
-        } ${!canSelect ? 'opacity-60' : ''}`}
+          selected
+            ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+            : "border-slate-200 text-slate-600"
+        } ${!canSelect ? "opacity-60" : ""}`}
       >
         <input
           type="checkbox"
@@ -143,7 +147,7 @@ function VideoPreviewCard({
           }}
           disabled={!canSelect}
         />
-        <span>{canSelect ? 'Select for TikTok upload' : 'Available when ready'}</span>
+        <span>{canSelect ? "Select for TikTok upload" : "Available when ready"}</span>
       </label>
     </div>
   );
@@ -188,12 +192,17 @@ function PreviewModal({ video, onClose }: PreviewModalProps) {
             <div className="flex flex-wrap gap-2">
               {video.tags.length ? (
                 video.tags.map((tag) => (
-                  <span key={`${video.id}-modal-tag-${tag}`} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">
+                  <span
+                    key={`${video.id}-modal-tag-${tag}`}
+                    className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500"
+                  >
                     #{tag}
                   </span>
                 ))
               ) : (
-                <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-300">Untagged</span>
+                <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-300">
+                  Untagged
+                </span>
               )}
             </div>
             <span
@@ -203,7 +212,9 @@ function PreviewModal({ video, onClose }: PreviewModalProps) {
             </span>
             <div className="text-sm text-slate-500">
               <p>Generated {generatedFormatter.format(new Date(video.generatedAt))}</p>
-              <p>Download window ends {downloadWindowFormatter.format(new Date(video.expiresAt))}</p>
+              <p>
+                Download window ends {downloadWindowFormatter.format(new Date(video.expiresAt))}
+              </p>
             </div>
           </div>
           <button
@@ -251,8 +262,9 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
   const [selectionMessage, setSelectionMessage] = useState<string | null>(null);
 
   const readyVideoIds = useMemo(
-    () => videos.filter((video) => video.status === 'ready' && video.videoUrl).map((video) => video.id),
-    [videos],
+    () =>
+      videos.filter((video) => video.status === "ready" && video.videoUrl).map((video) => video.id),
+    [videos]
   );
 
   const toggleSelect = (videoId: string) => {
@@ -263,11 +275,11 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
   const handleReview = () => {
     const selectedReadyIds = selectedVideoIds.filter((id) => readyVideoIds.includes(id));
     if (!selectedReadyIds.length) {
-      setSelectionMessage('Choose one ready video to review before posting to TikTok.');
+      setSelectionMessage("Choose one ready video to review before posting to TikTok.");
       return;
     }
 
-    const query = new URLSearchParams({ ids: selectedReadyIds.join(',') });
+    const query = new URLSearchParams({ ids: selectedReadyIds.join(",") });
     router.push(`/creatorportal/ai-video/post?${query.toString()}`);
   };
 
@@ -286,8 +298,8 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
           <p className="text-xs uppercase tracking-[0.2em] text-indigo-500">TikTok ready</p>
           <h1 className="text-3xl font-semibold text-slate-900">AI Video Queue</h1>
           <p className="text-sm text-slate-600">
-            Pick the finished cuts you want to send to TikTok. Each tile only exposes the generation time,
-            download window, and a quick preview for rapid approvals.
+            Pick the finished cuts you want to send to TikTok. Each tile only exposes the generation
+            time, download window, and a quick preview for rapid approvals.
           </p>
         </div>
         <Link
@@ -302,22 +314,24 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">TikTok account status</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              TikTok account status
+            </p>
             {hasTikTokBinding ? (
               <div className="flex items-center gap-2 text-sm font-semibold text-emerald-700">
                 {tikTokBinding?.avatarUrl ? (
                   <img
                     src={tikTokBinding.avatarUrl}
-                    alt={tikTokName || 'TikTok account avatar'}
+                    alt={tikTokName || "TikTok account avatar"}
                     className="h-8 w-8 rounded-full object-cover"
                   />
                 ) : (
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                    {tikTokName?.[0]?.toUpperCase() ?? 'T'}
+                    {tikTokName?.[0]?.toUpperCase() ?? "T"}
                   </span>
                 )}
                 <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                Connected {tikTokName ? `as ${tikTokName}` : ''}
+                Connected {tikTokName ? `as ${tikTokName}` : ""}
               </div>
             ) : (
               <div className="flex items-center gap-2 text-sm font-semibold text-amber-700">
@@ -333,7 +347,7 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
               className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700"
               disabled={isRedirectingToTikTok}
             >
-              {isRedirectingToTikTok ? 'Redirecting...' : 'Connect TikTok'}
+              {isRedirectingToTikTok ? "Redirecting..." : "Connect TikTok"}
             </button>
           )}
         </div>
@@ -350,7 +364,7 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
                 Review & post to TikTok
               </button>
               <p className="text-sm text-slate-600">
-                {selectedVideoIds.length ? 'Video selected' : 'No videos selected'}
+                {selectedVideoIds.length ? "Video selected" : "No videos selected"}
               </p>
             </div>
             {selectionMessage && (
@@ -360,7 +374,8 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
         )}
         {!hasTikTokBinding && (
           <p className="mt-3 text-sm text-slate-600">
-            Connect your TikTok account to enable direct uploads and keep campaign deliverables in sync.
+            Connect your TikTok account to enable direct uploads and keep campaign deliverables in
+            sync.
           </p>
         )}
       </div>
@@ -372,7 +387,7 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {videos.map((video) => {
-            const canSelect = video.status === 'ready' && Boolean(video.videoUrl);
+            const canSelect = video.status === "ready" && Boolean(video.videoUrl);
             return (
               <VideoPreviewCard
                 key={video.id}
@@ -394,10 +409,13 @@ export default function AiVideoDashboard({ videos, tikTokBinding }: DashboardPro
       <div className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-500 p-6 text-white shadow-xl">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-medium uppercase tracking-[0.3em] text-white/70">Need a new cut?</p>
+            <p className="text-sm font-medium uppercase tracking-[0.3em] text-white/70">
+              Need a new cut?
+            </p>
             <h2 className="text-2xl font-semibold">Spin up the next AI edit in under a minute.</h2>
             <p className="mt-2 text-sm text-white/80">
-              Drop in a voice, upload a reference image, and the creator workstation will mint a ready-to-preview TikTok asset.
+              Drop in a voice, upload a reference image, and the creator workstation will mint a
+              ready-to-preview TikTok asset.
             </p>
           </div>
           <Link

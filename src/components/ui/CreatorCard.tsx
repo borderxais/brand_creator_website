@@ -1,6 +1,6 @@
-import { Creator } from '@/types/creator';
-import Image from 'next/image';
-import { Card } from './Card';
+import { Creator } from "@/types/creator";
+import Image from "next/image";
+import { Card } from "./Card";
 
 interface CreatorCardProps {
   creator: Creator;
@@ -13,7 +13,7 @@ export function CreatorCard({ creator }: CreatorCardProps) {
         {creator.user.image ? (
           <Image
             src={creator.user.image}
-            alt={creator.user.name || 'Creator'}
+            alt={creator.user.name || "Creator"}
             fill
             className="object-cover"
           />
@@ -25,7 +25,7 @@ export function CreatorCard({ creator }: CreatorCardProps) {
       </div>
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">
-          {creator.user.name || 'Anonymous Creator'}
+          {creator.user.name || "Anonymous Creator"}
         </h3>
         <p className="text-sm text-gray-600 mb-2">{creator.location}</p>
         <p className="text-sm text-gray-500 mb-4">{creator.bio}</p>

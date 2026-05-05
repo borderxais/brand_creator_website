@@ -1,8 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Calendar, Users, DollarSign, Clock, MapPin, Star, Eye, Heart, MessageCircle } from 'lucide-react';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import {
+  Calendar,
+  Users,
+  DollarSign,
+  Clock,
+  MapPin,
+  Star,
+  Heart,
+  MessageCircle,
+} from "lucide-react";
+import Link from "next/link";
 
 // Mission data structure to match API response
 interface Mission {
@@ -37,21 +46,21 @@ function MissionCard({ mission }: { mission: Mission }) {
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD format
-    } catch (error) {
+      return date.toISOString().split("T")[0]; // Returns YYYY-MM-DD format
+    } catch (_error) {
       return dateString;
     }
   };
 
   const getRewardDisplay = () => {
-    if (mission.reward_model === 'fixed' && mission.fixed_reward) {
+    if (mission.reward_model === "fixed" && mission.fixed_reward) {
       return `$${mission.fixed_reward}`;
-    } else if (mission.reward_model === 'cps' && mission.cps_rate) {
+    } else if (mission.reward_model === "cps" && mission.cps_rate) {
       return `$${mission.cps_rate}/view`;
-    } else if (mission.reward_model === 'tiered') {
-      return 'Tiered rewards';
+    } else if (mission.reward_model === "tiered") {
+      return "Tiered rewards";
     }
-    return 'TBD';
+    return "TBD";
   };
 
   return (
@@ -64,8 +73,10 @@ function MissionCard({ mission }: { mission: Mission }) {
               OPEN
             </span>
           </div>
-          <p className="text-sm text-gray-600 mb-2">by {mission.brand_name || 'Unknown Brand'}</p>
-          <p className="text-gray-700 text-sm leading-relaxed line-clamp-2">{mission.campaign_objective}</p>
+          <p className="text-sm text-gray-600 mb-2">by {mission.brand_name || "Unknown Brand"}</p>
+          <p className="text-gray-700 text-sm leading-relaxed line-clamp-2">
+            {mission.campaign_objective}
+          </p>
         </div>
       </div>
 
@@ -91,7 +102,7 @@ function MissionCard({ mission }: { mission: Mission }) {
           <Clock className="w-4 h-4 text-orange-600" />
           <div>
             <p className="text-xs text-gray-500">Platform</p>
-            <p className="font-semibold capitalize">{mission.platform || 'Not specified'}</p>
+            <p className="font-semibold capitalize">{mission.platform || "Not specified"}</p>
           </div>
         </div>
 
@@ -99,7 +110,9 @@ function MissionCard({ mission }: { mission: Mission }) {
           <MapPin className="w-4 h-4 text-purple-600" />
           <div>
             <p className="text-xs text-gray-500">Region</p>
-            <p className="font-semibold capitalize">{mission.region_priority?.replace('_', ' ') || 'Global'}</p>
+            <p className="font-semibold capitalize">
+              {mission.region_priority?.replace("_", " ") || "Global"}
+            </p>
           </div>
         </div>
       </div>
@@ -140,9 +153,7 @@ function MissionCard({ mission }: { mission: Mission }) {
 
       {/* Action Button */}
       <div className="flex items-center justify-between">
-        <div className="text-xs text-gray-500">
-          Posted {formatDate(mission.created_at)}
-        </div>
+        <div className="text-xs text-gray-500">Posted {formatDate(mission.created_at)}</div>
         <Link
           href={`/entertainment-live/${mission.id}`}
           className="px-6 py-2 rounded-lg font-medium text-sm transition-colors bg-purple-600 text-white hover:bg-purple-700"
@@ -156,16 +167,16 @@ function MissionCard({ mission }: { mission: Mission }) {
 
 export default function EntertainmentLive() {
   const [missions, setMissions] = useState<Mission[]>([]);
-  const [filter, setFilter] = useState<string>('all');
-  const [platform, setPlatform] = useState<string>('all');
-  const [region, setRegion] = useState<string>('all');
-  const [search, setSearch] = useState<string>('');
+  const [filter, setFilter] = useState<string>("all");
+  const [platform, setPlatform] = useState<string>("all");
+  const [region, setRegion] = useState<string>("all");
+  const [search, setSearch] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const platforms = ['all', 'instagram', 'twitch', 'youtube', 'tiktok'];
-  const regions = ['all', 'global', 'north_america', 'europe', 'asia'];
-  const rewardModels = ['all', 'fixed', 'cps', 'tiered'];
+  const platforms = ["all", "instagram", "twitch", "youtube", "tiktok"];
+  const regions = ["all", "global", "north_america", "europe", "asia"];
+  const rewardModels = ["all", "fixed", "cps", "tiered"];
 
   // Fetch missions from API
   const fetchMissions = async () => {
@@ -175,13 +186,13 @@ export default function EntertainmentLive() {
 
       // Build query parameters
       const params = new URLSearchParams();
-      if (search && search.trim()) params.append('search', search);
-      if (platform !== 'all') params.append('platform', platform);
-      if (region !== 'all') params.append('region', region);
-      if (filter !== 'all') params.append('reward_model', filter);
-      params.append('limit', '50');
+      if (search && search.trim()) params.append("search", search);
+      if (platform !== "all") params.append("platform", platform);
+      if (region !== "all") params.append("region", region);
+      if (filter !== "all") params.append("reward_model", filter);
+      params.append("limit", "50");
 
-      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const queryString = params.toString() ? `?${params.toString()}` : "";
       const response = await fetch(`/api/entertainment-live${queryString}`);
 
       if (!response.ok) {
@@ -189,18 +200,18 @@ export default function EntertainmentLive() {
       }
 
       const data = await response.json();
-      console.log('Fetched missions:', data);
+      console.log("Fetched missions:", data);
 
       // Handle both array response and object with missions property
-      const missionsData = Array.isArray(data) ? data : (data.missions || []);
+      const missionsData = Array.isArray(data) ? data : data.missions || [];
       setMissions(missionsData);
 
       if (!Array.isArray(data) && data.error) {
-        console.warn('API Warning:', data.error);
+        console.warn("API Warning:", data.error);
       }
     } catch (error) {
-      console.error('Error fetching missions:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load missions');
+      console.error("Error fetching missions:", error);
+      setError(error instanceof Error ? error.message : "Failed to load missions");
       setMissions([]); // Set empty array on error
     } finally {
       setIsLoading(false);
@@ -217,10 +228,10 @@ export default function EntertainmentLive() {
   };
 
   // Client-side filtering (backup in case server filtering doesn't work)
-  const filteredMissions = missions.filter(mission => {
-    const platformMatch = platform === 'all' || mission.platform === platform;
-    const regionMatch = region === 'all' || mission.region_priority === region;
-    const rewardMatch = filter === 'all' || mission.reward_model === filter;
+  const filteredMissions = missions.filter((mission) => {
+    const platformMatch = platform === "all" || mission.platform === platform;
+    const regionMatch = region === "all" || mission.region_priority === region;
+    const rewardMatch = filter === "all" || mission.reward_model === filter;
     return platformMatch && regionMatch && rewardMatch;
   });
 
@@ -235,9 +246,7 @@ export default function EntertainmentLive() {
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Entertainment Live Streaming
-            </h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">Entertainment Live Streaming</h1>
             <p className="text-xl md:text-2xl mb-8 text-purple-100">
               Join exciting live streaming missions and earn rewards while entertaining audiences
             </p>
@@ -247,21 +256,27 @@ export default function EntertainmentLive() {
                   <Heart className="w-8 h-8" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">Engage Audiences</h3>
-                <p className="text-purple-100">Connect with viewers through interactive live streaming experiences</p>
+                <p className="text-purple-100">
+                  Connect with viewers through interactive live streaming experiences
+                </p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <DollarSign className="w-8 h-8" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">Earn Rewards</h3>
-                <p className="text-purple-100">Get paid for hosting entertaining live streaming sessions</p>
+                <p className="text-purple-100">
+                  Get paid for hosting entertaining live streaming sessions
+                </p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Star className="w-8 h-8" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">Build Your Brand</h3>
-                <p className="text-purple-100">Grow your audience and establish yourself as a live streaming expert</p>
+                <p className="text-purple-100">
+                  Grow your audience and establish yourself as a live streaming expert
+                </p>
               </div>
             </div>
           </div>
@@ -280,7 +295,7 @@ export default function EntertainmentLive() {
                   placeholder="Search missions..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleFilterChange()}
+                  onKeyDown={(e) => e.key === "Enter" && handleFilterChange()}
                   className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
@@ -291,9 +306,9 @@ export default function EntertainmentLive() {
                   onChange={(e) => setPlatform(e.target.value)}
                   className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
-                  {platforms.map(p => (
+                  {platforms.map((p) => (
                     <option key={p} value={p}>
-                      {p === 'all' ? 'All Platforms' : p.charAt(0).toUpperCase() + p.slice(1)}
+                      {p === "all" ? "All Platforms" : p.charAt(0).toUpperCase() + p.slice(1)}
                     </option>
                   ))}
                 </select>
@@ -305,9 +320,11 @@ export default function EntertainmentLive() {
                   onChange={(e) => setRegion(e.target.value)}
                   className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
-                  {regions.map(r => (
+                  {regions.map((r) => (
                     <option key={r} value={r}>
-                      {r === 'all' ? 'All Regions' : r.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      {r === "all"
+                        ? "All Regions"
+                        : r.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                     </option>
                   ))}
                 </select>
@@ -319,9 +336,9 @@ export default function EntertainmentLive() {
                   onChange={(e) => setFilter(e.target.value)}
                   className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
-                  {rewardModels.map(r => (
+                  {rewardModels.map((r) => (
                     <option key={r} value={r}>
-                      {r === 'all' ? 'All Models' : r.toUpperCase()}
+                      {r === "all" ? "All Models" : r.toUpperCase()}
                     </option>
                   ))}
                 </select>
@@ -335,9 +352,7 @@ export default function EntertainmentLive() {
                 </button>
               </div>
             </div>
-            <div className="text-sm text-gray-600">
-              Showing {sortedMissions.length} missions
-            </div>
+            <div className="text-sm text-gray-600">Showing {sortedMissions.length} missions</div>
           </div>
         </div>
 
@@ -362,9 +377,7 @@ export default function EntertainmentLive() {
               </button>
             </div>
           ) : sortedMissions.length > 0 ? (
-            sortedMissions.map((mission) => (
-              <MissionCard key={mission.id} mission={mission} />
-            ))
+            sortedMissions.map((mission) => <MissionCard key={mission.id} mission={mission} />)
           ) : (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

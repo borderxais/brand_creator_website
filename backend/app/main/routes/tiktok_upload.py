@@ -1,5 +1,4 @@
 import logging
-from typing import List, Optional
 import math
 
 import httpx
@@ -15,16 +14,16 @@ BUCKET_NAME = "aivideogenerated"
 
 
 class UploadVideo(BaseModel):
-    id: Optional[str] = None
-    video_url: Optional[HttpUrl] = Field(None, alias="videoUrl")
-    video_path: Optional[str] = Field(None, alias="videoPath")
-    title: Optional[str] = None
-    brand_content_toggle: Optional[bool] = Field(None, alias="brandContent")
-    brand_organic_toggle: Optional[bool] = Field(None, alias="brandOrganic")
-    privacy_level: Optional[str] = Field(None, alias="privacyLevel")
-    disable_comment: Optional[bool] = Field(None, alias="disableComment")
-    disable_duet: Optional[bool] = Field(None, alias="disableDuet")
-    disable_stitch: Optional[bool] = Field(None, alias="disableStitch")
+    id: str | None = None
+    video_url: HttpUrl | None = Field(None, alias="videoUrl")
+    video_path: str | None = Field(None, alias="videoPath")
+    title: str | None = None
+    brand_content_toggle: bool | None = Field(None, alias="brandContent")
+    brand_organic_toggle: bool | None = Field(None, alias="brandOrganic")
+    privacy_level: str | None = Field(None, alias="privacyLevel")
+    disable_comment: bool | None = Field(None, alias="disableComment")
+    disable_duet: bool | None = Field(None, alias="disableDuet")
+    disable_stitch: bool | None = Field(None, alias="disableStitch")
 
     model_config = {
         "populate_by_name": True,
@@ -35,11 +34,12 @@ class UploadVideo(BaseModel):
 
 class UploadRequest(BaseModel):
     access_token: str
-    videos: List[UploadVideo]
+    videos: list[UploadVideo]
+
 
 class PublishStatusRequest(BaseModel):
     access_token: str
-    publish_ids: List[str] = Field(default_factory=list)
+    publish_ids: list[str] = Field(default_factory=list)
 
 
 def _required_brand_flags(video: UploadVideo):
@@ -53,7 +53,7 @@ def _required_brand_flags(video: UploadVideo):
 async def _init_tiktok_publish(
     client: httpx.AsyncClient,
     access_token: str,
-    title: Optional[str],
+    title: str | None,
     video_size: int,
     chunk_size: int,
     total_chunk_count: int,
@@ -207,7 +207,7 @@ async def upload_ai_video(body: UploadRequest):
     async with httpx.AsyncClient(timeout=30) as client:
         for video in body.videos:
             try:
-                source_url: Optional[str] = None
+                source_url: str | None = None
                 if video.video_url:
                     source_url = str(video.video_url)
                 elif video.video_path:
@@ -246,7 +246,9 @@ async def upload_ai_video(body: UploadRequest):
                 results.append({"id": video.id, "status": "error", "error": exc.detail})
             except Exception as exc:  # pragma: no cover - unexpected
                 logger.error("Unexpected TikTok upload error: %s", exc)
-                results.append({"id": video.id, "status": "error", "error": "Unexpected server error"})
+                results.append(
+                    {"id": video.id, "status": "error", "error": "Unexpected server error"}
+                )
 
     return {"results": results}
 
@@ -261,11 +263,19 @@ async def publish_status(body: PublishStatusRequest):
         for publish_id in body.publish_ids:
             try:
                 status_payload = await _fetch_publish_status(client, body.access_token, publish_id)
-                results.append({"publish_id": publish_id, "status": "ok", "payload": status_payload})
+                results.append(
+                    {"publish_id": publish_id, "status": "ok", "payload": status_payload}
+                )
             except HTTPException as exc:
                 results.append({"publish_id": publish_id, "status": "error", "error": exc.detail})
             except Exception as exc:  # pragma: no cover
                 logger.error("Unexpected publish status error: %s", exc)
-                results.append({"publish_id": publish_id, "status": "error", "error": "Unexpected server error"})
+                results.append(
+                    {
+                        "publish_id": publish_id,
+                        "status": "error",
+                        "error": "Unexpected server error",
+                    }
+                )
 
     return {"results": results}

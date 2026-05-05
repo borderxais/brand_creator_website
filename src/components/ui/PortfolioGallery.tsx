@@ -1,7 +1,7 @@
 "use client";
 
-import Link from 'next/link';
-import ErrorHandlingImage from './ErrorHandlingImage';
+import Link from "next/link";
+import ErrorHandlingImage from "./ErrorHandlingImage";
 
 interface PortfolioItem {
   id: string;
@@ -37,9 +37,7 @@ export function PortfolioGallery({ items }: PortfolioGalleryProps) {
           )}
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900">{item.title}</h3>
-            {item.description && (
-              <p className="mt-2 text-gray-600">{item.description}</p>
-            )}
+            {item.description && <p className="mt-2 text-gray-600">{item.description}</p>}
             {item.link && (
               <Link
                 href={item.link}
@@ -48,12 +46,7 @@ export function PortfolioGallery({ items }: PortfolioGalleryProps) {
                 className="mt-4 inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-500"
               >
                 View Project
-                <svg
-                  className="ml-1 h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

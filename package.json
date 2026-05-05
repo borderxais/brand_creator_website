@@ -2,15 +2,49 @@
   "name": "brand-creator-platform",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.12.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky && node scripts/harness/banner.js",
+    "harness:install": "npm install && npm run prepare",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "node prisma/seed.js",
-    "db:seed": "node prisma/seed.js"
+    "db:seed": "node prisma/seed.js",
+    "lint:strict": "eslint . --max-warnings=0",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "e2e": "playwright test",
+    "e2e:preview": "PLAYWRIGHT_BASE_URL=$DEPLOY_PRIME_URL playwright test e2e/smoke",
+    "harness:prepush": "npm run typecheck && npm run lint && node scripts/harness/prisma-drift.js && npm run test:run && cd backend && .venv/bin/ruff check . && .venv/bin/ruff format --check . && .venv/bin/mypy app",
+    "harness:full": "npm run harness:prepush && npm run e2e"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs}": [
+      "prettier --write",
+      "eslint --fix --max-warnings=0"
+    ],
+    "*.{ts,tsx}": [
+      "tsc-files --noEmit"
+    ],
+    "prisma/schema.prisma": [
+      "prisma format",
+      "node scripts/harness/prisma-drift.js"
+    ],
+    "backend/**/*.py": [
+      "backend/.venv/bin/ruff format",
+      "backend/.venv/bin/ruff check --fix --exit-non-zero-on-fix"
+    ],
+    "*.{json,md,yml,yaml,css}": [
+      "prettier --write"
+    ]
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -45,20 +79,30 @@
     "tailwind-merge": "^3.0.2"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
     "@faker-js/faker": "^9.5.1",
+    "@playwright/test": "^1.59.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.17.16",
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.24.0",
     "eslint-config-next": "^15.5.9",
+    "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
+    "lint-staged": "^16.4.0",
     "postcss": "^8.5.1",
+    "prettier": "^3.8.3",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "tsc-files": "^1.1.4",
+    "typescript": "^5.8.2",
+    "vitest": "^4.1.5"
   }
 }

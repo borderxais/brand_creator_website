@@ -1,0 +1,26 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+# E501: line-too-long — enforced by formatter (line-length = 100); remaining long lines are in
+#        string literals that cannot be split.
+# B904: raise-from — stylistic; existing codebase uses bare raise consistently.
+# B008: FastAPI Body()/Path()/Query() in defaults is the established pre-Annotated[] pattern;
+#        refactoring to Annotated[] is a separate task.
+# SIM117: combine-with-statements — not safe for nested async-with where inner context depends
+#          on the outer (e.g. httpx client must stay open while streaming).
+ignore = ["E501", "B904", "B008", "SIM117"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+files = ["app"]
+# NOTE: not strict — strict mode produces ~238 errors on existing code
+# (mostly missing FastAPI endpoint return types). Tighten gradually:
+# 1) disallow_untyped_defs = true once endpoint signatures are annotated
+# 2) strict = true once 1) is clean

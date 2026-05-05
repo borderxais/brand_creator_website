@@ -6,15 +6,11 @@ const AUTH_ENDPOINT = "https://www.tiktok.com/v2/auth/authorize";
 const STATE_COOKIE_NAME = "tiktok_oauth_state";
 const CODE_VERIFIER_COOKIE_NAME = "tiktok_code_verifier";
 
-const defaultScopes =
-  "user.info.basic,user.info.stats,video.list,video.upload,video.publish";
+const defaultScopes = "user.info.basic,user.info.stats,video.list,video.upload,video.publish";
 
-const appBaseUrl =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://cricher.ai";
+const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://cricher.ai";
 
-const redirectUri =
-  process.env.TIKTOK_REDIRECT_URI ??
-  `${appBaseUrl}/api/auth/tiktok/callback`;
+const redirectUri = process.env.TIKTOK_REDIRECT_URI ?? `${appBaseUrl}/api/auth/tiktok/callback`;
 
 const scopes =
   process.env.TIKTOK_SCOPES?.split(/[,\s]+/)
@@ -28,11 +24,7 @@ function generateState() {
 }
 
 function base64UrlEncode(buffer: Buffer) {
-  return buffer
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+  return buffer.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 function generateCodeVerifier() {
@@ -48,10 +40,7 @@ export async function GET() {
   const clientKey = process.env.TIKTOK_CLIENT_KEY;
 
   if (!clientKey) {
-    return NextResponse.json(
-      { error: "TikTok client key is not configured." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "TikTok client key is not configured." }, { status: 500 });
   }
 
   const state = generateState();

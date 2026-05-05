@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { CampaignList } from '@/components/campaigns/CampaignList';
-import { Platform } from '@/types/platform';
-import { Category } from '@/types/category';
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { CampaignList } from "@/components/campaigns/CampaignList";
+import { Platform } from "@/types/platform";
+import { Category } from "@/types/category";
 
 interface Brand {
   name: string;
@@ -41,10 +41,10 @@ export default function Campaigns() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === 'loading') return;
-    
+    if (status === "loading") return;
+
     if (!session) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
@@ -52,32 +52,32 @@ export default function Campaigns() {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Check if we're on the right page
-        if (session.user.role !== 'CREATOR') {
-          router.push('/login');
+        if (session.user.role !== "CREATOR") {
+          router.push("/login");
           return;
         }
 
-        const response = await fetch('/api/creator/campaigns', {
+        const response = await fetch("/api/creator/campaigns", {
           headers: {
-            'Content-Type': 'application/json'
-          }
+            "Content-Type": "application/json",
+          },
         });
 
         if (!response.ok) {
           const data = await response.json();
-          throw new Error(data.error || 'Failed to fetch campaigns');
+          throw new Error(data.error || "Failed to fetch campaigns");
         }
 
         const data = await response.json();
-        
+
         // Transform campaigns to match the interface
         const transformCampaign = (campaign: any): Campaign => ({
           id: campaign.id,
           brand: {
             name: campaign.brand.user.name,
-            logo: '/images/placeholder.svg'
+            logo: "/images/placeholder.svg",
           },
           title: campaign.title,
           description: campaign.description,
@@ -85,33 +85,33 @@ export default function Campaigns() {
           category: (() => {
             try {
               const categories = JSON.parse(campaign.categories);
-              return Array.isArray(categories) && categories.length > 0 
-                ? categories[0] 
-                : typeof categories === 'string' 
-                  ? categories 
-                  : 'General';
-            } catch (e) {
-              return 'General';
+              return Array.isArray(categories) && categories.length > 0
+                ? categories[0]
+                : typeof categories === "string"
+                  ? categories
+                  : "General";
+            } catch (_e) {
+              return "General";
             }
           })(),
           compensation: `$${campaign.budget}`,
           startDate: new Date(campaign.startDate),
           endDate: new Date(campaign.endDate),
-          deadline: new Date(campaign.endDate).toISOString().split('T')[0],
+          deadline: new Date(campaign.endDate).toISOString().split("T")[0],
           status: campaign.status,
           requirements: JSON.parse(campaign.requirements).list,
           createdAt: new Date(campaign.createdAt),
           platformIds: campaign.platformIds,
           categories: campaign.categories,
           deliverables: campaign.deliverables,
-          budget: campaign.budget
+          budget: campaign.budget,
         });
 
         setCurrentCampaigns(data.currentCampaigns.map(transformCampaign));
         setAvailableCampaigns(data.availableCampaigns.map(transformCampaign));
       } catch (error) {
-        console.error('Error fetching campaigns:', error);
-        setError(error instanceof Error ? error.message : 'Failed to load campaigns');
+        console.error("Error fetching campaigns:", error);
+        setError(error instanceof Error ? error.message : "Failed to load campaigns");
       } finally {
         setLoading(false);
       }
@@ -120,7 +120,7 @@ export default function Campaigns() {
     fetchCampaigns();
   }, [session, status, router]);
 
-  if (status === 'loading' || loading) {
+  if (status === "loading" || loading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -130,8 +130,8 @@ export default function Campaigns() {
     );
   }
 
-  if (!session || session.user.role !== 'CREATOR') {
-    router.push('/login');
+  if (!session || session.user.role !== "CREATOR") {
+    router.push("/login");
     return null;
   }
 
@@ -154,10 +154,7 @@ export default function Campaigns() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Your Campaigns</h1>
-      <CampaignList
-        currentCampaigns={currentCampaigns}
-        availableCampaigns={availableCampaigns}
-      />
+      <CampaignList currentCampaigns={currentCampaigns} availableCampaigns={availableCampaigns} />
     </div>
   );
 }

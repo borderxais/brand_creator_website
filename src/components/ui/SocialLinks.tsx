@@ -1,5 +1,5 @@
-import { Instagram, Youtube, Globe, Video } from 'lucide-react';
-import Link from 'next/link';
+import { Instagram, Youtube, Globe, Video } from "lucide-react";
+import Link from "next/link";
 
 interface SocialLinksProps {
   [key: string]: string | undefined;
@@ -8,28 +8,28 @@ interface SocialLinksProps {
 const platformConfig: { [key: string]: { icon: React.ElementType; baseUrl: string } } = {
   instagram: {
     icon: Instagram,
-    baseUrl: 'https://instagram.com'
+    baseUrl: "https://instagram.com",
   },
   tiktok: {
     icon: Video,
-    baseUrl: 'https://tiktok.com/@'
+    baseUrl: "https://tiktok.com/@",
   },
   youtube: {
     icon: Youtube,
-    baseUrl: 'https://youtube.com/@'
+    baseUrl: "https://youtube.com/@",
   },
   weibo: {
     icon: Globe,
-    baseUrl: 'https://weibo.com/'
+    baseUrl: "https://weibo.com/",
   },
   xiaohongshu: {
     icon: Globe,
-    baseUrl: 'https://xiaohongshu.com/user/profile/'
+    baseUrl: "https://xiaohongshu.com/user/profile/",
   },
   douyin: {
     icon: Video,
-    baseUrl: 'https://douyin.com/user/'
-  }
+    baseUrl: "https://douyin.com/user/",
+  },
 };
 
 export function SocialLinks(props: SocialLinksProps) {
@@ -39,7 +39,7 @@ export function SocialLinks(props: SocialLinksProps) {
         if (!handle || !platformConfig[platform]) return null;
 
         const { icon: Icon, baseUrl } = platformConfig[platform];
-        const url = handle.startsWith('http') ? handle : `${baseUrl}${handle.replace('@', '')}`;
+        const url = handle.startsWith("http") ? handle : `${baseUrl}${handle.replace("@", "")}`;
 
         return (
           <Link

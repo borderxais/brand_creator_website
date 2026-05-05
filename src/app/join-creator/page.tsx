@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowRight, CheckCircle } from 'lucide-react';
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight, CheckCircle } from "lucide-react";
 
 interface FormData {
   name: string;
@@ -21,145 +21,140 @@ function JoinAsCreatorForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState<FormData>({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
     niches: [], // Changed from niche: '' to niches: []
     platforms: [],
-    audienceSize: '',
-    bio: '',
-    creatorHandleName: '',
+    audienceSize: "",
+    bio: "",
+    creatorHandleName: "",
     termsAccepted: false,
   });
 
-  const platforms = [
-    'Instagram',
-    'TikTok',
-    'YouTube',
-    'Twitter',
-    'LinkedIn',
-    'Facebook',
-  ] as const;
+  const platforms = ["Instagram", "TikTok", "YouTube", "Twitter", "LinkedIn", "Facebook"] as const;
 
   const niches = [
-    'Fashion & Style',
-    'Beauty & Makeup',
-    'Health & Fitness',
-    'Food & Cooking',
-    'Travel & Adventure',
-    'Tech & Gaming',
-    'Business & Finance',
-    'Lifestyle',
-    'Entertainment',
-    'Education',
+    "Fashion & Style",
+    "Beauty & Makeup",
+    "Health & Fitness",
+    "Food & Cooking",
+    "Travel & Adventure",
+    "Tech & Gaming",
+    "Business & Finance",
+    "Lifestyle",
+    "Entertainment",
+    "Education",
   ] as const;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Add checkbox change handler
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
-    setFormData(prev => ({ ...prev, [name]: checked }));
+    setFormData((prev) => ({ ...prev, [name]: checked }));
   };
 
   const handlePlatformToggle = (platform: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       platforms: prev.platforms.includes(platform)
-        ? prev.platforms.filter(p => p !== platform)
-        : [...prev.platforms, platform]
+        ? prev.platforms.filter((p) => p !== platform)
+        : [...prev.platforms, platform],
     }));
   };
 
   // Add niche toggle handler similar to platform toggle
   const handleNicheToggle = (niche: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       niches: prev.niches.includes(niche)
-        ? prev.niches.filter(n => n !== niche)
-        : [...prev.niches, niche]
+        ? prev.niches.filter((n) => n !== niche)
+        : [...prev.niches, niche],
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     // Validate terms acceptance on step 3
     if (step === 3 && !formData.termsAccepted) {
-      setError('You must accept the Terms of Service and Privacy Policy');
+      setError("You must accept the Terms of Service and Privacy Policy");
       return;
     }
-    
+
     if (step < 3) {
       setStep(step + 1);
     } else {
       try {
         // Validate passwords match
         if (formData.password !== formData.confirmPassword) {
-          setError('Passwords do not match');
+          setError("Passwords do not match");
           return;
         }
 
-        console.log('Submitting registration with data:', {
+        console.log("Submitting registration with data:", {
           email: formData.email,
           name: formData.name,
-          role: 'CREATOR',
+          role: "CREATOR",
           creatorHandleName: formData.creatorHandleName,
           niches: formData.niches,
           bio: formData.bio,
           audienceSize: formData.audienceSize,
-          platforms: formData.platforms
+          platforms: formData.platforms,
         });
 
         // Register the user with enhanced profile data
-        const response = await fetch('/api/register', {
-          method: 'POST',
+        const response = await fetch("/api/register", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             email: formData.email,
             password: formData.password,
             name: formData.name,
-            role: 'CREATOR',
+            role: "CREATOR",
             creatorHandleName: formData.creatorHandleName,
             // Send the additional profile data
             niches: formData.niches,
             bio: formData.bio,
             audienceSize: formData.audienceSize,
-            platforms: formData.platforms
+            platforms: formData.platforms,
           }),
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Registration failed');
+          throw new Error(data.error || "Registration failed");
         }
 
-        console.log('Registration successful:', data);
-        
+        console.log("Registration successful:", data);
+
         // Check if there's a redirect URL from career application
-        const redirectUrl = searchParams?.get('redirect');
-        const fromApply = searchParams?.get('from');
-        const positionId = searchParams?.get('position');
-        
-        if (redirectUrl && fromApply === 'apply' && positionId) {
+        const redirectUrl = searchParams?.get("redirect");
+        const fromApply = searchParams?.get("from");
+        const positionId = searchParams?.get("position");
+
+        if (redirectUrl && fromApply === "apply" && positionId) {
           // Redirect back to career page with parameters to open modal
           router.push(`${redirectUrl}?from=apply&position=${positionId}`);
         } else {
           // Default redirect to login with success message
-          router.push('/login?registered=true');
+          router.push("/login?registered=true");
         }
       } catch (error) {
-        console.error('Error:', error);
-        setError(error instanceof Error ? error.message : 'Registration failed');
+        console.error("Error:", error);
+        setError(error instanceof Error ? error.message : "Registration failed");
       }
     }
   };
@@ -174,16 +169,14 @@ function JoinAsCreatorForm() {
               <div key={num} className="flex items-center">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    step >= num ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'
+                    step >= num ? "bg-purple-600 text-white" : "bg-gray-200 text-gray-600"
                   }`}
                 >
                   {step > num ? <CheckCircle className="w-5 h-5" /> : num}
                 </div>
                 {num < 3 && (
                   <div
-                    className={`w-24 h-1 mx-2 ${
-                      step > num ? 'bg-purple-600' : 'bg-gray-200'
-                    }`}
+                    className={`w-24 h-1 mx-2 ${step > num ? "bg-purple-600" : "bg-gray-200"}`}
                   />
                 )}
               </div>
@@ -251,7 +244,10 @@ function JoinAsCreatorForm() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="creatorHandleName" className="block text-sm font-medium text-black">
+                  <label
+                    htmlFor="creatorHandleName"
+                    className="block text-sm font-medium text-black"
+                  >
                     Creator Handle Name
                   </label>
                   <div className="mt-1">
@@ -261,7 +257,9 @@ function JoinAsCreatorForm() {
                       type="text"
                       required
                       value={formData.creatorHandleName}
-                      onChange={(e) => setFormData({...formData, creatorHandleName: e.target.value})}
+                      onChange={(e) =>
+                        setFormData({ ...formData, creatorHandleName: e.target.value })
+                      }
                       className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-black"
                       placeholder="Your unique creator handle"
                     />
@@ -274,7 +272,9 @@ function JoinAsCreatorForm() {
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-black">Creator Profile</h2>
                 <div>
-                  <label className="block text-sm font-medium text-black mb-2">Content Niches (Select all that apply)</label>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Content Niches (Select all that apply)
+                  </label>
                   <div className="grid grid-cols-2 gap-4">
                     {niches.map((niche) => (
                       <button
@@ -283,8 +283,8 @@ function JoinAsCreatorForm() {
                         onClick={() => handleNicheToggle(niche)}
                         className={`p-3 border rounded-lg flex items-center justify-between ${
                           formData.niches.includes(niche)
-                            ? 'border-purple-500 bg-purple-50'
-                            : 'border-gray-300'
+                            ? "border-purple-500 bg-purple-50"
+                            : "border-gray-300"
                         }`}
                       >
                         <span className="text-black">{niche}</span>
@@ -295,7 +295,7 @@ function JoinAsCreatorForm() {
                     ))}
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-black">Audience Size</label>
                   <select
@@ -338,8 +338,8 @@ function JoinAsCreatorForm() {
                       onClick={() => handlePlatformToggle(platform)}
                       className={`p-4 border rounded-lg flex items-center justify-between ${
                         formData.platforms.includes(platform)
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-300'
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-300"
                       }`}
                     >
                       <span className="text-black">{platform}</span>
@@ -349,7 +349,7 @@ function JoinAsCreatorForm() {
                     </button>
                   ))}
                 </div>
-                
+
                 {/* Terms and Privacy Policy Acceptance */}
                 <div className="mt-6">
                   <div className="flex items-start">
@@ -368,8 +368,8 @@ function JoinAsCreatorForm() {
                       <label htmlFor="termsAccepted" className="font-medium text-gray-700">
                         I agree to the
                       </label>{" "}
-                      <a 
-                        href="https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/sign/terms/Terms.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXJtcy9UZXJtcy5wZGYiLCJpYXQiOjE3NDY2MzkzMTMsImV4cCI6MjA2MTk5OTMxM30.ONaP6D4wReFTY5z6MuXzX3cm3WKJHqwxceIwncJpDIQ" 
+                      <a
+                        href="https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/sign/terms/Terms.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXJtcy9UZXJtcy5wZGYiLCJpYXQiOjE3NDY2MzkzMTMsImV4cCI6MjA2MTk5OTMxM30.ONaP6D4wReFTY5z6MuXzX3cm3WKJHqwxceIwncJpDIQ"
                         className="text-purple-600 hover:text-purple-500"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -377,8 +377,8 @@ function JoinAsCreatorForm() {
                         Terms of Service
                       </a>{" "}
                       and{" "}
-                      <a 
-                        href="https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/sign/terms/Privacy%20Policy.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXJtcy9Qcml2YWN5IFBvbGljeS5wZGYiLCJpYXQiOjE3NDY2Mzg4NDUsImV4cCI6MjA2MTk5ODg0NX0.x-zvJQc76-FnGAyUWhBW95PeaV9_4UNm8n7cKM6vko0" 
+                      <a
+                        href="https://ldlxyyctxylgmstfqlzh.supabase.co/storage/v1/object/sign/terms/Privacy%20Policy.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXJtcy9Qcml2YWN5IFBvbGljeS5wZGYiLCJpYXQiOjE3NDY2Mzg4NDUsImV4cCI6MjA2MTk5ODg0NX0.x-zvJQc76-FnGAyUWhBW95PeaV9_4UNm8n7cKM6vko0"
                         className="text-purple-600 hover:text-purple-500"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -396,7 +396,7 @@ function JoinAsCreatorForm() {
                 type="submit"
                 className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
               >
-                {step === 3 ? 'Create Account' : 'Next'}
+                {step === 3 ? "Create Account" : "Next"}
                 <ArrowRight className="ml-2 w-4 h-4" />
               </button>
             </div>
@@ -409,7 +409,9 @@ function JoinAsCreatorForm() {
 
 export default function JoinAsCreator() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense
+      fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}
+    >
       <JoinAsCreatorForm />
     </Suspense>
   );

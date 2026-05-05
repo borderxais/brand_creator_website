@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Line } from 'react-chartjs-2';
+import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,8 +10,8 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
-} from 'chart.js';
+  Filler,
+} from "chart.js";
 
 ChartJS.register(
   CategoryScale,
@@ -26,45 +26,45 @@ ChartJS.register(
 
 // Mock data
 const earningsData = {
-  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
   datasets: [
     {
-      label: 'Monthly Earnings',
+      label: "Monthly Earnings",
       data: [2200, 2800, 2500, 3100, 2900, 3250],
       fill: true,
-      borderColor: 'rgb(147, 51, 234)', // Purple (600)
-      backgroundColor: 'rgba(147, 51, 234, 0.1)',
+      borderColor: "rgb(147, 51, 234)", // Purple (600)
+      backgroundColor: "rgba(147, 51, 234, 0.1)",
       tension: 0.4,
     },
     {
-      label: 'Engagement Rate',
+      label: "Engagement Rate",
       data: [3.2, 3.8, 3.5, 4.2, 4.5, 4.8],
       fill: true,
-      borderColor: 'rgb(34, 197, 94)', // Green (600)
-      backgroundColor: 'rgba(34, 197, 94, 0.1)',
+      borderColor: "rgb(34, 197, 94)", // Green (600)
+      backgroundColor: "rgba(34, 197, 94, 0.1)",
       tension: 0.4,
-      yAxisID: 'y1',
-    }
+      yAxisID: "y1",
+    },
   ],
 };
 
 const options = {
   responsive: true,
   interaction: {
-    mode: 'index' as const,
+    mode: "index" as const,
     intersect: false,
   },
   plugins: {
     legend: {
-      position: 'top' as const,
+      position: "top" as const,
       labels: {
         usePointStyle: true,
         boxWidth: 6,
-      }
+      },
     },
     title: {
       display: false,
-    }
+    },
   },
   scales: {
     x: {
@@ -73,29 +73,29 @@ const options = {
       },
       ticks: {
         font: {
-          size: 12
-        }
-      }
+          size: 12,
+        },
+      },
     },
     y: {
-      type: 'linear' as const,
+      type: "linear" as const,
       display: true,
-      position: 'left' as const,
+      position: "left" as const,
       title: {
         display: true,
-        text: 'Earnings ($)',
+        text: "Earnings ($)",
       },
       grid: {
-        color: 'rgba(0, 0, 0, 0.05)',
+        color: "rgba(0, 0, 0, 0.05)",
       },
     },
     y1: {
-      type: 'linear' as const,
+      type: "linear" as const,
       display: true,
-      position: 'right' as const,
+      position: "right" as const,
       title: {
         display: true,
-        text: 'Engagement Rate (%)',
+        text: "Engagement Rate (%)",
       },
       grid: {
         drawOnChartArea: false,

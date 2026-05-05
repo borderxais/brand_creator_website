@@ -1,12 +1,8 @@
-'use client'
+"use client";
 
-import { SessionProvider as NextAuthSessionProvider } from 'next-auth/react'
+import { SessionProvider as NextAuthSessionProvider } from "next-auth/react";
 
-export default function SessionProvider({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function SessionProvider({ children }: { children: React.ReactNode }) {
   return (
     <NextAuthSessionProvider
       refetchInterval={5 * 60} // Refetch session every 5 minutes
@@ -14,5 +10,5 @@ export default function SessionProvider({
     >
       {children}
     </NextAuthSessionProvider>
-  )
+  );
 }

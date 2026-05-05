@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
-import Chart from 'chart.js/auto';
+import { useEffect, useRef } from "react";
+import Chart from "chart.js/auto";
 
 interface AudienceMetricsChartProps {
   followerCount: number;
@@ -14,7 +14,7 @@ export default function AudienceMetricsChart({
   followerCount,
   followingCount,
   likeCount,
-  videosCount
+  videosCount,
 }: AudienceMetricsChartProps) {
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart | null>(null);
@@ -26,76 +26,76 @@ export default function AudienceMetricsChart({
         chartInstance.current.destroy();
       }
 
-      const ctx = chartRef.current.getContext('2d');
-      
+      const ctx = chartRef.current.getContext("2d");
+
       if (ctx) {
         // Create new chart
         chartInstance.current = new Chart(ctx, {
-          type: 'bar',
+          type: "bar",
           data: {
-            labels: ['Followers', 'Following', 'Likes', 'Videos'],
+            labels: ["Followers", "Following", "Likes", "Videos"],
             datasets: [
               {
-                label: 'Audience Statistics',
+                label: "Audience Statistics",
                 data: [followerCount, followingCount, likeCount, videosCount],
                 backgroundColor: [
-                  'rgba(99, 102, 241, 0.7)',
-                  'rgba(139, 92, 246, 0.7)',
-                  'rgba(217, 70, 239, 0.7)',
-                  'rgba(232, 121, 249, 0.7)'
+                  "rgba(99, 102, 241, 0.7)",
+                  "rgba(139, 92, 246, 0.7)",
+                  "rgba(217, 70, 239, 0.7)",
+                  "rgba(232, 121, 249, 0.7)",
                 ],
                 borderColor: [
-                  'rgba(99, 102, 241, 1)',
-                  'rgba(139, 92, 246, 1)',
-                  'rgba(217, 70, 239, 1)',
-                  'rgba(232, 121, 249, 1)'
+                  "rgba(99, 102, 241, 1)",
+                  "rgba(139, 92, 246, 1)",
+                  "rgba(217, 70, 239, 1)",
+                  "rgba(232, 121, 249, 1)",
                 ],
                 borderWidth: 1,
                 borderRadius: 6,
-              }
-            ]
+              },
+            ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
               legend: {
-                position: 'top',
+                position: "top",
                 display: false,
               },
               tooltip: {
                 callbacks: {
-                  label: function(context) {
-                    let label = context.dataset.label || '';
+                  label: function (context) {
+                    let label = context.dataset.label || "";
                     if (label) {
-                      label += ': ';
+                      label += ": ";
                     }
                     if (context.parsed.y !== null) {
                       label += new Intl.NumberFormat().format(context.parsed.y);
                     }
                     return label;
-                  }
-                }
-              }
+                  },
+                },
+              },
             },
             scales: {
               y: {
                 beginAtZero: true,
                 ticks: {
-                  callback: function(value) {
+                  callback: function (value) {
                     // Make sure to convert the value to a number
-                    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+                    const numValue = typeof value === "string" ? parseFloat(value) : value;
                     if (numValue >= 1000000) {
-                      return (numValue / 1000000).toFixed(1) + 'M';
+                      return (numValue / 1000000).toFixed(1) + "M";
                     } else if (numValue >= 1000) {
-                      return (numValue / 1000).toFixed(1) + 'K';
+                      return (numValue / 1000).toFixed(1) + "K";
                     }
                     return value;
-                  }
-                }
-              }
-            }
-          }
+                  },
+                },
+              },
+            },
+          },
         });
       }
     }

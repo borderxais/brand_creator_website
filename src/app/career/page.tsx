@@ -1,49 +1,49 @@
-'use client';
+"use client";
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { X } from 'lucide-react';
+import { useState, useEffect, Suspense } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { X } from "lucide-react";
 
 interface Position {
-  id: string
-  title: string
-  type: "creator" | "brand" | "other"
-  requirements: string[]
-  offer: string
+  id: string;
+  title: string;
+  type: "creator" | "brand" | "other";
+  requirements: string[];
+  offer: string;
 }
 
 interface ApplicationFormData {
   // Identity Information
-  passport_name: string
-  nationality: string
-  id_type: string
-  id_number: string
-  gender: string
-  date_of_birth: string
-  
+  passport_name: string;
+  nationality: string;
+  id_type: string;
+  id_number: string;
+  gender: string;
+  date_of_birth: string;
+
   // Influencer Information
-  account_intro: string
-  profile_url: string
-  follower_count: string
-  other_platforms: string
+  account_intro: string;
+  profile_url: string;
+  follower_count: string;
+  other_platforms: string;
 }
 
 const positions: Position[] = [
   {
-    id: '1',
-    title: 'TikTok Live Streaming Creator',
-    type: 'creator',
+    id: "1",
+    title: "TikTok Live Streaming Creator",
+    type: "creator",
     requirements: [
-      'Language: English',
-      'Category: Woman\'s beauty and personal care',
-      'Followers: 300k+',
-      'Need 4 pre-live video',
-      'Need 4-hour live streaming'
+      "Language: English",
+      "Category: Woman's beauty and personal care",
+      "Followers: 300k+",
+      "Need 4 pre-live video",
+      "Need 4-hour live streaming",
     ],
-    offer: '$100,000'
-  }
-]
+    offer: "$100,000",
+  },
+];
 
 function CareerPageContent() {
   const { data: session, status } = useSession();
@@ -53,44 +53,44 @@ function CareerPageContent() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [formData, setFormData] = useState<ApplicationFormData>({
-    passport_name: '',
-    nationality: '',
-    id_type: 'passport',
-    id_number: '',
-    gender: '',
-    date_of_birth: '',
-    account_intro: '',
-    profile_url: '',
-    follower_count: '',
-    other_platforms: ''
+    passport_name: "",
+    nationality: "",
+    id_type: "passport",
+    id_number: "",
+    gender: "",
+    date_of_birth: "",
+    account_intro: "",
+    profile_url: "",
+    follower_count: "",
+    other_platforms: "",
   });
 
   // Check if user was redirected back after login
   useEffect(() => {
     if (!searchParams) return;
-    
-    const fromApply = searchParams.get('from');
-    const positionId = searchParams.get('position');
-    
-    if (fromApply === 'apply' && positionId && status === 'authenticated') {
-      const position = positions.find(p => p.id === positionId);
-      if (position && position.type === 'creator') {
+
+    const fromApply = searchParams.get("from");
+    const positionId = searchParams.get("position");
+
+    if (fromApply === "apply" && positionId && status === "authenticated") {
+      const position = positions.find((p) => p.id === positionId);
+      if (position && position.type === "creator") {
         setSelectedPosition(position);
         setShowApplicationModal(true);
         // Clean up URL
-        window.history.replaceState({}, '', '/career');
+        window.history.replaceState({}, "", "/career");
       }
     }
   }, [searchParams, status]);
 
   const handleApplyClick = (position: Position) => {
-    if (position.type === 'creator') {
+    if (position.type === "creator") {
       // Check if user is logged in
-      if (status === 'unauthenticated') {
+      if (status === "unauthenticated") {
         // Show auth modal instead of direct redirect
         setSelectedPosition(position);
         setShowAuthModal(true);
-      } else if (status === 'authenticated') {
+      } else if (status === "authenticated") {
         // Show application modal
         setSelectedPosition(position);
         setShowApplicationModal(true);
@@ -113,17 +113,19 @@ function CareerPageContent() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmitApplication = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Format data for API
     const applicationData = {
       position: selectedPosition?.title,
@@ -136,26 +138,26 @@ function CareerPageContent() {
         idType: formData.id_type,
         idNumber: formData.id_number,
         gender: formData.gender,
-        dateOfBirth: formData.date_of_birth
+        dateOfBirth: formData.date_of_birth,
       },
       influencerInformation: {
         accountIntroduction: formData.account_intro,
         profileUrl: formData.profile_url,
         followerCount: formData.follower_count,
-        otherPlatforms: formData.other_platforms || 'N/A'
-      }
+        otherPlatforms: formData.other_platforms || "N/A",
+      },
     };
 
-    console.log('=== CAREER APPLICATION SUBMISSION ===');
+    console.log("=== CAREER APPLICATION SUBMISSION ===");
     console.log(JSON.stringify(applicationData, null, 2));
-    console.log('=====================================');
+    console.log("=====================================");
 
     try {
       // Send application to backend API
-      const response = await fetch('/api/career/apply', {
-        method: 'POST',
+      const response = await fetch("/api/career/apply", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(applicationData),
       });
@@ -167,26 +169,28 @@ function CareerPageContent() {
         setShowApplicationModal(false);
         setSelectedPosition(null);
         setFormData({
-          passport_name: '',
-          nationality: '',
-          id_type: 'passport',
-          id_number: '',
-          gender: '',
-          date_of_birth: '',
-          account_intro: '',
-          profile_url: '',
-          follower_count: '',
-          other_platforms: ''
+          passport_name: "",
+          nationality: "",
+          id_type: "passport",
+          id_number: "",
+          gender: "",
+          date_of_birth: "",
+          account_intro: "",
+          profile_url: "",
+          follower_count: "",
+          other_platforms: "",
         });
 
-        alert('Application submitted successfully! A confirmation email has been sent to your email address.');
+        alert(
+          "Application submitted successfully! A confirmation email has been sent to your email address."
+        );
       } else {
-        console.error('Application submission failed:', result);
-        alert('Failed to submit application. Please try again.');
+        console.error("Application submission failed:", result);
+        alert("Failed to submit application. Please try again.");
       }
     } catch (error) {
-      console.error('Error submitting application:', error);
-      alert('An error occurred while submitting your application. Please try again.');
+      console.error("Error submitting application:", error);
+      alert("An error occurred while submitting your application. Please try again.");
     }
   };
   return (
@@ -197,9 +201,7 @@ function CareerPageContent() {
           <h1 className="text-4xl font-bold text-white sm:text-5xl md:text-6xl">
             Careers at Cricher.ai
           </h1>
-          <p className="mt-4 text-xl text-purple-100 sm:text-2xl">
-            We need you!
-          </p>
+          <p className="mt-4 text-xl text-purple-100 sm:text-2xl">We need you!</p>
         </div>
       </div>
 
@@ -215,15 +217,13 @@ function CareerPageContent() {
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                   {/* Left side: Position details */}
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                      {position.title}
-                    </h2>
-                    
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">{position.title}</h2>
+
                     <div className="mb-4">
-                      <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                        Requirements:
-                      </h3>
-                      <ul className={`space-y-2 ${position.requirements.length > 4 ? 'max-h-40 overflow-y-auto pr-2' : ''}`}>
+                      <h3 className="text-lg font-semibold text-gray-700 mb-2">Requirements:</h3>
+                      <ul
+                        className={`space-y-2 ${position.requirements.length > 4 ? "max-h-40 overflow-y-auto pr-2" : ""}`}
+                      >
                         {position.requirements.map((req, index) => (
                           <li key={index} className="flex items-start">
                             <span className="inline-block w-2 h-2 bg-purple-600 rounded-full mt-2 mr-3 flex-shrink-0"></span>
@@ -234,12 +234,8 @@ function CareerPageContent() {
                     </div>
 
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                        What We Offer:
-                      </h3>
-                      <p className="text-xl font-bold text-green-600">
-                        {position.offer}
-                      </p>
+                      <h3 className="text-lg font-semibold text-gray-700 mb-2">What We Offer:</h3>
+                      <p className="text-xl font-bold text-green-600">{position.offer}</p>
                     </div>
                   </div>
 
@@ -274,11 +270,10 @@ function CareerPageContent() {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8">
             {/* Modal Header */}
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Authentication Required
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Authentication Required</h2>
               <p className="text-gray-600">
-                Please sign in to your creator account or join as a creator to apply for this position.
+                Please sign in to your creator account or join as a creator to apply for this
+                position.
               </p>
             </div>
 
@@ -331,11 +326,14 @@ function CareerPageContent() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                   Identity Information
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Passport Name */}
                   <div>
-                    <label htmlFor="passport_name" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="passport_name"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Legal Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -351,7 +349,10 @@ function CareerPageContent() {
 
                   {/* Nationality */}
                   <div>
-                    <label htmlFor="nationality" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="nationality"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Nationality <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -375,7 +376,10 @@ function CareerPageContent() {
 
                   {/* ID Type */}
                   <div>
-                    <label htmlFor="id_type" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="id_type"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       ID Type <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -387,7 +391,7 @@ function CareerPageContent() {
                       onChange={handleInputChange}
                     >
                       <option value="passport">Passport</option>
-                      <option value="driverLicense">Driver's License</option>
+                      <option value="driverLicense">Driver&apos;s License</option>
                       <option value="nationalId">National ID Card</option>
                       <option value="other">Other Government ID</option>
                     </select>
@@ -395,7 +399,10 @@ function CareerPageContent() {
 
                   {/* ID Number */}
                   <div>
-                    <label htmlFor="id_number" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="id_number"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       ID Number <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -422,7 +429,7 @@ function CareerPageContent() {
                           value="male"
                           required
                           className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300"
-                          checked={formData.gender === 'male'}
+                          checked={formData.gender === "male"}
                           onChange={handleInputChange}
                         />
                         <span className="ml-2 text-sm text-gray-700">Male</span>
@@ -434,7 +441,7 @@ function CareerPageContent() {
                           value="female"
                           required
                           className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300"
-                          checked={formData.gender === 'female'}
+                          checked={formData.gender === "female"}
                           onChange={handleInputChange}
                         />
                         <span className="ml-2 text-sm text-gray-700">Female</span>
@@ -444,7 +451,10 @@ function CareerPageContent() {
 
                   {/* Date of Birth */}
                   <div>
-                    <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="date_of_birth"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Date of Birth <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -465,11 +475,14 @@ function CareerPageContent() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                   Influencer Information
                 </h3>
-                
+
                 <div className="space-y-6">
                   {/* Account Introduction */}
                   <div>
-                    <label htmlFor="account_intro" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="account_intro"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Account Introduction <span className="text-red-500">*</span>
                     </label>
                     <textarea
@@ -487,7 +500,10 @@ function CareerPageContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Platform URL */}
                     <div>
-                      <label htmlFor="profile_url" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label
+                        htmlFor="profile_url"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
                         Social Media Profile URL <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -504,7 +520,10 @@ function CareerPageContent() {
 
                     {/* Follower Count */}
                     <div>
-                      <label htmlFor="follower_count" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label
+                        htmlFor="follower_count"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
                         Follower Count <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -522,7 +541,10 @@ function CareerPageContent() {
 
                   {/* Other Platforms */}
                   <div>
-                    <label htmlFor="other_platforms" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="other_platforms"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Other Platforms (Optional)
                     </label>
                     <textarea
@@ -559,12 +581,14 @@ function CareerPageContent() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 export default function CareerPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense
+      fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}
+    >
       <CareerPageContent />
     </Suspense>
   );

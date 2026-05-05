@@ -10,22 +10,19 @@ export async function POST(request: NextRequest) {
     const { email } = body;
 
     if (!email) {
-      return NextResponse.json(
-        { error: "Email is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
     // Apply rate limiting based on IP address to prevent abuse
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = request.headers.get("x-forwarded-for") || "unknown";
     const rateLimitKey = `email-verification:${ip}`;
-    
+
     if (emailVerificationLimiter.isRateLimited(rateLimitKey)) {
       const remainingTime = emailVerificationLimiter.getRemainingTime(rateLimitKey);
       return NextResponse.json(
-        { 
-          error: "Too many verification requests", 
-          message: `Please try again in ${remainingTime} seconds.` 
+        {
+          error: "Too many verification requests",
+          message: `Please try again in ${remainingTime} seconds.`,
         },
         { status: 429 }
       );
@@ -35,12 +32,12 @@ export async function POST(request: NextRequest) {
     // regardless of whether the email exists or not
     const successResponse = {
       success: true,
-      message: "If your email exists in our system, a verification link has been sent."
+      message: "If your email exists in our system, a verification link has been sent.",
     };
 
     // Check if user exists
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
 
     // If user doesn't exist or is already verified, return the same success message
@@ -55,9 +52,9 @@ export async function POST(request: NextRequest) {
 
     // Generate a new verification token
     const verificationToken = await createVerificationToken(email);
-    
+
     // Send verification email
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     await sendVerificationEmail(email, verificationToken, baseUrl);
 
     return NextResponse.json(successResponse);

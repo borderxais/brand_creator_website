@@ -1,68 +1,75 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Instagram, Youtube, Link as LinkIcon, Plus, Settings as SettingsIcon, RefreshCw } from 'lucide-react';
+import { useState } from "react";
+import {
+  Instagram,
+  Youtube,
+  Link as LinkIcon,
+  Plus,
+  Settings as SettingsIcon,
+  RefreshCw,
+} from "lucide-react";
 
 const mockConnectedAccounts = [
   {
-    platform: 'Instagram',
-    username: '@sarahstyle',
-    followers: '50K',
-    engagement: '4.8%',
+    platform: "Instagram",
+    username: "@sarahstyle",
+    followers: "50K",
+    engagement: "4.8%",
     posts: 245,
     icon: Instagram,
     connected: true,
-    lastSync: '2024-01-30 15:30',
+    lastSync: "2024-01-30 15:30",
     insights: {
-      reachGrowth: '+12%',
-      engagementRate: '4.8%',
-      topPerformingContent: 'Reels',
-      audienceAge: '18-34',
-      audienceGender: '75% Female'
-    }
+      reachGrowth: "+12%",
+      engagementRate: "4.8%",
+      topPerformingContent: "Reels",
+      audienceAge: "18-34",
+      audienceGender: "75% Female",
+    },
   },
   {
-    platform: 'TikTok',
-    username: '@sarahstyle',
-    followers: '75K',
-    engagement: '5.2%',
+    platform: "TikTok",
+    username: "@sarahstyle",
+    followers: "75K",
+    engagement: "5.2%",
     posts: 120,
     icon: Youtube,
     connected: true,
-    lastSync: '2024-01-30 15:30',
+    lastSync: "2024-01-30 15:30",
     insights: {
-      reachGrowth: '+18%',
-      engagementRate: '5.2%',
-      topPerformingContent: 'Dance',
-      audienceAge: '16-24',
-      audienceGender: '70% Female'
-    }
+      reachGrowth: "+18%",
+      engagementRate: "5.2%",
+      topPerformingContent: "Dance",
+      audienceAge: "16-24",
+      audienceGender: "70% Female",
+    },
   },
   {
-    platform: 'YouTube',
-    username: 'Sarah Style',
-    followers: '25K',
-    engagement: '3.9%',
+    platform: "YouTube",
+    username: "Sarah Style",
+    followers: "25K",
+    engagement: "3.9%",
     posts: 85,
     icon: Youtube,
     connected: true,
-    lastSync: '2024-01-30 15:30',
+    lastSync: "2024-01-30 15:30",
     insights: {
-      reachGrowth: '+8%',
-      engagementRate: '3.9%',
-      topPerformingContent: 'Tutorials',
-      audienceAge: '18-35',
-      audienceGender: '65% Female'
-    }
-  }
+      reachGrowth: "+8%",
+      engagementRate: "3.9%",
+      topPerformingContent: "Tutorials",
+      audienceAge: "18-35",
+      audienceGender: "65% Female",
+    },
+  },
 ];
 
 const availablePlatforms = [
-  { name: 'Instagram', icon: Instagram },
-  { name: 'TikTok', icon: Youtube },
-  { name: 'YouTube', icon: Youtube },
-  { name: 'Twitter', icon: LinkIcon },
-  { name: 'Facebook', icon: LinkIcon },
+  { name: "Instagram", icon: Instagram },
+  { name: "TikTok", icon: Youtube },
+  { name: "YouTube", icon: Youtube },
+  { name: "Twitter", icon: LinkIcon },
+  { name: "Facebook", icon: LinkIcon },
 ];
 
 export default function SocialMedia() {
@@ -86,7 +93,7 @@ export default function SocialMedia() {
           <div
             key={account.platform}
             className={`bg-white shadow rounded-lg p-6 cursor-pointer transition-all ${
-              selectedAccount.platform === account.platform ? 'ring-2 ring-blue-500' : ''
+              selectedAccount.platform === account.platform ? "ring-2 ring-blue-500" : ""
             }`}
             onClick={() => setSelectedAccount(account)}
           >

@@ -104,12 +104,13 @@ export default function LoginChinese() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-bold text-black">
-          登录您的账户
-        </h2>
+        <h2 className="mt-6 text-center text-3xl font-bold text-black">登录您的账户</h2>
         <p className="mt-2 text-center text-sm text-black">
           或者{" "}
-          <Link href="/zh/join-creator" className="font-medium text-purple-600 hover:text-purple-500">
+          <Link
+            href="/zh/join-creator"
+            className="font-medium text-purple-600 hover:text-purple-500"
+          >
             注册成为创作者{" "}
           </Link>
           /{" "}
@@ -131,7 +132,7 @@ export default function LoginChinese() {
                 {error}
               </div>
             )}
-            
+
             {resendSuccess && (
               <div className="bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded relative">
                 验证邮件已重新发送。请检查您的收件箱。
@@ -217,7 +218,7 @@ function SearchParamsHandler() {
       </div>
     );
   }
-  
+
   if (justRegistered) {
     return (
       <div className="mb-4 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded relative">

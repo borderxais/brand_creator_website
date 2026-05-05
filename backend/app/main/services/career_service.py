@@ -1,66 +1,68 @@
 import logging
 import smtplib
 from datetime import datetime
-from typing import Optional, Dict, Any
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from email.utils import formataddr
+
 from fastapi import HTTPException
 
-from ..database.connection import supabase
 from ..config.settings import settings
+from ..database.connection import supabase
 from ..models.career import CareerApplicationData, CareerApplicationResponse
 
 logger = logging.getLogger(__name__)
 
 
 class CareerService:
-    
     # Email configuration
     ADMIN_EMAIL = "sam@borderxai.com"
     HR_EMAIL = "info@borderxmedia.com"
-    
+
     @staticmethod
-    async def send_email(to_email: str, subject: str, html_content: str, from_email: str = None) -> bool:
+    async def send_email(
+        to_email: str, subject: str, html_content: str, from_email: str | None = None
+    ) -> bool:
         """Send email using SMTP configuration."""
         try:
             if not all([settings.SMTP_USER, settings.SMTP_PASSWORD]):
                 logger.error("SMTP configuration incomplete")
                 return False
-            
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
-            msg['From'] = formataddr(("Cricher.ai Careers", from_email or settings.SMTP_USER))
-            msg['To'] = to_email
-            
-            html_part = MIMEText(html_content, 'html')
+
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = formataddr(("Cricher.ai Careers", from_email or settings.SMTP_USER))
+            msg["To"] = to_email
+
+            html_part = MIMEText(html_content, "html")
             msg.attach(html_part)
-            
+
             logger.info(f"Connecting to SMTP server: {settings.SMTP_HOST}:{settings.SMTP_PORT}")
-            
+
+            smtp_server: smtplib.SMTP_SSL | smtplib.SMTP
             if settings.SMTP_SECURE:
-                server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT)
+                smtp_server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT)
             else:
-                server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT)
-                server.starttls()
-            
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.sendmail(settings.SMTP_USER, to_email, msg.as_string())
-            server.quit()
-            
+                smtp_server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT)
+                smtp_server.starttls()
+
+            smtp_server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            smtp_server.sendmail(settings.SMTP_USER, to_email, msg.as_string())
+            smtp_server.quit()
+
             logger.info(f"Email sent successfully to {to_email}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to send email to {to_email}: {str(e)}")
             return False
-    
+
     @staticmethod
     def create_user_confirmation_email(application_data: CareerApplicationData) -> str:
         """Create HTML email template for applicant confirmation."""
         identity = application_data.identityInformation
         influencer = application_data.influencerInformation
-        
+
         return f"""
         <!DOCTYPE html>
         <html>
@@ -141,18 +143,18 @@ class CareerService:
         </body>
         </html>
         """
-    
+
     @staticmethod
-    async def store_application(application_data: CareerApplicationData) -> Optional[str]:
+    async def store_application(application_data: CareerApplicationData) -> str | None:
         """Store career application in Supabase database."""
         try:
             if not supabase:
                 logger.warning("Supabase not available, skipping database storage")
                 return None
-            
+
             identity = application_data.identityInformation
             influencer = application_data.influencerInformation
-            
+
             application_record = {
                 "position": application_data.position,
                 "position_id": application_data.positionId,
@@ -168,63 +170,76 @@ class CareerService:
                 "follower_count": influencer.followerCount,
                 "other_platforms": influencer.otherPlatforms,
                 "status": "new",
-                "created_at": application_data.submittedAt
+                "created_at": application_data.submittedAt,
             }
-            
-            logger.info(f"Storing career application in database: {application_data.applicantEmail}")
-            
-            response = supabase.table('CareerApplications').insert(application_record).execute()
-            
+
+            logger.info(
+                f"Storing career application in database: {application_data.applicantEmail}"
+            )
+
+            response = supabase.table("CareerApplications").insert(application_record).execute()
+
             if response.data and len(response.data) > 0:
-                app_id = response.data[0]['id']
+                app_id = response.data[0]["id"]
                 logger.info(f"Career application stored successfully with ID: {app_id}")
                 return str(app_id)
             else:
                 logger.error("Failed to store career application - no data returned")
                 return None
-                
+
         except Exception as e:
             logger.error(f"Error storing career application in database: {str(e)}")
             return None
-    
+
     @staticmethod
-    async def submit_career_application(application_data: CareerApplicationData) -> CareerApplicationResponse:
+    async def submit_career_application(
+        application_data: CareerApplicationData,
+    ) -> CareerApplicationResponse:
         """Submit a career application with email notification."""
         try:
-            logger.info(f"Received career application from {application_data.applicantEmail} for {application_data.position}")
-            
+            logger.info(
+                f"Received career application from {application_data.applicantEmail} for {application_data.position}"
+            )
+
             # Store in database
             stored_app_id = await CareerService.store_application(application_data)
             database_stored = stored_app_id is not None
-            
+
             # Send confirmation email to applicant
             user_html = CareerService.create_user_confirmation_email(application_data)
             user_subject = f"Application Received - {application_data.position} at Cricher.ai"
-            
+
             email_sent = await CareerService.send_email(
                 to_email=application_data.applicantEmail,
                 subject=user_subject,
-                html_content=user_html
+                html_content=user_html,
             )
-            
+
             if not email_sent:
                 logger.error("Failed to send applicant confirmation email")
-            
-            app_id = stored_app_id or f"app-{application_data.positionId}-{int(datetime.now().timestamp())}"
-            response_message = "Thank you for your application! We've sent a confirmation to your email."
-            
-            logger.info(f"Career application processing complete - ID: {app_id}, DB Stored: {database_stored}, Email Sent: {email_sent}")
-            
+
+            app_id = (
+                stored_app_id
+                or f"app-{application_data.positionId}-{int(datetime.now().timestamp())}"
+            )
+            response_message = (
+                "Thank you for your application! We've sent a confirmation to your email."
+            )
+
+            logger.info(
+                f"Career application processing complete - ID: {app_id}, DB Stored: {database_stored}, Email Sent: {email_sent}"
+            )
+
             return CareerApplicationResponse(
                 success=True,
                 message=response_message,
                 application_id=app_id,
-                stored_in_database=database_stored
+                stored_in_database=database_stored,
             )
-            
+
         except Exception as e:
             logger.error(f"Error processing career application: {str(e)}")
             raise HTTPException(
                 status_code=500,
-                detail="Failed to submit career application. Please try again later."
+                detail="Failed to submit career application. Please try again later.",
             )

@@ -1,13 +1,13 @@
-import { Metadata } from 'next'
+import { Metadata } from "next";
 
 // Tell Next.js this is static content that can be prerendered
-export const dynamic = 'force-static'
+export const dynamic = "force-static";
 
 // Add proper metadata
 export const metadata: Metadata = {
-  title: '关于我们 | 品牌创作者平台',
-  description: '了解我们的使命，如何连接品牌与真实创作者，并革新创作者经济。'
-}
+  title: "关于我们 | 品牌创作者平台",
+  description: "了解我们的使命，如何连接品牌与真实创作者，并革新创作者经济。",
+};
 
 export default function AboutPageChinese() {
   return (
@@ -15,9 +15,7 @@ export default function AboutPageChinese() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">关于我们</h1>
-          <p className="mt-4 text-xl text-gray-600">
-            连接品牌与真实创作者
-          </p>
+          <p className="mt-4 text-xl text-gray-600">连接品牌与真实创作者</p>
         </div>
 
         <div className="mt-16">
@@ -51,9 +49,7 @@ export default function AboutPageChinese() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="p-4 bg-purple-50 rounded-lg">
                   <h3 className="text-lg font-semibold text-purple-900 mb-2">真实性</h3>
-                  <p className="text-purple-700">
-                    我们致力于促进真实的联系和真实的内容创作。
-                  </p>
+                  <p className="text-purple-700">我们致力于促进真实的联系和真实的内容创作。</p>
                 </div>
                 <div className="p-4 bg-purple-50 rounded-lg">
                   <h3 className="text-lg font-semibold text-purple-900 mb-2">创新</h3>
@@ -63,9 +59,7 @@ export default function AboutPageChinese() {
                 </div>
                 <div className="p-4 bg-purple-50 rounded-lg">
                   <h3 className="text-lg font-semibold text-purple-900 mb-2">社区</h3>
-                  <p className="text-purple-700">
-                    我们建立并培育创作者和品牌的支持性社区。
-                  </p>
+                  <p className="text-purple-700">我们建立并培育创作者和品牌的支持性社区。</p>
                 </div>
               </div>
             </div>

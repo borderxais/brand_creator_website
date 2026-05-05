@@ -1,23 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authConfig } from '@/app/api/auth/[...nextauth]/auth.config';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authConfig } from "@/app/api/auth/[...nextauth]/auth.config";
+import { prisma } from "@/lib/prisma";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Check authentication
     const session = await getServerSession(authConfig);
-    
+
     if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    if (session.user.role !== 'CREATOR') {
+    if (session.user.role !== "CREATOR") {
       return NextResponse.json(
-        { error: 'Only creators can access this endpoint' },
+        { error: "Only creators can access this endpoint" },
         { status: 403 }
       );
     }
@@ -28,18 +25,15 @@ export async function GET(request: NextRequest) {
     });
 
     if (!creatorProfile) {
-      return NextResponse.json(
-        { error: 'Creator profile not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Creator profile not found" }, { status: 404 });
     }
 
     // Parse categories from JSON string
     let categories = [];
     try {
-      categories = JSON.parse(creatorProfile.categories || '[]');
-    } catch (e) {
-      console.warn('Failed to parse categories:', creatorProfile.categories);
+      categories = JSON.parse(creatorProfile.categories || "[]");
+    } catch (_e) {
+      console.warn("Failed to parse categories:", creatorProfile.categories);
       categories = [];
     }
 
@@ -49,7 +43,7 @@ export async function GET(request: NextRequest) {
     });
 
     const platformIds = creatorPlatforms
-      .map(cp => cp.platformId)
+      .map((cp) => cp.platformId)
       .filter((id): id is string => Boolean(id));
 
     const platforms = platformIds.length
@@ -70,10 +64,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Format the response
@@ -83,7 +74,7 @@ export async function GET(request: NextRequest) {
         name: user.name,
         email: user.email,
         creatorHandleName: user.creatorHandleName,
-        role: user.role
+        role: user.role,
       },
       profile: {
         id: creatorProfile.id,
@@ -92,29 +83,28 @@ export async function GET(request: NextRequest) {
         website: creatorProfile.website,
         followers: creatorProfile.followers,
         engagementRate: creatorProfile.engagementRate,
-        categories: categories
+        categories: categories,
       },
-      platforms: creatorPlatforms.map(cp => {
+      platforms: creatorPlatforms.map((cp) => {
         const platformInfo = cp.platformId ? platformMap[cp.platformId] : undefined;
         return {
-        id: cp.id,
-        platformName: platformInfo?.name || '',
-        platformDisplayName: platformInfo?.displayName || '',
-        handle: cp.handle,
-        followers: cp.followers,
-        engagementRate: cp.engagementRate,
-        isVerified: cp.isVerified,
-        lastUpdated: cp.lastUpdated
+          id: cp.id,
+          platformName: platformInfo?.name || "",
+          platformDisplayName: platformInfo?.displayName || "",
+          handle: cp.handle,
+          followers: cp.followers,
+          engagementRate: cp.engagementRate,
+          isVerified: cp.isVerified,
+          lastUpdated: cp.lastUpdated,
         };
-      })
+      }),
     };
 
     return NextResponse.json(profileData);
-
   } catch (error: any) {
-    console.error('Error fetching creator profile:', error);
+    console.error("Error fetching creator profile:", error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch creator profile' },
+      { error: error.message || "Failed to fetch creator profile" },
       { status: 500 }
     );
   }

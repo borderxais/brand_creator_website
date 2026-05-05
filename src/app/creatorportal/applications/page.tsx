@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, Clock, Eye, ArrowRight, Calendar, DollarSign } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { CheckCircle, XCircle, Clock, Eye, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 interface CampaignClaim {
   id: string;
@@ -60,36 +60,36 @@ export default function Applications() {
   const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
-    if (status === 'loading') return;
-    
+    if (status === "loading") return;
+
     if (!session) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
-    if (session.user.role !== 'CREATOR') {
-      router.push('/login');
+    if (session.user.role !== "CREATOR") {
+      router.push("/login");
       return;
     }
 
     // Check if there's an ID in the query params for direct viewing
     const urlParams = new URLSearchParams(window.location.search);
-    const applicationId = urlParams.get('id');
+    const applicationId = urlParams.get("id");
 
     const fetchApplications = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const response = await fetch('/api/creator/campaign-claims');
-        
+        const response = await fetch("/api/creator/campaign-claims");
+
         if (!response.ok) {
-          throw new Error('Failed to fetch applications');
+          throw new Error("Failed to fetch applications");
         }
 
         const data = await response.json();
         setApplications(data);
-        
+
         // If an ID was specified in the URL, select that application for detailed view
         if (applicationId && data.length > 0) {
           const selected = data.find((app: CampaignClaim) => app.id === applicationId);
@@ -99,8 +99,8 @@ export default function Applications() {
           }
         }
       } catch (err: any) {
-        console.error('Error fetching applications:', err);
-        setError(err.message || 'Failed to load applications');
+        console.error("Error fetching applications:", err);
+        setError(err.message || "Failed to load applications");
       } finally {
         setLoading(false);
       }
@@ -112,35 +112,35 @@ export default function Applications() {
   // Helper function to render status badge
   const renderStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pending':
+      case "pending":
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
             <Clock className="w-3 h-3 mr-1" />
             Pending
           </span>
         );
-      case 'approved':
+      case "approved":
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
             <CheckCircle className="w-3 h-3 mr-1" />
             Approved
           </span>
         );
-      case 'rejected':
+      case "rejected":
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
             <XCircle className="w-3 h-3 mr-1" />
             Rejected
           </span>
         );
-      case 'in_progress':
+      case "in_progress":
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
             <Clock className="w-3 h-3 mr-1" />
             In Progress
           </span>
         );
-      case 'finished':
+      case "finished":
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
             <CheckCircle className="w-3 h-3 mr-1" />
@@ -159,7 +159,7 @@ export default function Applications() {
   // Helper function to format array fields
   const formatArrayField = (field: string[] | string | undefined): string[] => {
     if (!field) return [];
-    if (typeof field === 'string') {
+    if (typeof field === "string") {
       try {
         const parsed = JSON.parse(field);
         return Array.isArray(parsed) ? parsed : [field];
@@ -172,7 +172,7 @@ export default function Applications() {
 
   // Helper function to format text fields
   const formatTextField = (field: string | undefined): string => {
-    return field || 'Not specified';
+    return field || "Not specified";
   };
 
   if (loading) {
@@ -204,29 +204,31 @@ export default function Applications() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
-              <h2 className="text-xl font-bold text-gray-900">{selectedApplication.campaign_title}</h2>
-              <button 
+              <h2 className="text-xl font-bold text-gray-900">
+                {selectedApplication.campaign_title}
+              </h2>
+              <button
                 onClick={() => setShowDetails(false)}
                 className="text-gray-400 hover:text-gray-500"
               >
                 <XCircle className="h-6 w-6" />
               </button>
             </div>
-            
+
             <div className="flex justify-between items-center mb-4">
               <p className="text-sm text-gray-600">by {selectedApplication.campaign_brand_name}</p>
               {renderStatusBadge(selectedApplication.status)}
             </div>
-            
+
             {/* Enhanced Product Information Section */}
-            {(selectedApplication.product_photo || 
-              selectedApplication.product_name || 
-              selectedApplication.product_highlight || 
-              selectedApplication.product_price || 
+            {(selectedApplication.product_photo ||
+              selectedApplication.product_name ||
+              selectedApplication.product_highlight ||
+              selectedApplication.product_price ||
               selectedApplication.product_sold_number) && (
               <div className="border-t border-gray-200 pt-4 mb-4">
                 <h3 className="text-sm font-medium text-gray-900 mb-3">Product Information</h3>
-                
+
                 {/* Product Photo */}
                 {selectedApplication.product_photo && (
                   <div className="w-full max-w-sm mx-auto relative mb-4">
@@ -237,36 +239,67 @@ export default function Applications() {
                       height={200}
                       className="w-full h-auto rounded-lg shadow-sm opacity-0 transition-opacity duration-300"
                       onLoad={(e) => {
-                        e.currentTarget.classList.remove('opacity-0');
-                        e.currentTarget.classList.add('opacity-100');
-                        const loader = e.currentTarget.parentElement?.querySelector('.loading-indicator') as HTMLElement;
-                        if (loader) loader.style.display = 'none';
+                        e.currentTarget.classList.remove("opacity-0");
+                        e.currentTarget.classList.add("opacity-100");
+                        const loader = e.currentTarget.parentElement?.querySelector(
+                          ".loading-indicator"
+                        ) as HTMLElement;
+                        if (loader) loader.style.display = "none";
                       }}
                       onError={(e) => {
-                        console.error(`Application product image failed to load: ${selectedApplication.product_photo}`);
-                        const fallback = e.currentTarget.parentElement?.querySelector('.image-fallback') as HTMLElement;
+                        console.error(
+                          `Application product image failed to load: ${selectedApplication.product_photo}`
+                        );
+                        const fallback = e.currentTarget.parentElement?.querySelector(
+                          ".image-fallback"
+                        ) as HTMLElement;
                         if (fallback) {
-                          fallback.style.display = 'flex';
-                          e.currentTarget.style.display = 'none';
+                          fallback.style.display = "flex";
+                          e.currentTarget.style.display = "none";
                         }
                       }}
                       unoptimized={true}
                     />
-                    
+
                     <div className="loading-indicator absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
                       <div className="text-center">
-                        <svg className="w-6 h-6 text-gray-400 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="w-6 h-6 text-gray-400 mx-auto animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                         <p className="text-xs text-gray-500 mt-2">Loading image...</p>
                       </div>
                     </div>
-                    
+
                     <div className="image-fallback hidden w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
                       <div className="text-center text-gray-500">
-                        <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                          className="w-8 h-8 mx-auto mb-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                         <p className="text-sm">Product image unavailable</p>
                       </div>
@@ -279,28 +312,36 @@ export default function Applications() {
                   {selectedApplication.product_name && (
                     <div>
                       <p className="text-xs text-gray-500">Product Name</p>
-                      <p className="text-sm text-gray-900">{formatTextField(selectedApplication.product_name)}</p>
+                      <p className="text-sm text-gray-900">
+                        {formatTextField(selectedApplication.product_name)}
+                      </p>
                     </div>
                   )}
 
                   {selectedApplication.product_highlight && (
                     <div>
                       <p className="text-xs text-gray-500">Product Highlight</p>
-                      <p className="text-sm text-gray-900">{formatTextField(selectedApplication.product_highlight)}</p>
+                      <p className="text-sm text-gray-900">
+                        {formatTextField(selectedApplication.product_highlight)}
+                      </p>
                     </div>
                   )}
 
                   {selectedApplication.product_price && (
                     <div>
                       <p className="text-xs text-gray-500">Product Price</p>
-                      <p className="text-sm text-gray-900 font-semibold">{formatTextField(selectedApplication.product_price)}</p>
+                      <p className="text-sm text-gray-900 font-semibold">
+                        {formatTextField(selectedApplication.product_price)}
+                      </p>
                     </div>
                   )}
 
                   {selectedApplication.product_sold_number && (
                     <div>
                       <p className="text-xs text-gray-500">Units Sold</p>
-                      <p className="text-sm text-gray-900">{formatTextField(selectedApplication.product_sold_number)}</p>
+                      <p className="text-sm text-gray-900">
+                        {formatTextField(selectedApplication.product_sold_number)}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -310,13 +351,13 @@ export default function Applications() {
             {/* Enhanced Compensation Structure Section */}
             <div className="border-t border-gray-200 pt-4 mb-4">
               <h3 className="text-sm font-medium text-gray-900 mb-3">Compensation Structure</h3>
-              
+
               {/* Paid Promotion Type */}
               {selectedApplication.paid_promotion_type && (
                 <div className="mb-4">
                   <p className="text-xs text-gray-500">Paid Promotion Type</p>
                   <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium capitalize">
-                    {selectedApplication.paid_promotion_type.replace('_', ' ')}
+                    {selectedApplication.paid_promotion_type.replace("_", " ")}
                   </span>
                 </div>
               )}
@@ -329,10 +370,15 @@ export default function Applications() {
                     {selectedApplication.campaign_budget_range}
                     {selectedApplication.campaign_budget_unit && (
                       <span className="text-xs text-gray-500 ml-1">
-                        ({selectedApplication.campaign_budget_unit === 'total' ? 'Total Budget' : 
-                          selectedApplication.campaign_budget_unit === 'per_person' ? 'Per Creator' : 
-                          selectedApplication.campaign_budget_unit === 'per_video' ? 'Per Video' : 
-                          selectedApplication.campaign_budget_unit})
+                        (
+                        {selectedApplication.campaign_budget_unit === "total"
+                          ? "Total Budget"
+                          : selectedApplication.campaign_budget_unit === "per_person"
+                            ? "Per Creator"
+                            : selectedApplication.campaign_budget_unit === "per_video"
+                              ? "Per Video"
+                              : selectedApplication.campaign_budget_unit}
+                        )
                       </span>
                     )}
                   </p>
@@ -342,7 +388,9 @@ export default function Applications() {
                 {selectedApplication.video_buyout_budget_range && (
                   <div>
                     <p className="text-xs text-gray-500">Video Buyout Budget</p>
-                    <p className="text-sm text-gray-900 font-semibold">{formatTextField(selectedApplication.video_buyout_budget_range)}</p>
+                    <p className="text-sm text-gray-900 font-semibold">
+                      {formatTextField(selectedApplication.video_buyout_budget_range)}
+                    </p>
                   </div>
                 )}
 
@@ -350,7 +398,9 @@ export default function Applications() {
                 {selectedApplication.base_fee_budget_range && (
                   <div>
                     <p className="text-xs text-gray-500">Base Fee Budget</p>
-                    <p className="text-sm text-gray-900 font-semibold">{formatTextField(selectedApplication.base_fee_budget_range)}</p>
+                    <p className="text-sm text-gray-900 font-semibold">
+                      {formatTextField(selectedApplication.base_fee_budget_range)}
+                    </p>
                   </div>
                 )}
               </div>
@@ -363,12 +413,16 @@ export default function Applications() {
                 {selectedApplication.script_required && (
                   <div>
                     <p className="text-xs text-gray-500">Script Required</p>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      selectedApplication.script_required === 'yes' 
-                        ? 'bg-orange-100 text-orange-800' 
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {selectedApplication.script_required === 'yes' ? 'Yes - Script approval required' : 'No - Direct content creation allowed'}
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        selectedApplication.script_required === "yes"
+                          ? "bg-orange-100 text-orange-800"
+                          : "bg-green-100 text-green-800"
+                      }`}
+                    >
+                      {selectedApplication.script_required === "yes"
+                        ? "Yes - Script approval required"
+                        : "No - Direct content creation allowed"}
                     </span>
                   </div>
                 )}
@@ -379,10 +433,15 @@ export default function Applications() {
                     {selectedApplication.campaign_budget_range}
                     {selectedApplication.campaign_budget_unit && (
                       <span className="text-xs text-gray-500 ml-1">
-                        ({selectedApplication.campaign_budget_unit === 'total' ? 'Total Budget' : 
-                          selectedApplication.campaign_budget_unit === 'per_person' ? 'Per Creator' : 
-                          selectedApplication.campaign_budget_unit === 'per_video' ? 'Per Video' : 
-                          selectedApplication.campaign_budget_unit})
+                        (
+                        {selectedApplication.campaign_budget_unit === "total"
+                          ? "Total Budget"
+                          : selectedApplication.campaign_budget_unit === "per_person"
+                            ? "Per Creator"
+                            : selectedApplication.campaign_budget_unit === "per_video"
+                              ? "Per Video"
+                              : selectedApplication.campaign_budget_unit}
+                        )
                       </span>
                     )}
                   </p>
@@ -393,12 +452,14 @@ export default function Applications() {
                     {new Date(selectedApplication.campaign_deadline).toLocaleDateString()}
                   </p>
                 </div>
-                
+
                 {/* Industry Category */}
                 {selectedApplication.industry_category && (
                   <div>
                     <p className="text-xs text-gray-500">Industry Category</p>
-                    <p className="text-sm text-gray-900">{formatTextField(selectedApplication.industry_category)}</p>
+                    <p className="text-sm text-gray-900">
+                      {formatTextField(selectedApplication.industry_category)}
+                    </p>
                   </div>
                 )}
 
@@ -406,7 +467,9 @@ export default function Applications() {
                 {selectedApplication.language_requirement_for_creators && (
                   <div>
                     <p className="text-xs text-gray-500">Language Requirement</p>
-                    <p className="text-sm text-gray-900 capitalize">{formatTextField(selectedApplication.language_requirement_for_creators)}</p>
+                    <p className="text-sm text-gray-900 capitalize">
+                      {formatTextField(selectedApplication.language_requirement_for_creators)}
+                    </p>
                   </div>
                 )}
               </div>
@@ -416,17 +479,22 @@ export default function Applications() {
                 <div className="mb-4">
                   <p className="text-xs text-gray-500 mb-2">Primary Promotion Objectives</p>
                   <div className="flex flex-wrap gap-1">
-                    {formatArrayField(selectedApplication.primary_promotion_objectives).map((objective, index) => (
-                      <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                        {objective}
-                      </span>
-                    ))}
+                    {formatArrayField(selectedApplication.primary_promotion_objectives).map(
+                      (objective, index) => (
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
+                        >
+                          {objective}
+                        </span>
+                      )
+                    )}
                   </div>
                 </div>
               )}
 
               {/* Creator Preferences */}
-              {(selectedApplication.creator_tier_requirement || 
+              {(selectedApplication.creator_tier_requirement ||
                 selectedApplication.creator_profile_preferences_gender ||
                 selectedApplication.creator_profile_preference_ethnicity ||
                 selectedApplication.creator_profile_preference_content_niche ||
@@ -438,50 +506,70 @@ export default function Applications() {
                       <div>
                         <span className="text-xs font-medium text-gray-700">Tier: </span>
                         <div className="inline-flex flex-wrap gap-1">
-                          {formatArrayField(selectedApplication.creator_tier_requirement).map((tier, index) => (
-                            <span key={index} className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
-                              {tier}
-                            </span>
-                          ))}
+                          {formatArrayField(selectedApplication.creator_tier_requirement).map(
+                            (tier, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs"
+                              >
+                                {tier}
+                              </span>
+                            )
+                          )}
                         </div>
                       </div>
                     )}
-                    
+
                     {selectedApplication.creator_profile_preferences_gender && (
                       <div>
                         <span className="text-xs font-medium text-gray-700">Gender: </span>
                         <div className="inline-flex flex-wrap gap-1">
-                          {formatArrayField(selectedApplication.creator_profile_preferences_gender).map((gender, index) => (
-                            <span key={index} className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                          {formatArrayField(
+                            selectedApplication.creator_profile_preferences_gender
+                          ).map((gender, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs"
+                            >
                               {gender}
                             </span>
                           ))}
                         </div>
                       </div>
                     )}
-                    
+
                     {selectedApplication.creator_profile_preference_content_niche && (
                       <div>
                         <span className="text-xs font-medium text-gray-700">Content Niche: </span>
                         <div className="inline-flex flex-wrap gap-1">
-                          {formatArrayField(selectedApplication.creator_profile_preference_content_niche).map((niche, index) => (
-                            <span key={index} className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs">
+                          {formatArrayField(
+                            selectedApplication.creator_profile_preference_content_niche
+                          ).map((niche, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs"
+                            >
                               {niche}
                             </span>
                           ))}
                         </div>
                       </div>
                     )}
-                    
+
                     {selectedApplication.preferred_creator_location && (
                       <div>
                         <span className="text-xs font-medium text-gray-700">Location: </span>
                         <div className="inline-flex flex-wrap gap-1">
-                          {formatArrayField(selectedApplication.preferred_creator_location).map((location, index) => (
-                            <span key={index} className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">
-                              {location}
-                            </span>
-                          ))}
+                          {formatArrayField(selectedApplication.preferred_creator_location).map(
+                            (location, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs"
+                              >
+                                {location}
+                              </span>
+                            )
+                          )}
                         </div>
                       </div>
                     )}
@@ -493,24 +581,29 @@ export default function Applications() {
               {selectedApplication.kpi_reference_target && (
                 <div className="mb-4">
                   <p className="text-xs text-gray-500">KPI Reference Target</p>
-                  <p className="text-sm text-gray-900">{formatTextField(selectedApplication.kpi_reference_target)}</p>
+                  <p className="text-sm text-gray-900">
+                    {formatTextField(selectedApplication.kpi_reference_target)}
+                  </p>
                 </div>
               )}
 
               {/* Content Guidelines */}
-              {(selectedApplication.posting_requirements || selectedApplication.prohibited_content_warnings) && (
+              {(selectedApplication.posting_requirements ||
+                selectedApplication.prohibited_content_warnings) && (
                 <div className="mb-4">
                   <p className="text-xs text-gray-500 mb-2">Content Guidelines</p>
-                  
+
                   {selectedApplication.posting_requirements && (
                     <div className="mb-3">
-                      <p className="text-xs font-medium text-gray-700 mb-1">Posting Requirements:</p>
+                      <p className="text-xs font-medium text-gray-700 mb-1">
+                        Posting Requirements:
+                      </p>
                       <div className="bg-gray-50 p-3 rounded text-sm text-gray-900">
                         {formatTextField(selectedApplication.posting_requirements)}
                       </div>
                     </div>
                   )}
-                  
+
                   {selectedApplication.prohibited_content_warnings && (
                     <div>
                       <p className="text-xs font-medium text-gray-700 mb-1">Prohibited Content:</p>
@@ -521,7 +614,7 @@ export default function Applications() {
                   )}
                 </div>
               )}
-              
+
               {selectedApplication.campaign_sample_video_url && (
                 <div className="mb-4">
                   <p className="text-xs text-gray-500">Campaign Sample Video</p>
@@ -536,7 +629,7 @@ export default function Applications() {
                   </a>
                 </div>
               )}
-              
+
               {selectedApplication.campaign_brief && (
                 <div className="mb-4">
                   <p className="text-xs text-gray-500">Brief</p>
@@ -544,14 +637,16 @@ export default function Applications() {
                 </div>
               )}
             </div>
-            
+
             <div className="border-t border-gray-200 pt-4 mb-4">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Your Submission</h3>
               <div className="bg-gray-50 p-3 rounded mb-3">
                 <p className="text-xs text-gray-500 mb-1">Sample Text</p>
-                <p className="text-sm text-gray-900 whitespace-pre-line">{selectedApplication.sample_text}</p>
+                <p className="text-sm text-gray-900 whitespace-pre-line">
+                  {selectedApplication.sample_text}
+                </p>
               </div>
-              
+
               {selectedApplication.sample_video_url && (
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Sample Video</p>
@@ -567,14 +662,14 @@ export default function Applications() {
                 </div>
               )}
             </div>
-            
+
             <div className="border-t border-gray-200 pt-4 mb-4">
               <p className="text-xs text-gray-500">Application Date</p>
               <p className="text-sm text-gray-900">
                 {new Date(selectedApplication.created_at).toLocaleString()}
               </p>
             </div>
-            
+
             <div className="flex justify-end">
               <button
                 onClick={() => setShowDetails(false)}
@@ -589,10 +684,7 @@ export default function Applications() {
 
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">My Campaign Applications</h1>
-        <Link
-          href="/campaigns"
-          className="text-purple-600 hover:text-purple-800 flex items-center"
-        >
+        <Link href="/campaigns" className="text-purple-600 hover:text-purple-800 flex items-center">
           Browse Campaigns <ArrowRight className="ml-1 h-4 w-4" />
         </Link>
       </div>
@@ -601,7 +693,8 @@ export default function Applications() {
         <div className="bg-white rounded-lg shadow p-8 text-center">
           <h3 className="text-lg font-medium text-gray-900 mb-2">No applications yet</h3>
           <p className="text-gray-600 mb-4">
-            You haven't applied to any campaigns yet. Browse available campaigns to get started.
+            You haven&apos;t applied to any campaigns yet. Browse available campaigns to get
+            started.
           </p>
           <Link
             href="/campaigns"
@@ -620,9 +713,7 @@ export default function Applications() {
                     <h2 className="text-lg font-medium text-gray-900">
                       {application.campaign_title}
                     </h2>
-                    <p className="text-sm text-gray-600">
-                      {application.campaign_brand_name}
-                    </p>
+                    <p className="text-sm text-gray-600">{application.campaign_brand_name}</p>
                   </div>
                   {renderStatusBadge(application.status)}
                 </div>
@@ -634,17 +725,17 @@ export default function Applications() {
                       {new Date(application.created_at).toLocaleDateString()}
                     </span>
                   </div>
-                  
+
                   {/* Enhanced compensation display */}
                   {application.paid_promotion_type && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Promotion Type:</span>
                       <span className="font-medium text-gray-900 capitalize">
-                        {application.paid_promotion_type.replace('_', ' ')}
+                        {application.paid_promotion_type.replace("_", " ")}
                       </span>
                     </div>
                   )}
-                  
+
                   {application.video_buyout_budget_range && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Video Buyout:</span>
@@ -653,7 +744,7 @@ export default function Applications() {
                       </span>
                     </div>
                   )}
-                  
+
                   {application.base_fee_budget_range && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Base Fee:</span>
@@ -662,39 +753,46 @@ export default function Applications() {
                       </span>
                     </div>
                   )}
-                  
+
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Campaign budget:</span>
                     <span className="font-medium text-gray-900">
                       {application.campaign_budget_range}
                       {application.campaign_budget_unit && (
                         <span className="text-xs text-gray-500 ml-1">
-                          ({application.campaign_budget_unit === 'total' ? 'Total Budget' : 
-                            application.campaign_budget_unit === 'per_person' ? 'Per Creator' : 
-                            application.campaign_budget_unit === 'per_video' ? 'Per Video' : 
-                            application.campaign_budget_unit})
+                          (
+                          {application.campaign_budget_unit === "total"
+                            ? "Total Budget"
+                            : application.campaign_budget_unit === "per_person"
+                              ? "Per Creator"
+                              : application.campaign_budget_unit === "per_video"
+                                ? "Per Video"
+                                : application.campaign_budget_unit}
+                          )
                         </span>
                       )}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Deadline:</span>
                     <span className="font-medium text-gray-900">
                       {new Date(application.campaign_deadline).toLocaleDateString()}
                     </span>
                   </div>
-                  
+
                   {/* Script requirement indicator */}
                   {application.script_required && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Script Required:</span>
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        application.script_required === 'yes' 
-                          ? 'bg-orange-100 text-orange-800' 
-                          : 'bg-green-100 text-green-800'
-                      }`}>
-                        {application.script_required === 'yes' ? 'Yes' : 'No'}
+                      <span
+                        className={`text-xs px-2 py-1 rounded ${
+                          application.script_required === "yes"
+                            ? "bg-orange-100 text-orange-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {application.script_required === "yes" ? "Yes" : "No"}
                       </span>
                     </div>
                   )}
@@ -703,7 +801,7 @@ export default function Applications() {
                 {application.campaign_sample_video_url && (
                   <div className="flex justify-between text-sm mt-2">
                     <span className="text-gray-600">Campaign Sample:</span>
-                    <a 
+                    <a
                       href={application.campaign_sample_video_url}
                       target="_blank"
                       rel="noopener noreferrer"

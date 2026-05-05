@@ -1,46 +1,45 @@
-import { notFound } from 'next/navigation';
-import { SocialLinks } from '@/components/ui/SocialLinks';
-import { Stats } from '@/components/ui/Stats';
-import { PortfolioGallery } from '@/components/ui/PortfolioGallery';
-import ErrorHandlingImage from '@/components/ui/ErrorHandlingImage';
-import { Metadata } from 'next';
-import { prisma } from '@/lib/prisma';
-import ClientAudienceChartWrapper from '@/components/charts/ClientAudienceChartWrapper';
-import ClientPerformanceChartWrapper from '@/components/charts/ClientPerformanceChartWrapper';
+import { notFound } from "next/navigation";
+import { SocialLinks } from "@/components/ui/SocialLinks";
+import { Stats } from "@/components/ui/Stats";
+import ErrorHandlingImage from "@/components/ui/ErrorHandlingImage";
+import { Metadata } from "next";
+import { prisma } from "@/lib/prisma";
+import ClientAudienceChartWrapper from "@/components/charts/ClientAudienceChartWrapper";
+import ClientPerformanceChartWrapper from "@/components/charts/ClientPerformanceChartWrapper";
 
 // Function to get creator profile from database
 async function getCreatorProfile(id: string) {
   try {
     const creator = await prisma.findCreator.findUnique({
-      where: { id }
+      where: { id },
     });
-    
+
     if (!creator) return null;
-    
+
     // Format the creator data to match the structure expected by the component
     return {
       id: creator.id,
-      bio: creator.bio || '',
+      bio: creator.bio || "",
       location: "TikTok Creator", // Placeholder since we don't have location from TikTok API
-      categories: creator.content_label_name ? JSON.stringify([creator.content_label_name]) : '[]',
+      categories: creator.content_label_name ? JSON.stringify([creator.content_label_name]) : "[]",
       user: {
         id: creator.id,
-        name: creator.display_name || '',
-        image: creator.profile_image || ''
+        name: creator.display_name || "",
+        image: creator.profile_image || "",
       },
       platforms: [
         {
-          id: '1',
+          id: "1",
           platform: {
-            id: '1',
-            name: 'tiktok',
-            displayName: 'TikTok',
-            iconUrl: '/icons/tiktok.svg'
+            id: "1",
+            name: "tiktok",
+            displayName: "TikTok",
+            iconUrl: "/icons/tiktok.svg",
           },
           followers: Number(creator.follower_count) || 0,
           engagementRate: Number(creator.engagement_rate) || 0,
-          handle: `@${creator.creator_handle_name}`
-        }
+          handle: `@${creator.creator_handle_name}`,
+        },
       ],
       portfolioItems: [],
       posts: [],
@@ -55,10 +54,10 @@ async function getCreatorProfile(id: string) {
       median_views: Number(creator.median_views) || 0,
       content_label_name: creator.content_label_name,
       creator_price: Number(creator.creator_price) || 0,
-      currency: creator.currency
+      currency: creator.currency,
     };
   } catch (error) {
-    console.error('Error fetching creator profile:', error);
+    console.error("Error fetching creator profile:", error);
     return null;
   }
 }
@@ -66,22 +65,25 @@ async function getCreatorProfile(id: string) {
 // Parse categories helper function
 function parseCategories(categoriesStr: string | null): string[] {
   if (!categoriesStr) return [];
-  
+
   try {
     // Try parsing as JSON first
     const parsed = JSON.parse(categoriesStr);
-    
+
     // Handle both array and string cases
     if (Array.isArray(parsed)) {
       return parsed;
-    } else if (typeof parsed === 'string') {
+    } else if (typeof parsed === "string") {
       return [parsed]; // Convert single string to array with one element
     } else {
       return [];
     }
-  } catch (e) {
+  } catch (_e) {
     // If JSON parsing fails, split by comma and trim
-    return categoriesStr.split(',').map(cat => cat.trim()).filter(Boolean);
+    return categoriesStr
+      .split(",")
+      .map((cat) => cat.trim())
+      .filter(Boolean);
   }
 }
 
@@ -93,7 +95,7 @@ export async function generateMetadata(props: any): Promise<Metadata> {
 
   if (!creator) {
     return {
-      title: 'Creator Not Found',
+      title: "Creator Not Found",
     };
   }
 
@@ -114,22 +116,23 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
     }
 
     const categories = parseCategories(creator.categories);
-    
+
     // Calculate metrics from real data only
     const totalFollowers = creator.platforms.reduce((sum: number, cp) => {
-      const followers = typeof cp.followers === 'number' ? cp.followers : Number(cp.followers) || 0;
+      const followers = typeof cp.followers === "number" ? cp.followers : Number(cp.followers) || 0;
       return sum + followers;
     }, 0);
-    const averageEngagementRate = typeof creator.platforms[0]?.engagementRate === 'number'
-      ? creator.platforms[0]?.engagementRate
-      : Number(creator.platforms[0]?.engagementRate) || 0;
+    const averageEngagementRate =
+      typeof creator.platforms[0]?.engagementRate === "number"
+        ? creator.platforms[0]?.engagementRate
+        : Number(creator.platforms[0]?.engagementRate) || 0;
 
     // Create social links from real data
     const socialLinks = creator.platforms.reduce((acc, cp) => {
       if (cp.platform && cp.platform.name && cp.handle) {
         return {
           ...acc,
-          [cp.platform.name]: cp.handle
+          [cp.platform.name]: cp.handle,
         };
       }
       return acc;
@@ -143,19 +146,13 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
             <h1 className="text-3xl font-extrabold">Creator Profile</h1>
             <p className="mt-2 text-lg">View detailed metrics and performance data</p>
             <div className="mt-4 flex flex-wrap gap-4">
-              <button
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-              >
+              <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
                 Book Collaboration
               </button>
-              <button
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              >
+              <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                 Compare Creators
               </button>
-              <button
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
+              <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 Send Notification
               </button>
             </div>
@@ -197,7 +194,7 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
                   <div className="relative w-32 h-32">
                     <ErrorHandlingImage
                       src={creator.user.image}
-                      alt={creator.user.name || ''}
+                      alt={creator.user.name || ""}
                       fill
                       sizes="128px"
                       className="rounded-full border-4 border-white object-cover"
@@ -212,27 +209,24 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
                 </div>
               )}
             </div>
-            
+
             <div className="pt-16 pb-8 px-8">
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">{creator.user.name}</h1>
-                  <p className="text-gray-500">{creator.location || 'TikTok Creator'}</p>
+                  <p className="text-gray-500">{creator.location || "TikTok Creator"}</p>
                 </div>
-                <Stats
-                  followers={totalFollowers}
-                  engagementRate={averageEngagementRate}
-                />
+                <Stats followers={totalFollowers} engagementRate={averageEngagementRate} />
               </div>
-              
+
               <div className="mt-6">
-                <p className="text-gray-700">{creator.bio || 'No bio available'}</p>
+                <p className="text-gray-700">{creator.bio || "No bio available"}</p>
               </div>
 
               {/* Creator Metrics Card - Only show real data */}
               <div className="mt-8 bg-gray-50 rounded-lg p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Creator Metrics</h2>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Basic Stats */}
                   <div className="bg-white p-4 rounded-md shadow-sm">
@@ -292,12 +286,18 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
                           )}
                         </div>
                         <div>
-                          <h3 className="font-medium text-gray-900">
-                            {cp.platform.displayName}
-                          </h3>
+                          <h3 className="font-medium text-gray-900">{cp.platform.displayName}</h3>
                           <div className="text-sm text-gray-500">
-                            <p>{new Intl.NumberFormat().format(Number(cp.followers) || 0)} followers</p>
-                            <p>{(typeof cp.engagementRate === 'number' ? cp.engagementRate : Number(cp.engagementRate) || 0).toFixed(1)}% engagement</p>
+                            <p>
+                              {new Intl.NumberFormat().format(Number(cp.followers) || 0)} followers
+                            </p>
+                            <p>
+                              {(typeof cp.engagementRate === "number"
+                                ? cp.engagementRate
+                                : Number(cp.engagementRate) || 0
+                              ).toFixed(1)}
+                              % engagement
+                            </p>
                             {cp.handle && <p className="text-gray-400">{cp.handle}</p>}
                           </div>
                         </div>
@@ -310,7 +310,7 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
               {/* Creator Detailed Stats */}
               <div className="mt-8">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Creator Details</h2>
-                
+
                 {/* Account Information */}
                 <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-6 mb-6 shadow-sm">
                   <h3 className="text-lg font-semibold text-purple-800 mb-3 border-b border-purple-200 pb-2">
@@ -319,19 +319,25 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">Creator Handle</p>
-                      <p className="text-lg font-bold text-gray-900">@{creator?.creator_handle_name || 'N/A'}</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        @{creator?.creator_handle_name || "N/A"}
+                      </p>
                     </div>
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">Creator ID</p>
-                      <p className="text-lg font-bold text-gray-900">{creator?.creator_id || 'N/A'}</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        {creator?.creator_id || "N/A"}
+                      </p>
                     </div>
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">Industry</p>
-                      <p className="text-lg font-bold text-gray-900">{creator?.industry_label_name || 'Not specified'}</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        {creator?.industry_label_name || "Not specified"}
+                      </p>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Audience Metrics */}
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-6 shadow-sm">
                   <h3 className="text-lg font-semibold text-blue-800 mb-3 border-b border-blue-200 pb-2">
@@ -340,37 +346,49 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">Followers</p>
-                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(Number(creator?.follower_count) || 0)}</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {new Intl.NumberFormat().format(Number(creator?.follower_count) || 0)}
+                      </p>
                     </div>
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">Following</p>
-                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(Number(creator?.following_count) || 0)}</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {new Intl.NumberFormat().format(Number(creator?.following_count) || 0)}
+                      </p>
                     </div>
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">Total Likes</p>
-                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(Number(creator?.like_count) || 0)}</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {new Intl.NumberFormat().format(Number(creator?.like_count) || 0)}
+                      </p>
                     </div>
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">Videos Count</p>
-                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(Number(creator?.videos_count) || 0)}</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {new Intl.NumberFormat().format(Number(creator?.videos_count) || 0)}
+                      </p>
                     </div>
                   </div>
-                  
+
                   {/* Audience Chart */}
-                  <ClientAudienceChartWrapper 
+                  <ClientAudienceChartWrapper
                     followerCount={Number(creator?.follower_count) || 0}
                     followingCount={Number(creator?.following_count) || 0}
                     likeCount={Number(creator?.like_count) || 0}
                     videosCount={Number(creator?.videos_count) || 0}
                   />
-                  
+
                   <div className="mt-4 p-3 bg-blue-50 rounded-md">
                     <p className="text-sm text-blue-800">
-                      <span className="font-semibold">Audience Insight:</span> With {new Intl.NumberFormat().format(Number(creator?.follower_count) || 0)} followers and {new Intl.NumberFormat().format(Number(creator?.like_count) || 0)} likes, this creator has built a substantial audience base in their niche.
+                      <span className="font-semibold">Audience Insight:</span> With{" "}
+                      {new Intl.NumberFormat().format(Number(creator?.follower_count) || 0)}{" "}
+                      followers and{" "}
+                      {new Intl.NumberFormat().format(Number(creator?.like_count) || 0)} likes, this
+                      creator has built a substantial audience base in their niche.
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Performance Metrics */}
                 <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-lg p-6 mb-6 shadow-sm">
                   <h3 className="text-lg font-semibold text-green-800 mb-3 border-b border-green-200 pb-2">
@@ -379,39 +397,54 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">Engagement Rate</p>
-                      <p className="text-xl font-bold text-gray-900">{(Number(creator?.engagement_rate) || 0).toFixed(2)}%</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {(Number(creator?.engagement_rate) || 0).toFixed(2)}%
+                      </p>
                     </div>
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">Median Views</p>
-                      <p className="text-xl font-bold text-gray-900">{new Intl.NumberFormat().format(Number(creator?.median_views) || 0)}</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {new Intl.NumberFormat().format(Number(creator?.median_views) || 0)}
+                      </p>
                     </div>
                     <div className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow">
                       <p className="text-sm font-medium text-gray-500">Content Category</p>
-                      <p className="text-xl font-bold text-gray-900">{creator?.content_label_name || 'Not specified'}</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {creator?.content_label_name || "Not specified"}
+                      </p>
                     </div>
                   </div>
-                  
+
                   {/* Performance Chart */}
-                  <ClientPerformanceChartWrapper 
+                  <ClientPerformanceChartWrapper
                     engagementRate={Number(creator?.engagement_rate) || 0}
                     medianViews={Number(creator?.median_views) || 0}
-                    contentCategory={creator?.content_label_name || ''}
+                    contentCategory={creator?.content_label_name || ""}
                   />
-                  
+
                   <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-3 bg-green-50 rounded-md">
                       <p className="text-sm text-green-800">
-                        <span className="font-semibold">Engagement Analysis:</span> This creator's {(Number(creator?.engagement_rate) || 0).toFixed(2)}% engagement rate is {creator?.engagement_rate && Number(creator.engagement_rate) > 2.7 ? 'above' : 'below'} the platform average of 2.7%.
+                        <span className="font-semibold">Engagement Analysis:</span> This
+                        creator&apos;s {(Number(creator?.engagement_rate) || 0).toFixed(2)}%
+                        engagement rate is{" "}
+                        {creator?.engagement_rate && Number(creator.engagement_rate) > 2.7
+                          ? "above"
+                          : "below"}{" "}
+                        the platform average of 2.7%.
                       </p>
                     </div>
                     <div className="p-3 bg-teal-50 rounded-md">
                       <p className="text-sm text-teal-800">
-                        <span className="font-semibold">View Performance:</span> With {new Intl.NumberFormat().format(Number(creator?.median_views) || 0)} median views, this creator consistently reaches a significant audience with each post.
+                        <span className="font-semibold">View Performance:</span> With{" "}
+                        {new Intl.NumberFormat().format(Number(creator?.median_views) || 0)} median
+                        views, this creator consistently reaches a significant audience with each
+                        post.
                       </p>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Business Information */}
                 <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-6 shadow-sm">
                   <h3 className="text-lg font-semibold text-amber-800 mb-3 border-b border-amber-200 pb-2">
@@ -420,16 +453,27 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white rounded-md p-4 shadow-sm hover:shadow-md transition-shadow flex items-center">
                       <div className="bg-amber-100 rounded-full p-3 mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6 text-amber-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-500">Creator Rate</p>
                         <p className="text-2xl font-bold text-gray-900">
-                          {creator?.creator_price 
-                            ? `${creator.currency || '$'}${new Intl.NumberFormat().format(Number(creator.creator_price) || 0)}`
-                            : 'Contact for pricing'}
+                          {creator?.creator_price
+                            ? `${creator.currency || "$"}${new Intl.NumberFormat().format(Number(creator.creator_price) || 0)}`
+                            : "Contact for pricing"}
                         </p>
                       </div>
                     </div>
@@ -441,8 +485,19 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
                         </span>
                       </div>
                       <button className="mt-3 w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                         Schedule Collaboration
                       </button>
@@ -460,7 +515,7 @@ export default async function CreatorProfile(props: { params: Promise<{ id: stri
       </div>
     );
   } catch (error) {
-    console.error('Error rendering creator profile:', error);
+    console.error("Error rendering creator profile:", error);
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
