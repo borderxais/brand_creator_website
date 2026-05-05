@@ -34,6 +34,8 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+# Bare 'env' file (no dot) — some local workflows use this; ensure it's never committed
+env
 
 # vercel
 .vercel

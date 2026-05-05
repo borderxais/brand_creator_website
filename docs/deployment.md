@@ -21,17 +21,19 @@ Current `netlify.toml` (repo root):
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[[plugins]]
+  package = "/plugins/smoke-e2e"
 ```
 
-| Key                               | Value                               | Purpose                                                        |
-| --------------------------------- | ----------------------------------- | -------------------------------------------------------------- |
-| `build.command`                   | `npx prisma generate && next build` | Generates the Prisma client before building Next.js            |
-| `build.publish`                   | `.next`                             | Netlify serves from the Next.js build output                   |
-| `functions.external_node_modules` | `@prisma/client`, `axios`           | Bundled outside the function zip (large native binaries)       |
-| `functions.included_files`        | `prisma/**`                         | Prisma schema and migration files included in function bundle  |
-| `@netlify/plugin-nextjs`          | official plugin                     | Adapts Next.js App Router for Netlify's edge/functions runtime |
-
-A smoke E2E plugin (`/plugins/smoke-e2e`) will be registered here in a later harness PR (PR 8).
+| Key                               | Value                               | Purpose                                                             |
+| --------------------------------- | ----------------------------------- | ------------------------------------------------------------------- |
+| `build.command`                   | `npx prisma generate && next build` | Generates the Prisma client before building Next.js                 |
+| `build.publish`                   | `.next`                             | Netlify serves from the Next.js build output                        |
+| `functions.external_node_modules` | `@prisma/client`, `axios`           | Bundled outside the function zip (large native binaries)            |
+| `functions.included_files`        | `prisma/**`                         | Prisma schema and migration files included in function bundle       |
+| `@netlify/plugin-nextjs`          | official plugin                     | Adapts Next.js App Router for Netlify's edge/functions runtime      |
+| `/plugins/smoke-e2e`              | local build plugin                  | Runs Playwright smoke tests via `onSuccess` on every preview deploy |
 
 ---
 
@@ -62,7 +64,7 @@ npx prisma generate && next build
 
 ## Preview Gates
 
-A Netlify Build Plugin (added in a later harness PR — PR 8) runs Playwright smoke tests against `$DEPLOY_PRIME_URL` after each preview build. Smoke failures fail the deploy. Smoke artifacts (screenshots, traces) are visible in the Netlify deploy log.
+The smoke E2E Netlify Build Plugin (`/plugins/smoke-e2e`, registered in PR 8) runs Playwright smoke tests against `$DEPLOY_PRIME_URL` via its `onSuccess` hook after each preview build. Smoke failures fail the deploy. Smoke artifacts (screenshots, traces) are visible in the Netlify deploy log.
 
 The plugin runs only when `DEPLOY_PRIME_URL` is set. Production deploys do not set this variable, so smoke tests are a preview-only gate by design.
 

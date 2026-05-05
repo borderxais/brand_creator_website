@@ -4,7 +4,7 @@ Six-layer quality harness: fast edit-time feedback → pre-commit gates → pre-
 
 **Source of truth:** [`docs/superpowers/specs/2026-05-03-dev-pipeline-harness-design.md`](superpowers/specs/2026-05-03-dev-pipeline-harness-design.md) — read that file for the full design rationale and decisions.
 
-> **Status:** This is the docs PR (PR 2). The knowledge layer is being established here; tooling layers land in subsequent harness PRs (PR 3–9). Layers marked "not yet wired" will gain their tooling in those PRs.
+> All harness layers (0–5) are live as of this PR. Layer-specific PR references are noted under each layer's `**Status:**` line.
 
 Every hook failure prints:
 
@@ -62,7 +62,7 @@ Husky + lint-staged. Single `pre-commit` hook dispatches by file glob.
 | `*.{ts,tsx,js,jsx,mjs}`    | `prettier --write` → `eslint --fix --max-warnings=0`              |
 | `*.{ts,tsx}`               | `tsc --noEmit` scoped to changed files via `tsc-files`            |
 | `prisma/schema.prisma`     | `prisma format` → drift check (`prisma migrate diff --exit-code`) |
-| `backend/**/*.py`          | `ruff format` → `ruff check --fix` → `mypy` on changed files      |
+| `backend/**/*.py`          | `ruff format` → `ruff check --fix`                                |
 | `*.{json,md,yml,yaml,css}` | `prettier --write`                                                |
 
 **Friction note.** The per-file `eslint --fix --max-warnings=0` step blocks a commit when the staged file already carries a warning, even if your change is unrelated to the warning. The 35 warnings tracked at branch creation (`@next/next/no-img-element`, `react-hooks/exhaustive-deps`) live in roughly 20 files. If your commit touches one of these, fix the warning in-place or add a `// eslint-disable-next-line <rule> -- TODO(harness): <issue>` comment with a tracking issue. To preview the warning list, run `npm run lint`. To run the strictest gate manually, `npm run lint:strict`.
@@ -77,7 +77,9 @@ Hook error format:
   See: docs/harness.md#layer-2-pre-commit
 ```
 
-**Status:** Not yet wired (Husky + lint-staged land in PR 3; Python globs in PR 6).
+mypy runs in pre-push only (Layer 3) — per-file mypy in lint-staged produces false positives on Pydantic models. See [backend.md](backend.md) for rationale.
+
+**Status:** Live (PR 3 + PR 6).
 
 ---
 
@@ -86,11 +88,13 @@ Hook error format:
 Full-repo checks. Single `pre-push` hook runs `npm run harness:prepush`:
 
 1. `tsc --noEmit` (full project)
-2. `eslint . --max-warnings=0`
+2. `npm run lint  # eslint . — warns allowed per plan §1.3`
 3. `prisma migrate diff --exit-code` (full drift check)
 4. `vitest run` (unit suite)
 5. `ruff check backend/`
 6. `mypy backend/`
+
+Use `npm run lint:strict` as an opt-in zero-tolerance variant (zero warnings allowed).
 
 Target: < 60 s.
 
@@ -102,7 +106,9 @@ Hook error format:
   See: docs/harness.md#layer-3-pre-push
 ```
 
-**Status:** Not yet wired (Husky pre-push hook lands in PR 4; Vitest in PR 4; Prisma drift script in PR 5; Python checks in PR 6).
+**Status:** Live (PR 4 + PR 5 + PR 6).
+
+> **Platform note:** the `harness:prepush` script uses POSIX shell syntax. Windows contributors should run it via Git Bash or WSL. Native cmd.exe / PowerShell is not supported by the harness in its current form.
 
 ---
 
@@ -117,7 +123,7 @@ Manual scripts available via `package.json` (added in later harness PRs):
 | `npm run harness:full`    | Layer 3 checks + E2E + full mypy                     |
 | `npm run harness:install` | Bootstrap: install Husky, scaffold env, print banner |
 
-**Status:** Not yet wired (scripts land across PRs 3–8).
+**Status:** Live (PRs 3, 7, 8).
 
 ---
 
@@ -140,7 +146,7 @@ The plugin only runs when `DEPLOY_PRIME_URL` is set — production deploys skip 
 
 See [deployment.md#preview-gates](deployment.md#preview-gates) for deploy-level detail.
 
-**Status:** Not yet wired (plugin lands in PR 8).
+**Status:** Live (PR 8).
 
 ---
 
