@@ -34,7 +34,22 @@ IDE and Claude Code feedback — sub-second.
 - **Pylance / Pyright** in `backend/` workspace folder for Python type feedback.
 - **Claude Code PostToolUse hooks** (Write|Edit) run Prettier + ESLint `--fix` on the edited file, configured in `.claude/settings.json` (added in PR 9).
 
-**Status:** Not yet wired (VSCode settings and Claude Code hooks land in later PRs).
+**Status:** Partially live. Claude Code hooks live (PR 9). VSCode `editor.formatOnSave` not yet wired.
+
+### Claude Code PostToolUse Hooks (PR 9)
+
+Two hook scripts fire automatically after every `Write` or `Edit` tool call Claude Code makes:
+
+| Script                             | Trigger                                                        | Actions                                                                                                |
+| ---------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `scripts/harness/claude-format.js` | Any file matching `*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml,css}` | `prettier --write <file>`; then `eslint --fix --max-warnings=0 <file>` for TS/JS only                  |
+| `scripts/harness/claude-ruff.js`   | Any file matching `backend/**/*.py`                            | `ruff format <file>` → `ruff check --fix <file>`; silently skips if `backend/.venv/bin/ruff` is absent |
+
+Both hooks are registered in `.claude/settings.json` under `hooks.PostToolUse` with matcher `Write|Edit`. Hook failures print to stderr but do **not** block tool execution — they are best-effort post-edit hygiene, not gates.
+
+**Performance note:** Each TS/JS edit adds ~1–3 s for Prettier + ESLint. This is acceptable for the quality guarantee it provides.
+
+**To disable hooks for a session:** run `/hooks` in Claude Code to open the hooks manager and toggle off the `Write|Edit` entries. Re-enable by toggling them back on. Alternatively, remove or rename `.claude/settings.json` temporarily.
 
 ---
 
