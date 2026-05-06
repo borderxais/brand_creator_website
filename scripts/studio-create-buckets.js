@@ -22,7 +22,14 @@ const BUCKETS = [
       public: b.public,
       fileSizeLimit: b.fileSizeLimit,
     });
-    if (error && !error.message.includes("already exists")) {
+    // Treat "already exists" and "exceeded the maximum allowed size" as
+    // idempotent no-ops: both indicate the bucket already exists with a
+    // configuration the SDK can't re-set (e.g. a 200MB limit raised via SQL
+    // that exceeds the SDK's plan-default upload cap).
+    const isAlreadyExists =
+      error &&
+      (error.message.includes("already exists") || error.message.includes("exceeded the maximum"));
+    if (error && !isAlreadyExists) {
       console.error(`[studio-buckets] failed to create ${b.id}: ${error.message}`);
       process.exit(1);
     }
