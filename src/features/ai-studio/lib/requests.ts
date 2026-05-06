@@ -97,6 +97,14 @@ export async function rejectRequest(args: { requestId: string; reason: string })
   });
 }
 
+export async function releaseRequest(args: { requestId: string }) {
+  await assertCurrentStatus(args.requestId, "IN_PROGRESS");
+  return prisma.videoRequest.update({
+    where: { id: args.requestId },
+    data: { status: "PENDING", claimedById: null, claimedAt: null },
+  });
+}
+
 export async function failRequest(args: { requestId: string }) {
   await assertCurrentStatus(args.requestId, "IN_PROGRESS");
   await refundIfApplicable(args.requestId);

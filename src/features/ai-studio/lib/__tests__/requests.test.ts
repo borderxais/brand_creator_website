@@ -29,6 +29,7 @@ import {
   deliverRequest,
   rejectRequest,
   failRequest,
+  releaseRequest,
   getAdminStats,
 } from "@/features/ai-studio/lib/requests";
 
@@ -148,6 +149,30 @@ describe("rejectRequest", () => {
     expect(args.data.status).toBe("REJECTED");
     expect(args.data.rejectionReason).toBe("needs more story setup");
     expect(args.data.quotaConsumed).toBe(false);
+  });
+});
+
+describe("releaseRequest", () => {
+  it("requires status IN_PROGRESS", async () => {
+    (prisma.videoRequest.findUnique as any).mockResolvedValue({
+      id: "r1",
+      status: "PENDING",
+    });
+    await expect(releaseRequest({ requestId: "r1" })).rejects.toMatchObject({
+      status: 409,
+    });
+  });
+  it("transitions IN_PROGRESS → PENDING and clears claim fields", async () => {
+    (prisma.videoRequest.findUnique as any).mockResolvedValue({
+      id: "r1",
+      status: "IN_PROGRESS",
+    });
+    (prisma.videoRequest.update as any).mockResolvedValue({ id: "r1", status: "PENDING" });
+    await releaseRequest({ requestId: "r1" });
+    const args = (prisma.videoRequest.update as any).mock.calls[0][0];
+    expect(args.data.status).toBe("PENDING");
+    expect(args.data.claimedById).toBeNull();
+    expect(args.data.claimedAt).toBeNull();
   });
 });
 
