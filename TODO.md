@@ -27,14 +27,8 @@ A more granular implementation plan will be produced via the writing-plans skill
 ### Sprint 1 follow-ups (deferred from Task 3)
 
 - [x] **Apply migration `20260505131009_add_ai_video_studio` to dev DB.** Old Supabase project `ldlxyyctxylgmstfqlzh` was paused (>90 days). Backup `db_cluster-02-01-2026@07-56-36.backup.gz` restored (public schema only, 26 tables, 2560 rows including User=58, CreatorProfile=54, CreatorPlatform=306, avocadata=1000, creator_test=1000) into NEW Supabase project `loesykbqlhynbjmqxfxc` (region `us-east-2`). New `DATABASE_URL` / `DIRECT_URL` set in `.env`. `npx prisma migrate deploy` succeeded — Studio schema (Sample, VideoRequest, Subscription, StripeEventLog + 3 enums) live on new DB.
-- [ ] **Cascade refactor (code-review follow-up).** Make foreign-key cascade behavior explicit on Studio relations:
-  - `Subscription.user`: `onDelete: Cascade` (delete sub when user deleted)
-  - `Sample.uploadedBy`: `onDelete: Restrict` + comment "preserve uploader audit trail"
-  - `VideoRequest.creator`: `onDelete: Restrict` + comment "preserve creator audit trail"
-  - `VideoRequest.claimedBy`: `onDelete: SetNull`
-  - `VideoRequest.subscription`: `onDelete: SetNull`
-  - `VideoRequest.sample`: `onDelete: SetNull` (sample archive shouldn't break history)
-- [ ] **Schema intent comments** on `VideoRequest.subscriptionId`, `VideoRequest.quotaConsumed`, and `StripeEventLog.id` clarifying nullability/defaults/external-id semantics.
+- [x] **Cascade refactor (code-review follow-up).** Schema annotations + migration `20260506180000_studio_cascade_rules` applied. `Subscription.user` flipped RESTRICT → CASCADE on dev DB; remaining FKs (`Sample.uploadedBy` Restrict, `VideoRequest.creator` Restrict, `VideoRequest.{sample,claimedBy,subscription}` SetNull) already matched intended policy in DB — only schema annotations added.
+- [x] **Schema intent comments** added on `VideoRequest.subscriptionId`, `VideoRequest.quotaConsumed`, `StripeEventLog.id`.
 - [x] **Restore Supabase service role key** in `.env` (`SUPABASE_SERVICE_KEY`) — set 2026-05-06.
 - [ ] **Storage buckets recreation** — old project had 7 storage buckets with 148 file objects. Original blob files gone. Studio buckets (`studio-samples`, `studio-outputs`) created on new project. Other buckets (TikTok uploads, profile images) recreate as use-cases re-emerge.
 

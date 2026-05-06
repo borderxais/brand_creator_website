@@ -502,7 +502,8 @@ model Sample {
   durationSec  Int            @default(90)
   isActive     Boolean        @default(true)
   uploadedById String
-  uploadedBy   User           @relation("SampleUploader", fields: [uploadedById], references: [id])
+  /// Restrict deletion of uploader to preserve sample audit trail.
+  uploadedBy   User           @relation("SampleUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
   requests     VideoRequest[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
@@ -513,9 +514,11 @@ model Sample {
 model VideoRequest {
   id        String  @id @default(cuid())
   creatorId String
-  creator   User    @relation("RequestCreator", fields: [creatorId], references: [id])
+  /// Restrict deletion of creator to preserve request history; soft-delete users instead.
+  creator   User    @relation("RequestCreator", fields: [creatorId], references: [id], onDelete: Restrict)
   sampleId  String?
-  sample    Sample? @relation(fields: [sampleId], references: [id])
+  /// SetNull so archiving a sample does not break historical request records.
+  sample    Sample? @relation(fields: [sampleId], references: [id], onDelete: SetNull)
 
   prompt         String
   styleNotes     String?
@@ -527,12 +530,18 @@ model VideoRequest {
   rejectionReason   String?
 
   claimedById String?
-  claimedBy   User?     @relation("RequestClaimer", fields: [claimedById], references: [id])
+  /// SetNull on admin deletion so request stays in queue, unclaimed.
+  claimedBy   User?     @relation("RequestClaimer", fields: [claimedById], references: [id], onDelete: SetNull)
   claimedAt   DateTime?
   deliveredAt DateTime?
 
+  /// Nullable: a request may have no Subscription link if quota was bypassed (e.g. admin-created)
+  /// or if the originating Subscription row was later deleted; refunds key off this when non-null.
   subscriptionId String?
-  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  /// SetNull so deleting a Subscription preserves the request record (audit + delivered output).
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  /// True when this request decremented Subscription.quotaUsed at create-time. Refunds on
+  /// REJECTED/FAILED only flip this back to false if the period has not rolled over.
   quotaConsumed  Boolean       @default(true)
 
   createdAt DateTime @default(now())
@@ -545,7 +554,8 @@ model VideoRequest {
 model Subscription {
   id     String @id @default(cuid())
   userId String @unique
-  user   User   @relation("UserSubscription", fields: [userId], references: [id])
+  /// Cascade so deleting a user removes their Subscription row (Stripe sub still must be canceled separately).
+  user   User   @relation("UserSubscription", fields: [userId], references: [id], onDelete: Cascade)
 
   tier                 PlanTier @default(FREE)
   stripeCustomerId     String?  @unique
@@ -568,6 +578,8 @@ model Subscription {
 }
 
 model StripeEventLog {
+  /// Stripe event.id (e.g. "evt_1ABC..."). Primary key acts as idempotency token: webhook handler
+  /// inserts here first; duplicate event.id collisions short-circuit before side effects.
   id         String   @id
   type       String
   receivedAt DateTime @default(now())
