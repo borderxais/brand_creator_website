@@ -48,3 +48,27 @@ export function getSamplePublicUrl(path: string): string {
   const { data } = getClient().storage.from(STUDIO_SAMPLES_BUCKET).getPublicUrl(path);
   return data.publicUrl;
 }
+
+export async function getSampleUploadUrl(args: {
+  sampleId: string;
+  ext: "mp4" | "jpg" | "webp" | "png";
+}): Promise<{ uploadUrl: string; path: string; token: string }> {
+  const path = samplePathFor({ sampleId: args.sampleId, ext: args.ext });
+  const { data, error } = await getClient()
+    .storage.from(STUDIO_SAMPLES_BUCKET)
+    .createSignedUploadUrl(path);
+  if (error || !data) throw new Error(`signed upload URL failed for ${path}: ${error?.message}`);
+  return { uploadUrl: data.signedUrl, path, token: data.token };
+}
+
+export async function getOutputUploadUrl(args: {
+  userId: string;
+  requestId: string;
+}): Promise<{ uploadUrl: string; path: string; token: string }> {
+  const path = outputPathFor({ userId: args.userId, requestId: args.requestId });
+  const { data, error } = await getClient()
+    .storage.from(STUDIO_OUTPUTS_BUCKET)
+    .createSignedUploadUrl(path);
+  if (error || !data) throw new Error(`signed upload URL failed for ${path}: ${error?.message}`);
+  return { uploadUrl: data.signedUrl, path, token: data.token };
+}
