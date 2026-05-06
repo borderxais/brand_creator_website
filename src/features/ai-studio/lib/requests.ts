@@ -119,11 +119,41 @@ export async function listRequestsForCreator(args: { creatorId: string; limit?: 
   });
 }
 
-export async function listAdminQueue(args: { limit?: number }) {
+export async function listAdminQueue(args: {
+  limit?: number;
+  status?: VideoRequestStatus | VideoRequestStatus[];
+}) {
+  const statusFilter = Array.isArray(args.status)
+    ? { in: args.status }
+    : args.status
+      ? { equals: args.status }
+      : { in: ["PENDING", "IN_PROGRESS"] as VideoRequestStatus[] };
   return prisma.videoRequest.findMany({
-    where: { status: { in: ["PENDING", "IN_PROGRESS"] } },
+    where: { status: statusFilter },
     orderBy: { createdAt: "asc" },
     take: args.limit ?? 50,
-    include: { sample: true, creator: true },
+    include: { sample: true, creator: true, claimedBy: true },
   });
+}
+
+export interface AdminStats {
+  pending: number;
+  inProgress: number;
+  delivered7d: number;
+  failed7d: number;
+}
+
+export async function getAdminStats(): Promise<AdminStats> {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const [pending, inProgress, delivered7d, failed7d] = await Promise.all([
+    prisma.videoRequest.count({ where: { status: "PENDING" } }),
+    prisma.videoRequest.count({ where: { status: "IN_PROGRESS" } }),
+    prisma.videoRequest.count({
+      where: { status: "DELIVERED", deliveredAt: { gte: sevenDaysAgo } },
+    }),
+    prisma.videoRequest.count({
+      where: { status: "FAILED", updatedAt: { gte: sevenDaysAgo } },
+    }),
+  ]);
+  return { pending, inProgress, delivered7d, failed7d };
 }

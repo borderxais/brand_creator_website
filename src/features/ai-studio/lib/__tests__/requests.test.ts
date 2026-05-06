@@ -7,6 +7,7 @@ vi.mock("@/lib/prisma", () => ({
       update: vi.fn(),
       create: vi.fn(),
       findMany: vi.fn(),
+      count: vi.fn(),
     },
     subscription: {
       findUnique: vi.fn(),
@@ -28,6 +29,7 @@ import {
   deliverRequest,
   rejectRequest,
   failRequest,
+  getAdminStats,
 } from "@/features/ai-studio/lib/requests";
 
 beforeEach(() => {
@@ -164,5 +166,33 @@ describe("failRequest", () => {
     const args = (prisma.videoRequest.update as any).mock.calls[0][0];
     expect(args.data.status).toBe("FAILED");
     expect(args.data.rejectionReason).toMatch(/generation failed/i);
+  });
+});
+
+describe("getAdminStats", () => {
+  it("counts each status bucket and returns the four-key shape", async () => {
+    (prisma.videoRequest.count as any)
+      .mockResolvedValueOnce(3) // pending
+      .mockResolvedValueOnce(1) // in progress
+      .mockResolvedValueOnce(12) // delivered7d
+      .mockResolvedValueOnce(2); // failed7d
+    const stats = await getAdminStats();
+    expect(stats).toEqual({ pending: 3, inProgress: 1, delivered7d: 12, failed7d: 2 });
+    expect(prisma.videoRequest.count).toHaveBeenCalledTimes(4);
+  });
+
+  it("scopes delivered/failed to the last 7 days via gte filter", async () => {
+    (prisma.videoRequest.count as any).mockResolvedValue(0);
+    await getAdminStats();
+    const calls = (prisma.videoRequest.count as any).mock.calls;
+    const deliveredCall = calls[2][0];
+    const failedCall = calls[3][0];
+    expect(deliveredCall.where.deliveredAt.gte).toBeInstanceOf(Date);
+    expect(failedCall.where.updatedAt.gte).toBeInstanceOf(Date);
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    const drift = Math.abs(
+      Date.now() - sevenDaysMs - deliveredCall.where.deliveredAt.gte.getTime()
+    );
+    expect(drift).toBeLessThan(2000);
   });
 });
