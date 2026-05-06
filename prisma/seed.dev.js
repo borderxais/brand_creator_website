@@ -47,13 +47,14 @@ async function main() {
   for (const fixture of FIXTURES) {
     const user = await prisma.user.upsert({
       where: { email: fixture.email },
-      update: { name: fixture.name, role: fixture.role },
+      update: { name: fixture.name, role: fixture.role, emailVerified: new Date() },
       create: {
         email: fixture.email,
         name: fixture.name,
         password,
         role: fixture.role,
         creatorHandleName: fixture.handle,
+        emailVerified: new Date(),
       },
     });
 
