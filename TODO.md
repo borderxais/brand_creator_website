@@ -35,48 +35,43 @@ A more granular implementation plan will be produced via the writing-plans skill
   - `VideoRequest.subscription`: `onDelete: SetNull`
   - `VideoRequest.sample`: `onDelete: SetNull` (sample archive shouldn't break history)
 - [ ] **Schema intent comments** on `VideoRequest.subscriptionId`, `VideoRequest.quotaConsumed`, and `StripeEventLog.id` clarifying nullability/defaults/external-id semantics.
-- [ ] **Restore Supabase service role key** in `.env` (`SUPABASE_SERVICE_KEY`) — fetch from Supabase Dashboard → Settings → API → service_role for new project `loesykbqlhynbjmqxfxc`. Required if any server-side code uses supabase-js with admin privileges.
-- [ ] **Storage buckets recreation** — old project had 7 storage buckets with 148 file objects. Original blob files are gone with the paused project. Manually recreate any buckets needed (TikTok video uploads, profile images) on new project as use-cases re-emerge.
+- [x] **Restore Supabase service role key** in `.env` (`SUPABASE_SERVICE_KEY`) — set 2026-05-06.
+- [ ] **Storage buckets recreation** — old project had 7 storage buckets with 148 file objects. Original blob files gone. Studio buckets (`studio-samples`, `studio-outputs`) created on new project. Other buckets (TikTok uploads, profile images) recreate as use-cases re-emerge.
 
-## Sprint 2 — Core services (server-side)
+## Sprint 2 — Core services (server-side) ✅ Plan B1 complete
 
-- [ ] `src/features/ai-studio/lib/quota.ts` — atomic deduct + refund + rollover helpers (with row lock)
-- [ ] `src/features/ai-studio/lib/requests.ts` — state machine validation + transition helpers
-- [ ] `src/features/ai-studio/lib/samples.ts` — Sample CRUD + signed-URL helpers
-- [ ] `src/features/ai-studio/lib/storage.ts` — Supabase bucket helpers (`studio-samples`, `studio-outputs`)
-- [ ] `src/features/ai-studio/lib/stripe.ts` — Stripe SDK wrapper + price lookups
-- [ ] Create Supabase buckets `studio-samples` (public read) and `studio-outputs` (private + signed URL)
-- [ ] Zod schemas for request submit, sample upload, deliver, reject, fail
+- [x] `src/features/ai-studio/lib/quota.ts` — atomic deduct + refund + rollover helpers (`063da13`)
+- [x] `src/features/ai-studio/lib/requests.ts` — state machine validation + transition helpers (`42645a5`)
+- [x] `src/features/ai-studio/lib/samples.ts` — Sample CRUD (`66d3875`)
+- [x] `src/features/ai-studio/lib/storage.ts` — Supabase bucket helpers (`7b51c73`)
+- [x] `src/features/ai-studio/lib/stripe.ts` — Stripe SDK wrapper (`1f8df5b`, stripe@22.1.0)
+- [x] Create Supabase buckets `studio-samples` (public 30MB) + `studio-outputs` (private 200MB) — live on `loesykbqlhynbjmqxfxc`; idempotent `npm run studio:create-buckets` script
+- [x] Zod schemas (`ac6a9da`) + shared `HttpError` (`920d863`)
 
-## Sprint 3 — API routes
+## Sprint 3 — API routes ✅ Plan B2 complete
 
-- [ ] `GET /api/studio/samples` (list, filter, paginate)
-- [ ] `POST /api/studio/samples` (admin only)
-- [ ] `GET /api/studio/samples/[id]`
-- [ ] `POST /api/studio/requests` (creator) — atomic quota deduction
-- [ ] `GET /api/studio/requests` (creator, own only)
-- [ ] `GET /api/studio/requests/[id]`
-- [ ] `POST /api/studio/requests/[id]/claim` (admin)
-- [ ] `POST /api/studio/requests/[id]/deliver` (admin)
-- [ ] `POST /api/studio/requests/[id]/reject` (admin)
-- [ ] `POST /api/studio/requests/[id]/fail` (admin)
-- [ ] `POST /api/studio/billing/checkout` — create Stripe Checkout session
-- [ ] `POST /api/studio/billing/portal` — create Stripe Customer Portal session
-- [ ] `POST /api/stripe/webhook` — verify signature, dedupe via `StripeEventLog`, dispatch handlers
-- [ ] Shared error middleware (`HttpError` → status code mapping, request-id logging)
+- [x] `withApiHandler` shared wrapper (`11dc3e5`)
+- [x] `GET /api/studio/samples`, `POST /api/studio/samples` (`4a1d754`)
+- [x] `GET /api/studio/samples/[id]` (`3ea309c`)
+- [x] `POST /api/studio/requests`, `GET /api/studio/requests` (`8085506`)
+- [x] `GET /api/studio/requests/[id]` with owner+admin guard (`1253c5b`)
+- [x] `POST /api/studio/requests/[id]/claim`, `deliver`, `reject`, `fail` (`6da651d`)
+- [x] `POST /api/studio/billing/checkout` (`7102109`)
+- [x] `POST /api/studio/billing/portal` (`fe88e1d`)
+- [x] `POST /api/stripe/webhook` — signature verify + idempotency (`a6401ac`)
 
-## Sprint 4 — Creator UI
+## Sprint 4 — Creator UI ✅ Plan B3 complete
 
-- [ ] `src/app/(studio)/studio/layout.tsx` — quota badge, nav, auth guard
-- [ ] `src/app/(studio)/studio/page.tsx` — landing with featured samples
-- [ ] `src/app/(studio)/studio/samples/page.tsx` — gallery with category filter + pagination
-- [ ] `src/app/(studio)/studio/samples/[id]/page.tsx` — sample detail + request CTA
-- [ ] `src/features/ai-studio/components/RequestForm.tsx` — prompt + style notes form
-- [ ] `src/app/(studio)/studio/requests/page.tsx` — "My Videos" with status tabs
-- [ ] `src/app/(studio)/studio/requests/[id]/page.tsx` — request detail + output player
-- [ ] `src/app/(studio)/studio/billing/page.tsx` — plan picker + portal link
-- [ ] Shared components: `SampleCard`, `QuotaBadge`, `StatusBadge`
-- [ ] Mobile responsiveness pass at 375 / 768 / 1024
+- [x] `src/app/(studio)/studio/layout.tsx` (`786f0ba`)
+- [x] `src/app/(studio)/studio/page.tsx` landing (`39faf1b`)
+- [x] `src/app/(studio)/studio/samples/page.tsx` gallery (`4eb5f05`)
+- [x] `src/app/(studio)/studio/samples/[id]/page.tsx` (`bc536dc`)
+- [x] `src/features/ai-studio/components/RequestForm.tsx` (`4d518e0`)
+- [x] `src/app/(studio)/studio/requests/page.tsx` + `[id]/page.tsx` (`5bbd095`)
+- [x] `src/app/(studio)/studio/billing/page.tsx` + `BillingActions` (`1a532cf`)
+- [x] Shared components: `SampleCard` (`761f861`), `QuotaBadge` (`786f0ba`), `StatusBadge` (`0183bd9`)
+- [ ] Mobile responsiveness pass at 375 / 768 / 1024 (deferred to Plan C polish)
+- [ ] Manual UI smoke test against `npm run dev` with seeded `creator-starter@test.local`
 
 ## Sprint 5 — Admin UI
 
