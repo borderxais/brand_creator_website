@@ -67,15 +67,16 @@ A more granular implementation plan will be produced via the writing-plans skill
 - [ ] Mobile responsiveness pass at 375 / 768 / 1024 (deferred to Plan C polish)
 - [ ] Manual UI smoke test against `npm run dev` with seeded `creator-starter@test.local`
 
-## Sprint 5 — Admin UI
+## Sprint 5 — Admin UI ✅ Plan C1 complete
 
-- [ ] `src/app/(studio)/admin/studio/layout.tsx` — STUDIO_ADMIN guard
-- [ ] `src/app/(studio)/admin/studio/page.tsx` — counts dashboard
-- [ ] `src/app/(studio)/admin/studio/samples/page.tsx` — sample list
-- [ ] `src/app/(studio)/admin/studio/samples/new/page.tsx` — upload form (signed-URL direct upload)
-- [ ] `src/app/(studio)/admin/studio/samples/[id]/edit/page.tsx` — edit + archive
-- [ ] `src/app/(studio)/admin/studio/requests/page.tsx` — queue (PENDING + IN_PROGRESS by default)
-- [ ] `src/app/(studio)/admin/studio/requests/[id]/page.tsx` — claim/deliver/reject/fail panel + output upload
+- [x] `src/app/(studio)/admin/studio/layout.tsx` — STUDIO_ADMIN guard (`ffba426`)
+- [x] `src/app/(studio)/admin/studio/page.tsx` — counts dashboard (`fd26d61`)
+- [x] `src/app/(studio)/admin/studio/samples/page.tsx` — sample list (`7590b19`)
+- [x] `src/app/(studio)/admin/studio/samples/new/page.tsx` — upload form (signed-URL direct upload) (`0141ea5`)
+- [x] `src/app/(studio)/admin/studio/samples/[id]/edit/page.tsx` — edit + archive (`6be92b7`)
+- [x] `src/app/(studio)/admin/studio/requests/page.tsx` — queue (PENDING + IN_PROGRESS by default) (`556e72d`)
+- [x] `src/app/(studio)/admin/studio/requests/[id]/page.tsx` — claim/deliver/reject/fail/release panel + output upload (`9e2ce54`)
+- Supporting services + APIs: stats (`d03261b`), sample-upload-URL (`ab58757`), output-upload-URL (`ac1ba0f`), sample PATCH + archive (`4c6e98d`), release route inside `9e2ce54`.
 
 ## Sprint 6 — Notifications
 
