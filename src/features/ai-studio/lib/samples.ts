@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { SampleCategory } from "@prisma/client";
-import type { SampleCreateInput } from "@/features/ai-studio/lib/schemas";
+import type { SampleCreateInput, SampleUpdateInput } from "@/features/ai-studio/lib/schemas";
 
 export interface ListSamplesArgs {
   category?: SampleCategory;
@@ -41,9 +41,16 @@ export async function createSample(args: { input: SampleCreateInput; uploadedByI
   });
 }
 
-export async function archiveSample(id: string) {
+export async function updateSample(args: { id: string; input: SampleUpdateInput }) {
   return prisma.sample.update({
-    where: { id },
-    data: { isActive: false },
+    where: { id: args.id },
+    data: args.input,
+  });
+}
+
+export async function archiveSample(args: { id: string; isActive: boolean }) {
+  return prisma.sample.update({
+    where: { id: args.id },
+    data: { isActive: args.isActive },
   });
 }

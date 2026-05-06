@@ -16,6 +16,7 @@ import {
   listSamples,
   getSample,
   createSample,
+  updateSample,
   archiveSample,
 } from "@/features/ai-studio/lib/samples";
 
@@ -66,9 +67,28 @@ describe("samples service", () => {
 
   it("archiveSample sets isActive=false", async () => {
     (prisma.sample.update as any).mockResolvedValue({ id: "s1", isActive: false });
-    await archiveSample("s1");
+    await archiveSample({ id: "s1", isActive: false });
     const args = (prisma.sample.update as any).mock.calls[0][0];
     expect(args.where).toEqual({ id: "s1" });
     expect(args.data).toEqual({ isActive: false });
+  });
+
+  it("archiveSample un-archives by flipping isActive=true", async () => {
+    (prisma.sample.update as any).mockResolvedValue({ id: "s1", isActive: true });
+    await archiveSample({ id: "s1", isActive: true });
+    const args = (prisma.sample.update as any).mock.calls[0][0];
+    expect(args.where).toEqual({ id: "s1" });
+    expect(args.data).toEqual({ isActive: true });
+  });
+
+  it("updateSample passes input through to prisma.sample.update", async () => {
+    (prisma.sample.update as any).mockResolvedValue({ id: "s1", title: "New" });
+    await updateSample({
+      id: "s1",
+      input: { title: "New", durationSec: 120 },
+    });
+    const args = (prisma.sample.update as any).mock.calls[0][0];
+    expect(args.where).toEqual({ id: "s1" });
+    expect(args.data).toEqual({ title: "New", durationSec: 120 });
   });
 });

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   RequestSubmitSchema,
   SampleCreateSchema,
+  SampleUpdateSchema,
   DeliverSchema,
   RejectSchema,
   CategoryEnum,
@@ -55,6 +56,20 @@ describe("studio Zod schemas", () => {
   it("RejectSchema requires reason >= 5 chars", () => {
     expect(RejectSchema.safeParse({ reason: "no" }).success).toBe(false);
     expect(RejectSchema.safeParse({ reason: "needs more story setup" }).success).toBe(true);
+  });
+
+  it("SampleUpdateSchema rejects empty objects", () => {
+    expect(SampleUpdateSchema.safeParse({}).success).toBe(false);
+  });
+
+  it("SampleUpdateSchema accepts partial updates", () => {
+    const ok = SampleUpdateSchema.safeParse({ title: "Renamed" });
+    expect(ok.success).toBe(true);
+  });
+
+  it("SampleUpdateSchema accepts isActive toggle alone", () => {
+    const ok = SampleUpdateSchema.safeParse({ isActive: false });
+    expect(ok.success).toBe(true);
   });
 
   it("CategoryEnum exposes 5 values matching Prisma enum", () => {
