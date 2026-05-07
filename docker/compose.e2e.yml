@@ -1,0 +1,85 @@
+name: brand-creator-e2e
+
+services:
+  pg:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: e2e
+      POSTGRES_PASSWORD: e2e
+      POSTGRES_DB: brand_creator_e2e
+    ports: ["54329:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U e2e -d brand_creator_e2e"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  supabase:
+    image: supabase/storage-api:v1.11.13
+    depends_on:
+      pg: { condition: service_healthy }
+    environment:
+      ANON_KEY: e2e-anon-key
+      SERVICE_KEY: e2e-service-key
+      POSTGREST_URL: http://pg:5432
+      PGRST_JWT_SECRET: e2e-jwt-secret-32chars-long-min-len
+      DATABASE_URL: postgres://e2e:e2e@pg:5432/brand_creator_e2e
+      FILE_SIZE_LIMIT: "52428800"
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: e2e
+      REGION: local
+      GLOBAL_S3_BUCKET: e2e
+    ports: ["54330:5000"]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5000/status"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - storage:/var/lib/storage
+
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    depends_on:
+      pg: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgres://e2e:e2e@pg:5432/brand_creator_e2e
+      SUPABASE_URL: http://supabase:5000
+      SUPABASE_SERVICE_KEY: e2e-service-key
+      ENV: e2e
+    ports: ["8001:8000"]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/health"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+    depends_on:
+      api: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgres://e2e:e2e@pg:5432/brand_creator_e2e
+      NEXTAUTH_URL: http://localhost:12001
+      NEXTAUTH_SECRET: e2e-nextauth-secret-not-prod
+      NEXT_PUBLIC_API_URL: http://localhost:8001
+      SUPABASE_URL: http://localhost:54330
+      SUPABASE_SERVICE_KEY: e2e-service-key
+      E2E_EXPLORE: ${E2E_EXPLORE:-0}
+    ports: ["12001:3000"]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+
+volumes:
+  pgdata:
+  storage:
