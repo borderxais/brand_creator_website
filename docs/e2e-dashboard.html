@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>E2E Stack Dashboard</title>
+<style>
+  :root {
+    --bg: oklch(16% 0.01 260);
+    --panel: oklch(22% 0.015 260);
+    --panel-2: oklch(26% 0.018 260);
+    --border: oklch(34% 0.02 260);
+    --text: oklch(94% 0.005 260);
+    --muted: oklch(70% 0.012 260);
+    --ok: oklch(78% 0.16 145);
+    --bad: oklch(70% 0.21 25);
+    --pending: oklch(78% 0.13 80);
+    --accent: oklch(74% 0.16 250);
+    --mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 -apple-system, system-ui, "Segoe UI", sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 48px 28px 96px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  h1 { font-size: clamp(1.6rem, 1rem + 1.6vw, 2.4rem); margin: 0; letter-spacing: -0.02em; }
+  h2 { font-size: 1.05rem; margin: 36px 0 14px; letter-spacing: 0.02em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .sub { color: var(--muted); font-size: 0.92rem; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .card.svc { display: flex; flex-direction: column; gap: 8px; }
+  .name { font-weight: 600; font-size: 1rem; display: flex; align-items: center; gap: 10px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--pending); flex: none; box-shadow: 0 0 0 3px oklch(from var(--pending) l c h / 0.18); }
+  .dot.ok { background: var(--ok); box-shadow: 0 0 0 3px oklch(from var(--ok) l c h / 0.18); }
+  .dot.bad { background: var(--bad); box-shadow: 0 0 0 3px oklch(from var(--bad) l c h / 0.18); }
+  .meta { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); }
+  .meta a { color: var(--accent); text-decoration: none; }
+  .meta a:hover { text-decoration: underline; }
+  .row { display: flex; justify-content: space-between; gap: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  td code, .ic { font-family: var(--mono); font-size: 0.88rem; background: var(--panel-2); padding: 2px 6px; border-radius: 5px; }
+  pre { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 0.86rem; margin: 0; }
+  .cmd { display: grid; grid-template-columns: minmax(180px, 220px) 1fr; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .cmd:last-child { border: none; }
+  .cmd code { font-family: var(--mono); background: var(--panel-2); padding: 4px 8px; border-radius: 6px; font-size: 0.86rem; }
+  .cmd .desc { color: var(--muted); font-size: 0.92rem; }
+  .links a { color: var(--accent); text-decoration: none; font-family: var(--mono); font-size: 0.88rem; }
+  .links a:hover { text-decoration: underline; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; background: var(--panel-2); color: var(--muted); border: 1px solid var(--border); }
+  .pill.ok { color: var(--ok); border-color: oklch(from var(--ok) l c h / 0.4); }
+  .pill.bad { color: var(--bad); border-color: oklch(from var(--bad) l c h / 0.4); }
+  .pill.pending { color: var(--pending); border-color: oklch(from var(--pending) l c h / 0.4); }
+  button { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); padding: 8px 14px; border-radius: 8px; cursor: pointer; font: inherit; }
+  button:hover { border-color: var(--accent); }
+  footer { margin-top: 48px; color: var(--muted); font-size: 0.85rem; }
+  .warn { background: oklch(from var(--pending) l c h / 0.08); border: 1px solid oklch(from var(--pending) l c h / 0.4); color: var(--pending); padding: 12px 14px; border-radius: 10px; font-size: 0.88rem; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>E2E Stack Dashboard</h1>
+      <div class="sub">brand-creator-e2e · local docker compose · <span id="now"></span></div>
+    </div>
+    <button id="refresh">Refresh status</button>
+  </header>
+
+  <div class="warn">
+    <strong>Open this file directly in a browser</strong> (<code>open docs/e2e-dashboard.html</code>). Status checks are client-side fetches against <code>localhost</code>; due to CORS on no-cors fetch, "up" means the host responded — not a strict 200.
+  </div>
+
+  <h2>Services</h2>
+  <div class="grid" id="svcs"></div>
+
+  <h2>App URLs</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Surface</th><th>URL</th></tr></thead>
+      <tbody class="links">
+        <tr><td>Web (Next.js)</td><td><a href="http://localhost:12001/" target="_blank">http://localhost:12001/</a></td></tr>
+        <tr><td>Login as brand</td><td><a href="http://localhost:12001/api/test/login?role=brand" target="_blank">/api/test/login?role=brand</a></td></tr>
+        <tr><td>Login as creator</td><td><a href="http://localhost:12001/api/test/login?role=creator" target="_blank">/api/test/login?role=creator</a></td></tr>
+        <tr><td>Login as admin</td><td><a href="http://localhost:12001/api/test/login?role=admin" target="_blank">/api/test/login?role=admin</a></td></tr>
+        <tr><td>Creator AI Video</td><td><a href="http://localhost:12001/creatorportal/ai-video" target="_blank">/creatorportal/ai-video</a></td></tr>
+        <tr><td>Backend API root</td><td><a href="http://localhost:8001/" target="_blank">http://localhost:8001/</a></td></tr>
+        <tr><td>API health</td><td><a href="http://localhost:8001/health" target="_blank">http://localhost:8001/health</a></td></tr>
+        <tr><td>Supabase storage stub</td><td><a href="http://localhost:54330/status" target="_blank">http://localhost:54330/status</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Test Credentials</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Email</th><th>Password</th><th>Role</th><th>User ID</th></tr></thead>
+      <tbody>
+        <tr><td><code>brand@e2e.test</code></td><td><code>e2e-password</code></td><td>BRAND</td><td><code>e2e-user-brand</code></td></tr>
+        <tr><td><code>creator@e2e.test</code></td><td><code>e2e-password</code></td><td>CREATOR</td><td><code>e2e-user-creator</code></td></tr>
+        <tr><td><code>admin@e2e.test</code></td><td><code>e2e-password</code></td><td>STUDIO_ADMIN</td><td><code>e2e-user-admin</code></td></tr>
+      </tbody>
+    </table>
+    <p class="sub" style="margin-top: 12px;">Shortcut: hit <code>/api/test/login?role=&lt;brand|creator|admin&gt;</code> — sets session cookie, no password needed. Gate: <code>E2E_EXPLORE=1</code> + <code>NODE_ENV !== 'production'</code>.</p>
+  </div>
+
+  <h2>Database</h2>
+  <div class="card">
+    <table>
+      <tbody>
+        <tr><th>Host</th><td><code>localhost</code></td></tr>
+        <tr><th>Port</th><td><code>54329</code></td></tr>
+        <tr><th>User</th><td><code>e2e</code></td></tr>
+        <tr><th>Password</th><td><code>e2e</code></td></tr>
+        <tr><th>Database</th><td><code>brand_creator_e2e</code></td></tr>
+        <tr><th>Connection</th><td><code>postgres://e2e:e2e@localhost:54329/brand_creator_e2e</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>npm Commands</h2>
+  <div class="card">
+    <div class="cmd"><code>npm run e2e:up</code><span class="desc">Boot stack, migrate, seed. Idempotent.</span></div>
+    <div class="cmd"><code>npm run e2e:explore</code><span class="desc">Boot only. Stack stays up for manual testing.</span></div>
+    <div class="cmd"><code>npm run e2e:reset</code><span class="desc">Truncate DB and re-seed.</span></div>
+    <div class="cmd"><code>npm run e2e:down</code><span class="desc">Stop + remove containers and volumes.</span></div>
+    <div class="cmd"><code>npm run e2e:agent</code><span class="desc">Run Playwright agent suite. Writes <code>.e2e/runs/latest/summary.md</code>.</span></div>
+    <div class="cmd"><code>npm run e2e:debug -- &lt;runId&gt;</code><span class="desc">Print summary + last 50 lines of api/web logs.</span></div>
+    <div class="cmd"><code>npm run e2e</code><span class="desc">Legacy fast path: dev webServer, no compose. Smoke only.</span></div>
+  </div>
+
+  <h2>Direct docker compose</h2>
+  <div class="card"><pre>docker compose -f docker/compose.e2e.yml up -d
+docker compose -f docker/compose.e2e.yml ps
+docker compose -f docker/compose.e2e.yml logs -f web
+docker compose -f docker/compose.e2e.yml logs -f api
+docker compose -f docker/compose.e2e.yml down -v</pre></div>
+
+  <footer>Source spec: <code>docs/superpowers/specs/2026-05-07-agentic-e2e-harness-design.md</code> · Operator guide: <code>docs/e2e.md</code></footer>
+</main>
+
+<script>
+  const services = [
+    { name: "web (Next.js)",      url: "http://localhost:12001/",       port: "12001 → 3000",  container: "brand-creator-e2e-web-1" },
+    { name: "api (FastAPI)",      url: "http://localhost:8001/health",  port: "8001 → 8000",   container: "brand-creator-e2e-api-1" },
+    { name: "supabase storage",   url: "http://localhost:54330/status", port: "54330 → 5000",  container: "brand-creator-e2e-supabase-1" },
+    { name: "postgres",           url: null,                            port: "54329 → 5432",  container: "brand-creator-e2e-pg-1", note: "TCP only — browser cannot probe; use psql or e2e:up" },
+  ];
+
+  const grid = document.getElementById("svcs");
+  const now = document.getElementById("now");
+  const refresh = document.getElementById("refresh");
+
+  function render() {
+    grid.innerHTML = "";
+    services.forEach((s, i) => {
+      const card = document.createElement("div");
+      card.className = "card svc";
+      card.innerHTML = `
+        <div class="row">
+          <div class="name"><span class="dot pending" id="dot-${i}"></span>${s.name}</div>
+          <span class="pill pending" id="pill-${i}">checking</span>
+        </div>
+        <div class="meta">port: <code class="ic">${s.port}</code></div>
+        <div class="meta">container: <code class="ic">${s.container}</code></div>
+        ${s.url ? `<div class="meta">probe: <a href="${s.url}" target="_blank">${s.url}</a></div>` : `<div class="meta">${s.note}</div>`}
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  async function check() {
+    now.textContent = new Date().toLocaleTimeString();
+    services.forEach(async (s, i) => {
+      const dot = document.getElementById(`dot-${i}`);
+      const pill = document.getElementById(`pill-${i}`);
+      dot.className = "dot pending";
+      pill.className = "pill pending";
+      pill.textContent = "checking";
+      if (!s.url) { pill.textContent = "tcp only"; return; }
+      try {
+        await fetch(s.url, { mode: "no-cors", cache: "no-store" });
+        dot.className = "dot ok";
+        pill.className = "pill ok";
+        pill.textContent = "up";
+      } catch (e) {
+        dot.className = "dot bad";
+        pill.className = "pill bad";
+        pill.textContent = "down";
+      }
+    });
+  }
+
+  refresh.addEventListener("click", check);
+  render();
+  check();
+  setInterval(check, 10000);
+</script>
+</body>
+</html>
