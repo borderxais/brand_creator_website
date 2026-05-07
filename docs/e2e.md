@@ -12,6 +12,7 @@
 | `npm run e2e:agent`            | Runs Playwright in agent mode; emits `.e2e/runs/latest/summary.md`. |
 | `npm run e2e:explore`          | Boots stack only; prints MCP connect info.                          |
 | `npm run e2e:debug -- <runId>` | Prints summary + last 50 lines of api/web logs.                     |
+| `npm run e2e:rebuild [svc]`    | Rebuild image(s) and restart. Omit `svc` for all; or `web`/`api`.   |
 | `npm run e2e`                  | Legacy fast path: dev `webServer`, no compose. Smoke only.          |
 
 ## Agent TDD loop
