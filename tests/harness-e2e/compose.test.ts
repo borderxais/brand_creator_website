@@ -23,4 +23,10 @@ describe("docker/compose.e2e.yml", () => {
       execSync("docker build --check -f docker/Dockerfile.web .", { stdio: "pipe" })
     ).not.toThrow();
   }, 30_000);
+
+  it("backend/Dockerfile parses", () => {
+    expect(() =>
+      execSync("docker build --check -f backend/Dockerfile backend", { stdio: "pipe" })
+    ).not.toThrow();
+  }, 30_000);
 });
