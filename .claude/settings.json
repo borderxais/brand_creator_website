@@ -3,13 +3,21 @@
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
-        "command": "node scripts/harness/claude-format.js",
-        "description": "Format + lint Claude TS/JS/docs edits"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/harness/claude-format.js"
+          }
+        ]
       },
       {
         "matcher": "Write|Edit",
-        "command": "node scripts/harness/claude-ruff.js",
-        "description": "Format + lint Claude Python edits"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/harness/claude-ruff.js"
+          }
+        ]
       }
     ]
   }

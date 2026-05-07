@@ -46,6 +46,9 @@ env
 # vercel
 .vercel
 
+# netlify CLI cache
+.netlify/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
