@@ -78,15 +78,16 @@ pages/          legacy error fallbacks (do not add new routes here)
 
 ## E2E Harness Cheatsheet
 
-| Command                        | What it does                                                       |
-| ------------------------------ | ------------------------------------------------------------------ |
-| `npm run e2e:up`               | Boot compose stack, run migrations, seed. Idempotent.              |
-| `npm run e2e:explore`          | Boot only. Stack stays up for manual testing or MCP-driven agents. |
-| `npm run e2e:reset`            | Truncate DB and re-seed.                                           |
-| `npm run e2e:down`             | Stop and remove containers + volumes.                              |
-| `npm run e2e:agent`            | Run Playwright in agent mode; emits `.e2e/runs/latest/summary.md`. |
-| `npm run e2e:debug -- <runId>` | Print run summary plus the last 50 lines of api/web logs.          |
-| `npm run e2e`                  | Legacy fast path: dev `webServer`, no compose. Smoke only.         |
+| Command                        | What it does                                                               |
+| ------------------------------ | -------------------------------------------------------------------------- |
+| `npm run e2e:up`               | Boot compose stack, run migrations, seed. Idempotent.                      |
+| `npm run e2e:explore`          | Boot only. Stack stays up for manual testing or MCP-driven agents.         |
+| `npm run e2e:reset`            | Truncate DB and re-seed.                                                   |
+| `npm run e2e:down`             | Stop and remove containers + volumes.                                      |
+| `npm run e2e:agent`            | Run Playwright in agent mode; emits `.e2e/runs/latest/summary.md`.         |
+| `npm run e2e:debug -- <runId>` | Print run summary plus the last 50 lines of api/web logs.                  |
+| `npm run e2e:rebuild [svc]`    | Rebuild image(s) and restart in place. Omit `svc` for all, or `web`/`api`. |
+| `npm run e2e`                  | Legacy fast path: dev `webServer`, no compose. Smoke only.                 |
 
 Full operator guide: [docs/e2e.md](docs/e2e.md).
 
