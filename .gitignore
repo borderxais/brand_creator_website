@@ -68,3 +68,9 @@ backend/app.yaml
 AGENTS.md
 playwright-report/
 test-results/
+
+# E2E harness runtime artifacts
+.e2e/
+
+# E2E draft exploration flows
+e2e/**/*.draft.ts

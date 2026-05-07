@@ -1,10 +1,132 @@
 # brand_creator_website
 
-Brand + creator collaboration platform built on Next.js, Prisma, and a FastAPI sidecar.
+> Brand + creator collaboration platform. Next.js 15 (App Router) + Prisma + Postgres, with a FastAPI sidecar for media and platform integrations.
 
-Documentation lives in [docs/](docs/README.md). Start there.
+The web app is the primary surface; the FastAPI service is an optional sidecar that the Next.js app degrades gracefully without. End-to-end tests run against a deterministic Docker Compose stack so local development, CI, and AI agents all hit the same surfaces.
 
-- [docs/architecture.md](docs/architecture.md) — system overview
-- [docs/harness.md](docs/harness.md) — dev pipeline (read before first commit)
-- [docs/contributing.md](docs/contributing.md) — workflow
-- [AGENTS.md](AGENTS.md) — repo conventions
+---
+
+## Tech Stack
+
+| Layer       | Tech                                                 |
+| ----------- | ---------------------------------------------------- |
+| Web         | Next.js 15 (App Router), React, TypeScript, Tailwind |
+| ORM / DB    | Prisma · Postgres 16                                 |
+| Sidecar API | FastAPI (Python 3.11+)                               |
+| Storage     | Supabase Storage (real in prod, stubbed in e2e)      |
+| E2E         | Playwright · Docker Compose                          |
+| Hosting     | Netlify                                              |
+
+---
+
+## Quickstart (E2E stack)
+
+The recommended local path. Spins up Postgres + Supabase stub + FastAPI + Next.js in containers, runs migrations, seeds deterministic users.
+
+```bash
+git clone https://github.com/borderxais/brand_creator_website.git
+cd brand_creator_website
+npm install
+npm run e2e:up
+```
+
+Then open the app:
+
+| Surface               | URL                                                    |
+| --------------------- | ------------------------------------------------------ |
+| Web                   | http://localhost:12001                                 |
+| Login as brand        | http://localhost:12001/api/test/login?role=brand       |
+| Login as creator      | http://localhost:12001/api/test/login?role=creator     |
+| Login as admin        | http://localhost:12001/api/test/login?role=admin       |
+| Backend API           | http://localhost:8001                                  |
+| API health            | http://localhost:8001/health                           |
+| Supabase storage stub | http://localhost:54330/status                          |
+| Postgres              | `postgres://e2e:e2e@localhost:54329/brand_creator_e2e` |
+
+Seeded users (password `e2e-password` for all):
+
+| Email              | Role         |
+| ------------------ | ------------ |
+| `brand@e2e.test`   | BRAND        |
+| `creator@e2e.test` | CREATOR      |
+| `admin@e2e.test`   | STUDIO_ADMIN |
+
+> The gated `/api/test/login?role=…` shortcut sets a session cookie without a password. Active only when `E2E_EXPLORE=1` and `NODE_ENV !== 'production'` — never present in prod.
+
+A live status dashboard for the running stack is at [docs/e2e-dashboard.html](docs/e2e-dashboard.html) (`open docs/e2e-dashboard.html`).
+
+First boot pulls images and builds; expect 5–15 minutes. Subsequent boots are seconds.
+
+---
+
+## Repo Layout
+
+```
+src/            Next.js App Router (pages, components, API routes, lib)
+backend/        FastAPI sidecar (Python)
+prisma/         schema, migrations, seed scripts (incl. seed.e2e.ts)
+e2e/            Playwright specs + fixtures (asBrand/asCreator/asAdmin)
+docker/         compose.e2e.yml + Dockerfile.web
+scripts/        e2e/* harness scripts, harness/* pre-push checks
+docs/           canonical reference; start at docs/README.md
+tests/          unit / integration tests (vitest)
+public/         static assets
+pages/          legacy error fallbacks (do not add new routes here)
+```
+
+---
+
+## E2E Harness Cheatsheet
+
+| Command                        | What it does                                                       |
+| ------------------------------ | ------------------------------------------------------------------ |
+| `npm run e2e:up`               | Boot compose stack, run migrations, seed. Idempotent.              |
+| `npm run e2e:explore`          | Boot only. Stack stays up for manual testing or MCP-driven agents. |
+| `npm run e2e:reset`            | Truncate DB and re-seed.                                           |
+| `npm run e2e:down`             | Stop and remove containers + volumes.                              |
+| `npm run e2e:agent`            | Run Playwright in agent mode; emits `.e2e/runs/latest/summary.md`. |
+| `npm run e2e:debug -- <runId>` | Print run summary plus the last 50 lines of api/web logs.          |
+| `npm run e2e`                  | Legacy fast path: dev `webServer`, no compose. Smoke only.         |
+
+Full operator guide: [docs/e2e.md](docs/e2e.md).
+
+---
+
+## Common Dev Commands
+
+| Command                   | What it does                                                              |
+| ------------------------- | ------------------------------------------------------------------------- |
+| `npm run dev`             | Next.js dev server on `:3000` (no compose, bring own DB).                 |
+| `npm run build`           | Production build.                                                         |
+| `npm run lint`            | ESLint (`next/core-web-vitals` + unused-var enforcement).                 |
+| `npm run typecheck`       | `tsc --noEmit`.                                                           |
+| `npm run test:run`        | Vitest unit + integration suite.                                          |
+| `npm run prisma:migrate`  | Apply pending Prisma migrations.                                          |
+| `npm run prisma:seed`     | Seed local DB (`prisma/seed.js`).                                         |
+| `npm run harness:prepush` | Full pre-push gate: typecheck + lint + drift + tests + backend ruff/mypy. |
+
+---
+
+## Documentation
+
+Canonical reference lives in [docs/](docs/README.md). Recommended reading order:
+
+1. [architecture.md](docs/architecture.md) — system overview
+2. [frontend.md](docs/frontend.md) — Next.js app
+3. [backend.md](docs/backend.md) — FastAPI service
+4. [database.md](docs/database.md) — Prisma + Postgres
+5. [deployment.md](docs/deployment.md) — Netlify
+6. [harness.md](docs/harness.md) — dev pipeline (read before first commit)
+7. [e2e.md](docs/e2e.md) — E2E harness operator guide
+8. [contributing.md](docs/contributing.md) — workflow
+
+Design specs live under [docs/superpowers/specs/](docs/superpowers/specs/).
+
+---
+
+## Contributing
+
+- Conventions and review expectations: [docs/contributing.md](docs/contributing.md)
+- Repo guidelines and agent operating rules: [AGENTS.md](AGENTS.md)
+- Conventional Commits required (`feat:`, `fix:`, `chore:`, `docs:`, …); subject lines ≤ 72 chars.
+- Run `npm run harness:prepush` before pushing.

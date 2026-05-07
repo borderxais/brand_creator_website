@@ -4,6 +4,8 @@ Six-layer quality harness: fast edit-time feedback → pre-commit gates → pre-
 
 **Source of truth:** [`docs/superpowers/specs/2026-05-03-dev-pipeline-harness-design.md`](superpowers/specs/2026-05-03-dev-pipeline-harness-design.md) — read that file for the full design rationale and decisions.
 
+**E2E:** [docs/e2e.md](e2e.md) — agentic E2E harness operator guide.
+
 > All harness layers (0–5) are live as of this PR. Layer-specific PR references are noted under each layer's `**Status:**` line.
 
 Every hook failure prints:
