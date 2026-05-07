@@ -75,6 +75,7 @@ services:
       NEXTAUTH_URL: http://localhost:12001
       NEXTAUTH_SECRET: e2e-nextauth-secret-not-prod
       NEXT_PUBLIC_API_URL: http://localhost:8001
+      CAMPAIGNS_API_URL: http://api:8000
       SUPABASE_URL: http://localhost:54330
       SUPABASE_SERVICE_KEY: e2e-service-key
       E2E_EXPLORE: "1"
