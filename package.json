@@ -25,6 +25,13 @@
     "test:run": "vitest run",
     "e2e": "playwright test",
     "e2e:preview": "PLAYWRIGHT_BASE_URL=$DEPLOY_PRIME_URL playwright test e2e/smoke",
+    "e2e:up": "tsx scripts/e2e/up.ts",
+    "e2e:down": "tsx scripts/e2e/down.ts",
+    "e2e:reset": "tsx scripts/e2e/reset-db.ts",
+    "e2e:agent": "tsx scripts/e2e/agent.ts",
+    "e2e:explore": "tsx scripts/e2e/explore.ts",
+    "e2e:debug": "tsx scripts/e2e/debug.ts",
+    "e2e:ci": "E2E_AGENT=1 playwright test",
     "harness:prepush": "npm run typecheck && npm run lint && node scripts/harness/prisma-drift.js && npm run test:run && cd backend && .venv/bin/ruff check . && .venv/bin/ruff format --check . && .venv/bin/mypy app",
     "harness:full": "npm run harness:prepush && npm run e2e"
   },

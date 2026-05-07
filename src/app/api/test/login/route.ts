@@ -20,7 +20,7 @@ export async function GET(req: Request): Promise<Response> {
   if (!secret) return NextResponse.json({ error: "no secret" }, { status: 500 });
 
   const token = await encode({
-    token: { sub: user.id, email: user.email, role: user.role },
+    token: { sub: user.id, email: user.email, role: user.role } as any,
     secret,
   });
   const res = NextResponse.json({ ok: true, role });

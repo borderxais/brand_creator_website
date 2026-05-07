@@ -15,6 +15,7 @@ services:
       retries: 30
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
 
   supabase:
     image: supabase/storage-api:v1.11.13
@@ -34,9 +35,10 @@ services:
       GLOBAL_S3_BUCKET: e2e
     ports: ["54330:5000"]
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5000/status"]
+      # Use 0.0.0.0 — alpine containers may not resolve 'localhost' to IPv4
+      test: ["CMD-SHELL", "wget -qO- http://0.0.0.0:5000/status > /dev/null"]
       interval: 3s
-      timeout: 3s
+      timeout: 5s
       retries: 30
     volumes:
       - storage:/var/lib/storage
@@ -54,15 +56,18 @@ services:
       ENV: e2e
     ports: ["8001:8000"]
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/health"]
+      # FastAPI only accepts GET; wget -qO- (GET) not --spider (HEAD); use 0.0.0.0 for IPv4
+      test: ["CMD-SHELL", "wget -qO- http://0.0.0.0:8000/health > /dev/null"]
       interval: 3s
-      timeout: 3s
+      timeout: 5s
       retries: 30
 
   web:
     build:
       context: ..
       dockerfile: docker/Dockerfile.web
+      args:
+        DATABASE_URL: postgres://e2e:e2e@pg:5432/brand_creator_e2e
     depends_on:
       api: { condition: service_healthy }
     environment:
@@ -75,7 +80,7 @@ services:
       E2E_EXPLORE: ${E2E_EXPLORE:-0}
     ports: ["12001:3000"]
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/"]
+      test: ["CMD-SHELL", "wget -qO- http://0.0.0.0:3000/ > /dev/null"]
       interval: 5s
       timeout: 5s
       retries: 60
