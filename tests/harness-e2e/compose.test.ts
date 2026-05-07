@@ -17,4 +17,10 @@ describe("docker/compose.e2e.yml", () => {
     const services = out.trim().split("\n").sort();
     expect(services).toEqual(["api", "pg", "supabase", "web"]);
   });
+
+  it("Dockerfile.web parses (docker build --check)", () => {
+    expect(() =>
+      execSync("docker build --check -f docker/Dockerfile.web .", { stdio: "pipe" })
+    ).not.toThrow();
+  }, 30_000);
 });
