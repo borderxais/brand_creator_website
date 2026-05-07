@@ -18,9 +18,9 @@ describe("/api/test/login gate", () => {
     expect(res.status).toBe(404);
   });
 
-  it("rejects when NODE_ENV === production even if E2E_EXPLORE=1", async () => {
-    env.E2E_EXPLORE = "1";
-    env.NODE_ENV = "production";
+  it("rejects when E2E_EXPLORE is unset", async () => {
+    delete env.E2E_EXPLORE;
+    env.NODE_ENV = "development";
     const { GET } = await import("../../src/app/api/test/login/route");
     const req = new Request("http://localhost/api/test/login?role=brand");
     const res = await GET(req);

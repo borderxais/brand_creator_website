@@ -70,8 +70,15 @@ async function main() {
        "order_requirement" TEXT, "product_name" TEXT, "updated_at" TIMESTAMPTZ,
        CONSTRAINT "campaigns_pkey" PRIMARY KEY ("id")
      )`,
-    `ALTER TABLE "campaigns" ADD CONSTRAINT IF NOT EXISTS "campaigns_brand_id_fkey"
-       FOREIGN KEY ("brand_id") REFERENCES "BrandProfile"("id") ON DELETE CASCADE`,
+    `DO $$
+     BEGIN
+       IF NOT EXISTS (
+         SELECT 1 FROM pg_constraint WHERE conname = 'campaigns_brand_id_fkey'
+       ) THEN
+         ALTER TABLE "campaigns" ADD CONSTRAINT "campaigns_brand_id_fkey"
+           FOREIGN KEY ("brand_id") REFERENCES "BrandProfile"("id") ON DELETE CASCADE;
+       END IF;
+     END $$`,
     `CREATE TABLE IF NOT EXISTS "campaignclaims" (
        "id" UUID NOT NULL DEFAULT gen_random_uuid(),
        "campaign_id" UUID, "creator_id" TEXT,
@@ -82,10 +89,10 @@ async function main() {
      )`,
   ];
   for (const sql of patches) {
-    execSync(
-      `${COMPOSE} exec -T pg psql -U e2e -d brand_creator_e2e -c "${sql.replace(/"/g, '\\"')}"`,
-      { stdio: "inherit" }
-    );
+    execSync(`${COMPOSE} exec -T pg psql -U e2e -d brand_creator_e2e -v ON_ERROR_STOP=1`, {
+      stdio: ["pipe", "inherit", "inherit"],
+      input: sql + ";\n",
+    });
   }
 
   console.log("[e2e:up] seeding…");

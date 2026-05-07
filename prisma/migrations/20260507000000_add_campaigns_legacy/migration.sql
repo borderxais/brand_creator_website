@@ -52,11 +52,16 @@ CREATE TABLE IF NOT EXISTS "campaigns" (
     CONSTRAINT "campaigns_pkey" PRIMARY KEY ("id")
 );
 
--- FK from campaigns to BrandProfile
-ALTER TABLE "campaigns"
-    ADD CONSTRAINT "campaigns_brand_id_fkey"
-    FOREIGN KEY ("brand_id") REFERENCES "BrandProfile"("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
+-- FK from campaigns to BrandProfile (idempotent)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'campaigns_brand_id_fkey') THEN
+        ALTER TABLE "campaigns"
+            ADD CONSTRAINT "campaigns_brand_id_fkey"
+            FOREIGN KEY ("brand_id") REFERENCES "BrandProfile"("id")
+            ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
 -- Create campaignclaims table
 CREATE TABLE IF NOT EXISTS "campaignclaims" (
@@ -70,14 +75,24 @@ CREATE TABLE IF NOT EXISTS "campaignclaims" (
     CONSTRAINT "campaignclaims_pkey" PRIMARY KEY ("id")
 );
 
--- FK from campaignclaims to campaigns
-ALTER TABLE "campaignclaims"
-    ADD CONSTRAINT "campaignclaims_campaign_id_fkey"
-    FOREIGN KEY ("campaign_id") REFERENCES "campaigns"("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
+-- FK from campaignclaims to campaigns (idempotent)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'campaignclaims_campaign_id_fkey') THEN
+        ALTER TABLE "campaignclaims"
+            ADD CONSTRAINT "campaignclaims_campaign_id_fkey"
+            FOREIGN KEY ("campaign_id") REFERENCES "campaigns"("id")
+            ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
--- FK from campaignclaims to CreatorProfile
-ALTER TABLE "campaignclaims"
-    ADD CONSTRAINT "campaignclaims_creator_id_fkey"
-    FOREIGN KEY ("creator_id") REFERENCES "CreatorProfile"("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
+-- FK from campaignclaims to CreatorProfile (idempotent)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'campaignclaims_creator_id_fkey') THEN
+        ALTER TABLE "campaignclaims"
+            ADD CONSTRAINT "campaignclaims_creator_id_fkey"
+            FOREIGN KEY ("creator_id") REFERENCES "CreatorProfile"("id")
+            ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;

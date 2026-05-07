@@ -7,8 +7,13 @@ const ROLE_TO_USER: Record<string, { id: string; email: string; role: string }> 
   admin: { id: "e2e-user-admin", email: "admin@e2e.test", role: "STUDIO_ADMIN" },
 };
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request): Promise<Response> {
-  if (process.env.E2E_EXPLORE !== "1" || process.env.NODE_ENV === "production") {
+  // Gated solely by E2E_EXPLORE=1 at runtime (not NODE_ENV — Next.js inlines
+  // NODE_ENV at build time as "production"). Compose stack sets E2E_EXPLORE=1.
+  // Never set this var in production deploys.
+  if (process.env.E2E_EXPLORE !== "1") {
     return new NextResponse(null, { status: 404 });
   }
   const role = new URL(req.url).searchParams.get("role") ?? "";
