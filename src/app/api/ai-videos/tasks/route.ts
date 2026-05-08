@@ -12,7 +12,12 @@ import {
   type PortraitMime,
   type VoiceMime,
 } from "@/lib/ai-video-task";
-import { SupabaseConfigError, deleteFromBucket, uploadToBucket } from "@/lib/supabase-admin";
+import {
+  SupabaseConfigError,
+  SupabaseUploadError,
+  deleteFromBucket,
+  uploadToBucket,
+} from "@/lib/supabase-admin";
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -86,8 +91,8 @@ export async function POST(request: NextRequest) {
       console.error("[ai-videos/tasks] supabase not configured");
       return NextResponse.json({ error: "Storage not configured" }, { status: 500 });
     }
-    if (error instanceof Error && error.message.startsWith("Supabase upload failed")) {
-      console.error("[ai-videos/tasks] upload error", error.message);
+    if (error instanceof SupabaseUploadError) {
+      console.error("[ai-videos/tasks] upload error", { path: error.path, message: error.message });
       return NextResponse.json({ error: "Storage upload failed" }, { status: 502 });
     }
     console.error("[ai-videos/tasks] db insert error", error);

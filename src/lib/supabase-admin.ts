@@ -13,6 +13,16 @@ export class SupabaseConfigError extends Error {
   }
 }
 
+export class SupabaseUploadError extends Error {
+  constructor(
+    public readonly path: string,
+    cause: Error
+  ) {
+    super(`Supabase upload failed for ${path}: ${cause.message}`);
+    this.name = "SupabaseUploadError";
+  }
+}
+
 export function getSupabaseAdmin(): SupabaseClient {
   if (globalThis._supabaseAdmin) return globalThis._supabaseAdmin;
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -34,16 +44,23 @@ export async function uploadToBucket(path: string, file: File, contentType: stri
     upsert: false,
   });
   if (error) {
-    throw new Error(`Supabase upload failed for ${path}: ${error.message}`);
+    throw new SupabaseUploadError(path, error);
   }
 }
 
 export async function deleteFromBucket(paths: string[]): Promise<void> {
   if (paths.length === 0) return;
-  const client = getSupabaseAdmin();
-  const { error } = await client.storage.from(AI_VIDEO_TASK_BUCKET).remove(paths);
-  if (error) {
-    console.error("[supabase-admin] cleanup delete failed", { paths, message: error.message });
+  try {
+    const client = getSupabaseAdmin();
+    const { error } = await client.storage.from(AI_VIDEO_TASK_BUCKET).remove(paths);
+    if (error) {
+      console.error("[supabase-admin] cleanup delete failed", { paths, message: error.message });
+    }
+  } catch (err) {
+    console.error("[supabase-admin] cleanup unexpected error", {
+      paths,
+      message: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
