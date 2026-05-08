@@ -77,3 +77,6 @@ test-results/
 
 # E2E draft exploration flows
 e2e/**/*.draft.ts
+
+# Claude Code local state
+.claude/scheduled_tasks.lock
