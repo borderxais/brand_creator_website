@@ -24,27 +24,46 @@ export default function TaskAdminRow({ task }: { task: TaskAdminRowData }) {
   const [outputUrl, setOutputUrl] = useState(task.outputUrl ?? "");
   const [notes, setNotes] = useState(task.notes ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const onSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
     setError(null);
-    const response = await fetch(`/api/storyclaw-admin/tasks/${task.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        status,
-        outputUrl: outputUrl.trim() || undefined,
-        notes: notes.trim() || undefined,
-      }),
-    });
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      setError(data?.error ?? "Failed to update task");
-      return;
+    try {
+      const response = await fetch(`/api/storyclaw-admin/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status,
+          outputUrl: outputUrl.trim() || undefined,
+          notes: notes.trim() || undefined,
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setError(data?.error ?? "Failed to update task");
+        return;
+      }
+      const payload = (await response.json().catch(() => null)) as {
+        task: { status: AiVideoTaskStatus; outputUrl: string | null; notes: string | null };
+      } | null;
+      if (payload?.task) {
+        setStatus(payload.task.status);
+        setOutputUrl(payload.task.outputUrl ?? "");
+        setNotes(payload.task.notes ?? "");
+      }
+      startTransition(() => router.refresh());
+    } catch {
+      setError("Network error — please try again");
+    } finally {
+      setIsSaving(false);
     }
-    startTransition(() => router.refresh());
   };
+
+  const busy = isSaving || isPending;
 
   return (
     <tr className="border-t border-slate-100 align-top">
@@ -79,6 +98,7 @@ export default function TaskAdminRow({ task }: { task: TaskAdminRowData }) {
             value={status}
             onChange={(e) => setStatus(e.target.value as AiVideoTaskStatus)}
             className="rounded border border-slate-200 px-2 py-1"
+            disabled={busy}
           >
             {STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -92,6 +112,7 @@ export default function TaskAdminRow({ task }: { task: TaskAdminRowData }) {
             value={outputUrl}
             onChange={(e) => setOutputUrl(e.target.value)}
             className="rounded border border-slate-200 px-2 py-1"
+            disabled={busy}
           />
           <textarea
             placeholder="notes"
@@ -99,14 +120,15 @@ export default function TaskAdminRow({ task }: { task: TaskAdminRowData }) {
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
             className="rounded border border-slate-200 px-2 py-1"
+            disabled={busy}
           />
           {error ? <p className="text-rose-600">{error}</p> : null}
           <button
             type="submit"
-            disabled={isPending}
+            disabled={busy}
             className="rounded bg-slate-900 px-3 py-1 text-white disabled:opacity-50"
           >
-            {isPending ? "Saving…" : "Save"}
+            {busy ? "Saving…" : "Save"}
           </button>
         </form>
       </td>

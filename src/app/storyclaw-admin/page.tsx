@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { createSignedUrl, createSignedUrls } from "@/lib/supabase-admin";
+import { createSignedUrls } from "@/lib/supabase-admin";
 import TaskAdminRow, { type TaskAdminRowData } from "./TaskAdminRow";
 
 export const dynamic = "force-dynamic";
@@ -8,27 +8,41 @@ export default async function StoryclawAdminPage() {
   const rows = await prisma.aiVideoTask.findMany({
     orderBy: { createdAt: "desc" },
     take: 100,
-    include: {
+    select: {
+      id: true,
+      prompt: true,
+      status: true,
+      outputUrl: true,
+      notes: true,
+      voicePath: true,
+      portraitPath: true,
+      createdAt: true,
+      updatedAt: true,
+      creatorId: true,
       creator: { select: { id: true, email: true, name: true } },
     },
   });
 
   const portraitPaths = rows.map((r) => r.portraitPath);
-  const portraitMap = await createSignedUrls(portraitPaths);
+  const voicePaths = rows.map((r) => r.voicePath).filter((p): p is string => p !== null);
 
-  const tasks: TaskAdminRowData[] = await Promise.all(
-    rows.map(async (r) => ({
-      id: r.id,
-      creatorLabel: r.creator?.name ?? r.creator?.email ?? r.creatorId,
-      prompt: r.prompt,
-      status: r.status,
-      outputUrl: r.outputUrl,
-      notes: r.notes,
-      voiceSignedUrl: r.voicePath ? await createSignedUrl(r.voicePath) : null,
-      portraitSignedUrl: portraitMap.get(r.portraitPath) ?? null,
-      createdAt: r.createdAt.toISOString(),
-    }))
-  );
+  const [portraitMap, voiceMap] = await Promise.all([
+    createSignedUrls(portraitPaths),
+    createSignedUrls(voicePaths),
+  ]);
+
+  const tasks: Array<TaskAdminRowData & { rowKey: string }> = rows.map((r) => ({
+    id: r.id,
+    creatorLabel: r.creator?.name ?? r.creator?.email ?? r.creatorId,
+    prompt: r.prompt,
+    status: r.status,
+    outputUrl: r.outputUrl,
+    notes: r.notes,
+    voiceSignedUrl: r.voicePath ? (voiceMap.get(r.voicePath) ?? null) : null,
+    portraitSignedUrl: portraitMap.get(r.portraitPath) ?? null,
+    createdAt: r.createdAt.toISOString(),
+    rowKey: `${r.id}-${r.updatedAt.toISOString()}`,
+  }));
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 p-8">
@@ -50,7 +64,7 @@ export default async function StoryclawAdminPage() {
           </thead>
           <tbody>
             {tasks.map((task) => (
-              <TaskAdminRow key={task.id} task={task} />
+              <TaskAdminRow key={task.rowKey} task={task} />
             ))}
           </tbody>
         </table>
