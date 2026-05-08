@@ -24,6 +24,9 @@ export default function GenerateVideoForm() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (sessionStatus === "loading") {
+      return;
+    }
     if (sessionStatus !== "authenticated") {
       setStatus({
         type: "error",
@@ -215,7 +218,7 @@ export default function GenerateVideoForm() {
 
           <button
             type="submit"
-            disabled={isSubmitting || !prompt.trim() || !portrait}
+            disabled={isSubmitting || sessionStatus === "loading" || !prompt.trim() || !portrait}
             className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-lg transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <span className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
