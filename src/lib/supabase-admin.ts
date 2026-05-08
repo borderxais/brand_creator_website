@@ -2,7 +2,9 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 export const AI_VIDEO_TASK_BUCKET = "ai-video-tasks";
 
-let cached: SupabaseClient | null = null;
+declare global {
+  var _supabaseAdmin: SupabaseClient | undefined;
+}
 
 export class SupabaseConfigError extends Error {
   constructor(message: string) {
@@ -12,20 +14,22 @@ export class SupabaseConfigError extends Error {
 }
 
 export function getSupabaseAdmin(): SupabaseClient {
-  if (cached) return cached;
+  if (globalThis._supabaseAdmin) return globalThis._supabaseAdmin;
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_KEY;
   if (!url || !serviceKey) {
     throw new SupabaseConfigError("Supabase admin client not configured");
   }
-  cached = createClient(url, serviceKey, { auth: { persistSession: false } });
-  return cached;
+  const client = createClient(url, serviceKey, { auth: { persistSession: false } });
+  if (process.env.NODE_ENV !== "production") {
+    globalThis._supabaseAdmin = client;
+  }
+  return client;
 }
 
 export async function uploadToBucket(path: string, file: File, contentType: string): Promise<void> {
   const client = getSupabaseAdmin();
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const { error } = await client.storage.from(AI_VIDEO_TASK_BUCKET).upload(path, buffer, {
+  const { error } = await client.storage.from(AI_VIDEO_TASK_BUCKET).upload(path, file, {
     contentType,
     upsert: false,
   });
