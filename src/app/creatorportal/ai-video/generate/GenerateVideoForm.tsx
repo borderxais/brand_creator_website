@@ -2,82 +2,68 @@
 
 import { FormEvent, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { FileAudio, FileImage, Loader2, Sparkles } from "lucide-react";
 
 type SubmissionState =
   | { type: "idle" }
-  | { type: "success"; message: string; requestId: string; storagePath: string }
+  | { type: "success"; taskId: string }
   | { type: "error"; message: string };
 
 export default function GenerateVideoForm() {
-  const { data: session } = useSession();
+  const { status: sessionStatus } = useSession();
   const [prompt, setPrompt] = useState("");
-  const [voiceSample, setVoiceSample] = useState<File | null>(null);
-  const [referenceImage, setReferenceImage] = useState<File | null>(null);
+  const [voice, setVoice] = useState<File | null>(null);
+  const [portrait, setPortrait] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<SubmissionState>({ type: "idle" });
 
   const voiceInputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
+  const portraitInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!session?.user?.id) {
+    if (sessionStatus !== "authenticated") {
       setStatus({
         type: "error",
         message: "You must be signed in as a creator to submit a request.",
       });
       return;
     }
-
     if (!prompt.trim()) {
       setStatus({ type: "error", message: "Please provide a generation prompt." });
       return;
     }
+    if (!portrait) {
+      setStatus({ type: "error", message: "Please upload a portrait reference image." });
+      return;
+    }
 
     const formData = new FormData();
-    formData.append("creator_id", session.user.id);
     formData.append("prompt", prompt.trim());
-    if (voiceSample) {
-      formData.append("voice_sample", voiceSample);
-    }
-    if (referenceImage) {
-      formData.append("reference_image", referenceImage);
-    }
+    formData.append("portrait", portrait);
+    if (voice) formData.append("voice", voice);
 
     setIsSubmitting(true);
     setStatus({ type: "idle" });
 
     try {
-      const response = await fetch("/api/ai-videos/generate", {
+      const response = await fetch("/api/ai-videos/tasks", {
         method: "POST",
         body: formData,
       });
-
       const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || data.detail || "Failed to queue AI video request.");
+        throw new Error(data.error || "Failed to queue AI video request.");
       }
-
-      setStatus({
-        type: "success",
-        message: data.message ?? "Video request submitted successfully.",
-        requestId: data.request_id,
-        storagePath: data.storage_path,
-      });
+      setStatus({ type: "success", taskId: data.id });
       setPrompt("");
-      setVoiceSample(null);
-      setReferenceImage(null);
-      if (voiceInputRef.current) {
-        voiceInputRef.current.value = "";
-      }
-      if (imageInputRef.current) {
-        imageInputRef.current.value = "";
-      }
+      setVoice(null);
+      setPortrait(null);
+      if (voiceInputRef.current) voiceInputRef.current.value = "";
+      if (portraitInputRef.current) portraitInputRef.current.value = "";
     } catch (error) {
-      console.error("AI video request failed:", error);
       setStatus({
         type: "error",
         message:
@@ -102,12 +88,17 @@ export default function GenerateVideoForm() {
         >
           {status.type === "success" ? (
             <>
-              <p className="font-semibold">{status.message}</p>
+              <p className="font-semibold">Task queued.</p>
               <p className="mt-1 text-emerald-700">
-                Request ID: <span className="font-mono text-xs">{status.requestId}</span>
+                Task ID: <span className="font-mono text-xs">{status.taskId}</span>
               </p>
-              <p className="text-emerald-700">
-                Assets stored under: <span className="font-mono text-xs">{status.storagePath}</span>
+              <p className="mt-2">
+                <Link
+                  href="/creatorportal/ai-video/tasks"
+                  className="font-semibold underline-offset-2 hover:underline"
+                >
+                  View all tasks →
+                </Link>
               </p>
             </>
           ) : (
@@ -123,11 +114,11 @@ export default function GenerateVideoForm() {
               Voice upload
             </h2>
             <p className="mt-2 text-sm text-slate-600">
-              Provide an audio sample for cloning—30 seconds or longer works best. We accept WAV,
-              MP3, and M4A files up to 25 MB.
+              Provide an audio sample for cloning—30 seconds or longer works best. WAV, MP3, or M4A
+              up to 25 MB. Optional.
             </p>
             <label
-              htmlFor="voice_sample"
+              htmlFor="voice"
               className="mt-5 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-indigo-200 bg-indigo-50/40 p-6 text-center transition hover:border-indigo-400 hover:bg-indigo-50"
             >
               <FileAudio className="h-10 w-10 text-indigo-500" />
@@ -136,22 +127,17 @@ export default function GenerateVideoForm() {
               </span>
               <span className="mt-1 text-xs text-slate-500">Or drag and drop an audio file</span>
               <input
-                id="voice_sample"
-                name="voice_sample"
+                id="voice"
+                name="voice"
                 type="file"
-                accept="audio/*"
+                accept="audio/mpeg,audio/wav,audio/mp4,audio/x-m4a"
                 className="hidden"
                 ref={voiceInputRef}
-                onChange={(event) => {
-                  const file = event.target.files?.[0] ?? null;
-                  setVoiceSample(file);
-                }}
+                onChange={(event) => setVoice(event.target.files?.[0] ?? null)}
               />
             </label>
-            {voiceSample && (
-              <p className="mt-3 truncate text-xs font-medium text-indigo-700">
-                {voiceSample.name}
-              </p>
+            {voice && (
+              <p className="mt-3 truncate text-xs font-medium text-indigo-700">{voice.name}</p>
             )}
           </section>
 
@@ -160,8 +146,7 @@ export default function GenerateVideoForm() {
               Creative prompt
             </h2>
             <p className="mt-2 text-sm text-slate-600">
-              Outline the storyline, pacing notes, and CTAs you want in the finished video. Include
-              any specific phrases we must mention.
+              Outline the storyline, pacing notes, and CTAs you want in the finished video.
             </p>
             <div className="mt-4">
               <label
@@ -190,35 +175,32 @@ export default function GenerateVideoForm() {
               Portrait reference
             </h2>
             <p className="mt-2 text-sm text-slate-600">
-              Upload a clear facial image of the target talent. Front-facing with neutral lighting
-              delivers the most consistent results.
+              Upload a clear facial image of the target talent. Front-facing with neutral lighting.
+              Required.
             </p>
             <label
-              htmlFor="reference_image"
+              htmlFor="portrait"
               className="mt-5 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-6 text-center transition hover:border-slate-300 hover:bg-slate-100"
             >
               <FileImage className="h-10 w-10 text-slate-500" />
               <span className="mt-3 text-sm font-semibold text-slate-700">
                 Upload portrait image
               </span>
-              <span className="mt-1 text-xs text-slate-500">JPG or PNG, minimum 1080x1080</span>
+              <span className="mt-1 text-xs text-slate-500">
+                JPG, PNG, or WebP — minimum 1080x1080
+              </span>
               <input
-                id="reference_image"
-                name="reference_image"
+                id="portrait"
+                name="portrait"
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 className="hidden"
-                ref={imageInputRef}
-                onChange={(event) => {
-                  const file = event.target.files?.[0] ?? null;
-                  setReferenceImage(file);
-                }}
+                ref={portraitInputRef}
+                onChange={(event) => setPortrait(event.target.files?.[0] ?? null)}
               />
             </label>
-            {referenceImage && (
-              <p className="mt-3 truncate text-xs font-medium text-slate-700">
-                {referenceImage.name}
-              </p>
+            {portrait && (
+              <p className="mt-3 truncate text-xs font-medium text-slate-700">{portrait.name}</p>
             )}
 
             <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-xs text-slate-500">
@@ -233,7 +215,7 @@ export default function GenerateVideoForm() {
 
           <button
             type="submit"
-            disabled={isSubmitting || !prompt.trim()}
+            disabled={isSubmitting || !prompt.trim() || !portrait}
             className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-lg transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <span className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
