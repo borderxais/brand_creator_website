@@ -222,6 +222,34 @@ model AiVideoRequest {
   tag          String?  @db.VarChar
 }
 
+enum AiVideoTaskStatus {
+  QUEUED
+  GENERATING
+  IN_REVIEW
+  DELIVERED
+}
+
+model AiVideoTask {
+  id        String @id @default(cuid())
+  creatorId String
+  /// Restrict deletion of creator to preserve task history.
+  creator   User   @relation("AiVideoTaskCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+
+  prompt       String  @db.Text
+  voicePath    String?
+  portraitPath String
+
+  status    AiVideoTaskStatus @default(QUEUED)
+  outputUrl String?
+  notes     String?           @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([creatorId, createdAt])
+  @@index([status, createdAt])
+}
+
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Contact {
   id         Int       @id(map: "contact_pkey") @default(autoincrement())
@@ -585,32 +613,4 @@ model StripeEventLog {
   type       String
   receivedAt DateTime @default(now())
   payload    Json
-}
-
-enum AiVideoTaskStatus {
-  QUEUED
-  GENERATING
-  IN_REVIEW
-  DELIVERED
-}
-
-model AiVideoTask {
-  id        String @id @default(cuid())
-  creatorId String
-  /// Restrict deletion of creator to preserve task history.
-  creator   User   @relation("AiVideoTaskCreator", fields: [creatorId], references: [id], onDelete: Restrict)
-
-  prompt       String  @db.Text
-  voicePath    String?
-  portraitPath String
-
-  status    AiVideoTaskStatus @default(QUEUED)
-  outputUrl String?
-  notes     String?           @db.Text
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([creatorId, createdAt])
-  @@index([status, createdAt])
 }
