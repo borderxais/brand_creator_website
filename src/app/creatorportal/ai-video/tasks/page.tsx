@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { createSignedUrl } from "@/lib/supabase-admin";
+import { createSignedUrls } from "@/lib/supabase-admin";
 import TaskRow, { type TaskRowData } from "./TaskRow";
 
 export const dynamic = "force-dynamic";
@@ -14,9 +14,12 @@ export default async function TasksPage() {
     redirect("/login");
   }
 
+  const PAGE_SIZE = 50;
+
   const rows = await prisma.aiVideoTask.findMany({
     where: { creatorId: session.user.id },
     orderBy: { createdAt: "desc" },
+    take: PAGE_SIZE,
     select: {
       id: true,
       prompt: true,
@@ -28,17 +31,18 @@ export default async function TasksPage() {
     },
   });
 
-  const tasks: TaskRowData[] = await Promise.all(
-    rows.map(async (r) => ({
-      id: r.id,
-      prompt: r.prompt,
-      status: r.status,
-      outputUrl: r.outputUrl,
-      hasVoice: r.voicePath !== null,
-      portraitSignedUrl: await createSignedUrl(r.portraitPath),
-      createdAt: r.createdAt.toISOString(),
-    }))
-  );
+  const portraitPaths = rows.map((r) => r.portraitPath);
+  const signedUrlMap = await createSignedUrls(portraitPaths);
+
+  const tasks: TaskRowData[] = rows.map((r) => ({
+    id: r.id,
+    prompt: r.prompt,
+    status: r.status,
+    outputUrl: r.outputUrl,
+    hasVoice: r.voicePath !== null,
+    portraitSignedUrl: signedUrlMap.get(r.portraitPath) ?? null,
+    createdAt: r.createdAt.toISOString(),
+  }));
 
   return (
     <div className="space-y-6">

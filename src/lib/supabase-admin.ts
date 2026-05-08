@@ -75,3 +75,29 @@ export async function createSignedUrl(path: string, expiresInSec = 3600): Promis
   }
   return data.signedUrl;
 }
+
+export async function createSignedUrls(
+  paths: string[],
+  expiresInSec = 3600
+): Promise<Map<string, string | null>> {
+  if (paths.length === 0) return new Map();
+  const client = getSupabaseAdmin();
+  const { data, error } = await client.storage
+    .from(AI_VIDEO_TASK_BUCKET)
+    .createSignedUrls(paths, expiresInSec);
+  if (error || !data) {
+    console.error("[supabase-admin] batch signed URLs failed", { message: error?.message });
+    return new Map(paths.map((p) => [p, null]));
+  }
+  const map = new Map<string, string | null>();
+  for (const entry of data) {
+    if (entry.path) {
+      map.set(entry.path, entry.signedUrl ?? null);
+    }
+  }
+  // Ensure every requested path has an entry (Supabase may omit failed paths)
+  for (const p of paths) {
+    if (!map.has(p)) map.set(p, null);
+  }
+  return map;
+}
