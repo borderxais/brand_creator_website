@@ -145,6 +145,7 @@ export default function CreatorPortalLayout({ children }: { children: React.Reac
       {/* Desktop sidebar */}
       <aside className="hidden w-72 flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-indigo-900 text-white lg:flex">
         <Link href="/" className="flex items-center gap-3 px-6 py-8">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo.jpg"
             alt="Cricher AI Logo"
@@ -166,7 +167,7 @@ export default function CreatorPortalLayout({ children }: { children: React.Reac
       </aside>
 
       {/* Content column */}
-      <div className="flex min-h-screen flex-1 flex-col">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         {/* Desktop header */}
         <header className="hidden items-center justify-between border-b border-slate-200 bg-white px-10 py-5 lg:flex">
           <div>
@@ -181,6 +182,7 @@ export default function CreatorPortalLayout({ children }: { children: React.Reac
               className="flex items-center gap-3 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"
             >
               {session?.user?.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={session.user.image}
                   alt={session.user.name || ""}
@@ -210,6 +212,7 @@ export default function CreatorPortalLayout({ children }: { children: React.Reac
         {/* Mobile header */}
         <header className="relative flex items-center justify-between border-b border-slate-200 bg-white px-4 py-4 lg:hidden">
           <Link href="/" className="flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.jpg" alt="Cricher AI Logo" className="h-8 w-8 rounded-lg" />
             <span className="text-base font-semibold text-slate-900">CreatorHub</span>
           </Link>
@@ -220,6 +223,7 @@ export default function CreatorPortalLayout({ children }: { children: React.Reac
                 className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700"
               >
                 {session?.user?.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={session.user.image}
                     alt={session.user.name || ""}
