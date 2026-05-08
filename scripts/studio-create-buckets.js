@@ -14,6 +14,7 @@ const client = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession:
 const BUCKETS = [
   { id: "studio-samples", public: true, fileSizeLimit: 30 * 1024 * 1024 },
   { id: "studio-outputs", public: false, fileSizeLimit: 200 * 1024 * 1024 },
+  { id: "ai-video-tasks", public: false, fileSizeLimit: 30 * 1024 * 1024 },
 ];
 
 (async () => {
