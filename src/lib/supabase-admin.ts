@@ -1,3 +1,4 @@
+import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 export const AI_VIDEO_TASK_BUCKET = "ai-video-tasks";
@@ -31,9 +32,7 @@ export function getSupabaseAdmin(): SupabaseClient {
     throw new SupabaseConfigError("Supabase admin client not configured");
   }
   const client = createClient(url, serviceKey, { auth: { persistSession: false } });
-  if (process.env.NODE_ENV !== "production") {
-    globalThis._supabaseAdmin = client;
-  }
+  globalThis._supabaseAdmin = client;
   return client;
 }
 

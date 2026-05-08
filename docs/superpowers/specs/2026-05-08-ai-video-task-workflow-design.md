@@ -121,7 +121,7 @@ Notes:
 **Required env vars:**
 
 - `NEXT_PUBLIC_SUPABASE_URL` — already used by frontend banner check.
-- `SUPABASE_SERVICE_ROLE_KEY` — server-only; never exposed to client.
+- `SUPABASE_SERVICE_KEY` — server-only; never exposed to client.
 
 **File validation (server-side):**
 
@@ -272,7 +272,7 @@ Client renders `error` field inline on the existing form. Submit is disabled dur
 
 - `prisma/schema.prisma` — add `AiVideoTaskStatus` enum, `AiVideoTask` model, `User.aiVideoTasks` relation.
 - `src/app/creatorportal/ai-video/generate/GenerateVideoForm.tsx` — repoint to new endpoint, field rename, success-state link.
-- `.env.local` (and `.env.example` if present) — document `SUPABASE_SERVICE_ROLE_KEY`.
+- `.env.local` (and `.env.example` if present) — document `SUPABASE_SERVICE_KEY`.
 
 ## 11. Open Items / Deferred
 
