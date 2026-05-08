@@ -112,6 +112,9 @@ describe("patchTaskSchema", () => {
   it("rejects an invalid status", () => {
     expect(() => patchTaskSchema.parse({ status: "BOGUS" })).toThrow();
   });
+  it("rejects an outputUrl that is not a valid URL", () => {
+    expect(() => patchTaskSchema.parse({ status: "DELIVERED", outputUrl: "not a url" })).toThrow();
+  });
 });
 
 describe("STATUS_DISPLAY", () => {

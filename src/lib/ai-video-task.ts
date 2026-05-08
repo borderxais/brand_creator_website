@@ -60,7 +60,7 @@ const baseStatusSchema = z.enum(["QUEUED", "GENERATING", "IN_REVIEW", "DELIVERED
 export const patchTaskSchema = z
   .object({
     status: baseStatusSchema,
-    outputUrl: z.string().optional(),
+    outputUrl: z.string().url().optional(),
     notes: z.string().optional(),
   })
   .refine(
