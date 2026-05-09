@@ -26,6 +26,7 @@
     "e2e": "playwright test",
     "e2e:preview": "PLAYWRIGHT_BASE_URL=$DEPLOY_PRIME_URL playwright test e2e/smoke",
     "e2e:up": "tsx scripts/e2e/up.ts",
+    "e2e:up:infra": "tsx scripts/e2e/up-infra.ts",
     "e2e:down": "tsx scripts/e2e/down.ts",
     "e2e:reset": "tsx scripts/e2e/reset-db.ts",
     "e2e:agent": "tsx scripts/e2e/agent.ts",
