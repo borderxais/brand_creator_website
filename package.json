@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "next dev -p 12000",
+    "dev:e2e": "dotenv -e .env.e2e-dev -o -- next dev -p 12000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
