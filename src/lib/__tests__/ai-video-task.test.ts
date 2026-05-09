@@ -98,9 +98,10 @@ describe("promptSchema", () => {
 });
 
 describe("patchTaskSchema", () => {
-  it("requires outputUrl when status is DELIVERED", () => {
-    expect(() => patchTaskSchema.parse({ status: "DELIVERED" })).toThrow();
-    expect(() => patchTaskSchema.parse({ status: "DELIVERED", outputUrl: "" })).toThrow();
+  it("accepts DELIVERED without an outputUrl (route handler enforces output presence)", () => {
+    expect(patchTaskSchema.parse({ status: "DELIVERED" })).toEqual({ status: "DELIVERED" });
+  });
+  it("accepts DELIVERED with a valid outputUrl", () => {
     expect(patchTaskSchema.parse({ status: "DELIVERED", outputUrl: "https://x" })).toEqual({
       status: "DELIVERED",
       outputUrl: "https://x",
