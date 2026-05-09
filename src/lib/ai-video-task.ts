@@ -16,8 +16,17 @@ export const VOICE_MIME_TO_EXT = {
   "audio/x-m4a": "m4a",
 } as const;
 
+export const OUTPUT_MAX_BYTES = 200 * 1024 * 1024;
+
+export const VIDEO_MIME_TO_EXT = {
+  "video/mp4": "mp4",
+  "video/webm": "webm",
+  "video/quicktime": "mov",
+} as const;
+
 export type PortraitMime = keyof typeof PORTRAIT_MIME_TO_EXT;
 export type VoiceMime = keyof typeof VOICE_MIME_TO_EXT;
+export type VideoMime = keyof typeof VIDEO_MIME_TO_EXT;
 
 export type FileValidationResult = { ok: true } | { ok: false; status: 400 | 413; error: string };
 
@@ -42,12 +51,29 @@ export function validateVoiceFile(file: File | null): FileValidationResult {
   return { ok: true };
 }
 
+export function validateOutputFile(file: File | null): FileValidationResult {
+  if (file === null || file.size === 0) {
+    return { ok: false, status: 400, error: "Output file required" };
+  }
+  if (!(file.type in VIDEO_MIME_TO_EXT)) {
+    return { ok: false, status: 400, error: "Unsupported output file type" };
+  }
+  if (file.size > OUTPUT_MAX_BYTES) {
+    return { ok: false, status: 413, error: "Output file exceeds size limit" };
+  }
+  return { ok: true };
+}
+
 export function buildPortraitPath(creatorId: string, taskId: string, mime: PortraitMime): string {
   return `${creatorId}/${taskId}/portrait.${PORTRAIT_MIME_TO_EXT[mime]}`;
 }
 
 export function buildVoicePath(creatorId: string, taskId: string, mime: VoiceMime): string {
   return `${creatorId}/${taskId}/voice.${VOICE_MIME_TO_EXT[mime]}`;
+}
+
+export function buildOutputPath(creatorId: string, taskId: string, mime: VideoMime): string {
+  return `${creatorId}/${taskId}/output.${VIDEO_MIME_TO_EXT[mime]}`;
 }
 
 export const promptSchema = z
