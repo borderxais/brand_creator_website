@@ -83,16 +83,11 @@ export const promptSchema = z
 
 const baseStatusSchema = z.enum(["QUEUED", "GENERATING", "IN_REVIEW", "DELIVERED"]);
 
-export const patchTaskSchema = z
-  .object({
-    status: baseStatusSchema,
-    outputUrl: z.string().url().optional(),
-    notes: z.string().optional(),
-  })
-  .refine(
-    (v) => v.status !== "DELIVERED" || (typeof v.outputUrl === "string" && v.outputUrl.length > 0),
-    { message: "outputUrl required when status is DELIVERED", path: ["outputUrl"] }
-  );
+export const patchTaskSchema = z.object({
+  status: baseStatusSchema,
+  outputUrl: z.string().url().optional(),
+  notes: z.string().optional(),
+});
 
 export type PatchTaskInput = z.infer<typeof patchTaskSchema>;
 
