@@ -2,12 +2,16 @@ import { describe, it, expect } from "vitest";
 import {
   PORTRAIT_MIME_TO_EXT,
   VOICE_MIME_TO_EXT,
+  VIDEO_MIME_TO_EXT,
   PORTRAIT_MAX_BYTES,
   VOICE_MAX_BYTES,
+  OUTPUT_MAX_BYTES,
   buildPortraitPath,
   buildVoicePath,
+  buildOutputPath,
   validatePortraitFile,
   validateVoiceFile,
+  validateOutputFile,
   promptSchema,
   patchTaskSchema,
   STATUS_DISPLAY,
@@ -137,5 +141,53 @@ it("PORTRAIT_MIME_TO_EXT and VOICE_MIME_TO_EXT export the expected keys", () => 
     "audio/mpeg",
     "audio/wav",
     "audio/x-m4a",
+  ]);
+});
+
+describe("buildOutputPath", () => {
+  it("uses creatorId, taskId and the correct extension", () => {
+    expect(buildOutputPath("c", "t", "video/mp4")).toBe("c/t/output.mp4");
+    expect(buildOutputPath("c", "t", "video/webm")).toBe("c/t/output.webm");
+    expect(buildOutputPath("c", "t", "video/quicktime")).toBe("c/t/output.mov");
+  });
+});
+
+describe("validateOutputFile", () => {
+  it("rejects null", () => {
+    expect(validateOutputFile(null)).toEqual({
+      ok: false,
+      status: 400,
+      error: "Output file required",
+    });
+  });
+  it("accepts a small mp4", () => {
+    const f = new File(["x"], "out.mp4", { type: "video/mp4" });
+    expect(validateOutputFile(f)).toEqual({ ok: true });
+  });
+  it("rejects an unsupported MIME", () => {
+    const f = new File(["x"], "out.avi", { type: "video/x-msvideo" });
+    expect(validateOutputFile(f)).toEqual({
+      ok: false,
+      status: 400,
+      error: "Unsupported output file type",
+    });
+  });
+  it("rejects an oversize file", () => {
+    const big = new File([new Uint8Array(OUTPUT_MAX_BYTES + 1)], "out.mp4", {
+      type: "video/mp4",
+    });
+    expect(validateOutputFile(big)).toEqual({
+      ok: false,
+      status: 413,
+      error: "Output file exceeds size limit",
+    });
+  });
+});
+
+it("VIDEO_MIME_TO_EXT exports the expected keys", () => {
+  expect(Object.keys(VIDEO_MIME_TO_EXT).sort()).toEqual([
+    "video/mp4",
+    "video/quicktime",
+    "video/webm",
   ]);
 });
