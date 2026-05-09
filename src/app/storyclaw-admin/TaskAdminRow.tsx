@@ -10,6 +10,8 @@ export type TaskAdminRowData = {
   prompt: string;
   status: AiVideoTaskStatus;
   outputUrl: string | null;
+  outputPath: string | null;
+  outputSignedUrl: string | null;
   notes: string | null;
   voiceSignedUrl: string | null;
   portraitSignedUrl: string | null;
