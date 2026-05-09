@@ -239,9 +239,10 @@ model AiVideoTask {
   voicePath    String?
   portraitPath String
 
-  status    AiVideoTaskStatus @default(QUEUED)
-  outputUrl String?
-  notes     String?           @db.Text
+  status     AiVideoTaskStatus @default(QUEUED)
+  outputPath String? // Supabase Storage object path; set when admin uploads file
+  outputUrl  String? // External URL; kept for non-uploaded deliveries
+  notes      String?           @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
