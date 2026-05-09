@@ -10,12 +10,12 @@ describe("docker/compose.e2e.yml", () => {
     ).not.toThrow();
   });
 
-  it("declares pg, supabase, api, web services", () => {
+  it("declares pg, supabase, api, web, proxy services", () => {
     const out = execSync("docker compose -f docker/compose.e2e.yml config --services", {
       encoding: "utf8",
     });
     const services = out.trim().split("\n").sort();
-    expect(services).toEqual(["api", "pg", "supabase", "web"]);
+    expect(services).toEqual(["api", "pg", "proxy", "supabase", "web"]);
   });
 
   it("Dockerfile.web parses (docker build --check)", () => {
