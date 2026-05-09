@@ -25,6 +25,7 @@ export default async function TasksPage() {
       prompt: true,
       status: true,
       outputUrl: true,
+      outputPath: true,
       voicePath: true,
       portraitPath: true,
       createdAt: true,
@@ -32,15 +33,21 @@ export default async function TasksPage() {
   });
 
   const portraitPaths = rows.map((r) => r.portraitPath);
-  const signedUrlMap = await createSignedUrls(portraitPaths);
+  const outputPaths = rows.map((r) => r.outputPath).filter((p): p is string => p !== null);
+
+  const [portraitMap, outputMap] = await Promise.all([
+    createSignedUrls(portraitPaths),
+    createSignedUrls(outputPaths),
+  ]);
 
   const tasks: TaskRowData[] = rows.map((r) => ({
     id: r.id,
     prompt: r.prompt,
     status: r.status,
     outputUrl: r.outputUrl,
+    outputSignedUrl: r.outputPath ? (outputMap.get(r.outputPath) ?? null) : null,
     hasVoice: r.voicePath !== null,
-    portraitSignedUrl: signedUrlMap.get(r.portraitPath) ?? null,
+    portraitSignedUrl: portraitMap.get(r.portraitPath) ?? null,
     createdAt: r.createdAt.toISOString(),
   }));
 

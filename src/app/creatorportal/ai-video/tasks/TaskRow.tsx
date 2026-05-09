@@ -10,6 +10,7 @@ export type TaskRowData = {
   prompt: string;
   status: AiVideoTaskStatus;
   outputUrl: string | null;
+  outputSignedUrl: string | null;
   hasVoice: boolean;
   portraitSignedUrl: string | null;
   createdAt: string;
@@ -19,6 +20,9 @@ export default function TaskRow({ task }: { task: TaskRowData }) {
   const display = STATUS_DISPLAY[task.status];
   const created = formatDistanceToNow(new Date(task.createdAt), { addSuffix: true });
   const promptPreview = task.prompt.length > 80 ? `${task.prompt.slice(0, 80)}…` : task.prompt;
+
+  const viewOutputHref =
+    task.status === "DELIVERED" ? (task.outputSignedUrl ?? task.outputUrl ?? null) : null;
 
   return (
     <li className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
@@ -53,11 +57,11 @@ export default function TaskRow({ task }: { task: TaskRowData }) {
       >
         {display.label}
       </span>
-      {task.outputUrl ? (
+      {viewOutputHref ? (
         <Link
-          href={task.outputUrl}
+          href={viewOutputHref}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="shrink-0 text-xs font-semibold text-indigo-600 hover:underline"
         >
           View output
