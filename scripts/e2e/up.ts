@@ -47,6 +47,7 @@ async function main() {
   console.log("[e2e:up] applying schema drift patches…");
   const patches = [
     `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "creator_handle_name" TEXT NOT NULL DEFAULT ''`,
+    `ALTER TABLE "AiVideoTask" ADD COLUMN IF NOT EXISTS "outputPath" TEXT`,
     `CREATE TABLE IF NOT EXISTS "campaigns" (
        "id" UUID NOT NULL DEFAULT gen_random_uuid(),
        "brand_id" TEXT,
@@ -94,6 +95,32 @@ async function main() {
       input: sql + ";\n",
     });
   }
+
+  // Storage-api uses unqualified table names ("buckets", "objects") and the
+  // knex `searchPath` option doesn't take effect against this image, so create
+  // public-schema views over the storage tables and grant access to the supabase
+  // roles. Then disable RLS (e2e-only) so service_role inserts succeed.
+  // Finally upsert the ai-video-tasks bucket row at 200 MB (matches OUTPUT_MAX_BYTES).
+  console.log("[e2e:up] configuring storage schema bridge…");
+  execSync(`${COMPOSE} exec -T pg psql -U e2e -d brand_creator_e2e -v ON_ERROR_STOP=1`, {
+    stdio: ["pipe", "inherit", "inherit"],
+    input: `
+      CREATE OR REPLACE VIEW public.buckets AS SELECT * FROM storage.buckets;
+      CREATE OR REPLACE VIEW public.objects AS SELECT * FROM storage.objects;
+      CREATE OR REPLACE VIEW public.s3_multipart_uploads AS SELECT * FROM storage.s3_multipart_uploads;
+      CREATE OR REPLACE VIEW public.s3_multipart_uploads_parts AS SELECT * FROM storage.s3_multipart_uploads_parts;
+      ALTER TABLE storage.buckets DISABLE ROW LEVEL SECURITY;
+      ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY;
+      ALTER TABLE storage.s3_multipart_uploads DISABLE ROW LEVEL SECURITY;
+      ALTER TABLE storage.s3_multipart_uploads_parts DISABLE ROW LEVEL SECURITY;
+      GRANT USAGE ON SCHEMA storage, public TO service_role, authenticated, anon;
+      GRANT ALL ON public.buckets, public.objects, public.s3_multipart_uploads, public.s3_multipart_uploads_parts TO service_role, authenticated, anon;
+      GRANT ALL ON ALL TABLES IN SCHEMA storage TO service_role;
+      INSERT INTO storage.buckets (id, name, public, file_size_limit)
+      VALUES ('ai-video-tasks', 'ai-video-tasks', false, 209715200)
+      ON CONFLICT (id) DO UPDATE SET file_size_limit = EXCLUDED.file_size_limit;
+    `,
+  });
 
   console.log("[e2e:up] seeding…");
   execSync(`${COMPOSE} exec -T web sh -c "${dbEnv} npx tsx prisma/seed.e2e.ts"`, {
