@@ -13,6 +13,7 @@ export default async function StoryclawAdminPage() {
       prompt: true,
       status: true,
       outputUrl: true,
+      outputPath: true,
       notes: true,
       voicePath: true,
       portraitPath: true,
@@ -25,10 +26,12 @@ export default async function StoryclawAdminPage() {
 
   const portraitPaths = rows.map((r) => r.portraitPath);
   const voicePaths = rows.map((r) => r.voicePath).filter((p): p is string => p !== null);
+  const outputPaths = rows.map((r) => r.outputPath).filter((p): p is string => p !== null);
 
-  const [portraitMap, voiceMap] = await Promise.all([
+  const [portraitMap, voiceMap, outputMap] = await Promise.all([
     createSignedUrls(portraitPaths),
     createSignedUrls(voicePaths),
+    createSignedUrls(outputPaths),
   ]);
 
   const tasks: Array<TaskAdminRowData & { rowKey: string }> = rows.map((r) => ({
@@ -37,6 +40,8 @@ export default async function StoryclawAdminPage() {
     prompt: r.prompt,
     status: r.status,
     outputUrl: r.outputUrl,
+    outputPath: r.outputPath,
+    outputSignedUrl: r.outputPath ? (outputMap.get(r.outputPath) ?? null) : null,
     notes: r.notes,
     voiceSignedUrl: r.voicePath ? (voiceMap.get(r.voicePath) ?? null) : null,
     portraitSignedUrl: portraitMap.get(r.portraitPath) ?? null,
