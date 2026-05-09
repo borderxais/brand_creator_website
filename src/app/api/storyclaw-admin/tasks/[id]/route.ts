@@ -19,6 +19,30 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
+  const existing = await prisma.aiVideoTask.findUnique({
+    where: { id },
+    select: { outputPath: true, outputUrl: true },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Task not found" }, { status: 404 });
+  }
+
+  // outputUrl: payload value if provided, otherwise existing value.
+  const finalOutputUrl =
+    parsed.data.outputUrl !== undefined ? parsed.data.outputUrl : existing.outputUrl;
+
+  if (parsed.data.status === "DELIVERED") {
+    const hasOutput =
+      (typeof finalOutputUrl === "string" && finalOutputUrl.length > 0) ||
+      (typeof existing.outputPath === "string" && existing.outputPath.length > 0);
+    if (!hasOutput) {
+      return NextResponse.json(
+        { error: "outputUrl or uploaded output required when status is DELIVERED" },
+        { status: 400 }
+      );
+    }
+  }
+
   try {
     const task = await prisma.aiVideoTask.update({
       where: { id },
@@ -31,6 +55,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         id: true,
         status: true,
         outputUrl: true,
+        outputPath: true,
         notes: true,
         updatedAt: true,
       },
