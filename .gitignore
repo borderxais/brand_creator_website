@@ -80,3 +80,4 @@ e2e/**/*.draft.ts
 
 # Claude Code local state
 .claude/scheduled_tasks.lock
+.env.e2e-dev
