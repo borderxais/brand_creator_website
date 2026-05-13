@@ -1,8 +1,24 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useState, useTransition } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { formatDistanceToNow } from "date-fns";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ExternalLink,
+  FileAudio2,
+  Hash,
+  Loader2,
+  Mic,
+  Save,
+  Upload,
+  User,
+  Video as VideoIcon,
+} from "lucide-react";
 import type { AiVideoTaskStatus } from "@prisma/client";
+import { STATUS_DISPLAY } from "@/lib/ai-video-task";
 
 export type TaskAdminRowData = {
   id: string;
@@ -20,6 +36,12 @@ export type TaskAdminRowData = {
 
 const STATUSES: AiVideoTaskStatus[] = ["QUEUED", "GENERATING", "IN_REVIEW", "DELIVERED"];
 
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default function TaskAdminRow({ task }: { task: TaskAdminRowData }) {
   const router = useRouter();
   const [status, setStatus] = useState<AiVideoTaskStatus>(task.status);
@@ -28,6 +50,7 @@ export default function TaskAdminRow({ task }: { task: TaskAdminRowData }) {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [promptExpanded, setPromptExpanded] = useState(false);
 
   const [outputFile, setOutputFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -101,117 +124,292 @@ export default function TaskAdminRow({ task }: { task: TaskAdminRowData }) {
 
   const busy = isSaving || isPending;
   const uploaded = task.outputPath !== null;
+  const currentDisplay = STATUS_DISPLAY[task.status];
+  const dirty =
+    status !== task.status ||
+    (outputUrl.trim() || "") !== (task.outputUrl ?? "") ||
+    (notes.trim() || "") !== (task.notes ?? "");
+
+  const isLongPrompt = task.prompt.length > 180;
+  const promptToShow =
+    promptExpanded || !isLongPrompt ? task.prompt : `${task.prompt.slice(0, 180).trimEnd()}…`;
 
   return (
-    <tr className="border-t border-slate-100 align-top">
-      <td className="px-3 py-3 text-xs text-slate-500">
-        <div className="font-mono">{task.id.slice(0, 8)}</div>
-        <div>{task.creatorLabel}</div>
-        <div>{new Date(task.createdAt).toLocaleString()}</div>
-      </td>
-      <td className="px-3 py-3 text-xs">
-        <details>
-          <summary className="cursor-pointer text-slate-600">
-            {task.prompt.length > 60 ? `${task.prompt.slice(0, 60)}…` : task.prompt}
-          </summary>
-          <p className="mt-2 whitespace-pre-wrap text-slate-700">{task.prompt}</p>
-        </details>
-        <div className="mt-2 flex gap-2 text-indigo-600">
-          {task.portraitSignedUrl ? (
-            <a href={task.portraitSignedUrl} target="_blank" rel="noreferrer" className="underline">
-              portrait
-            </a>
-          ) : null}
-          {task.voiceSignedUrl ? (
-            <a href={task.voiceSignedUrl} target="_blank" rel="noreferrer" className="underline">
-              voice
-            </a>
+    <li className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-slate-100 bg-slate-50/60 px-5 py-3">
+        <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 font-mono text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200">
+          <Hash className="h-3 w-3 text-slate-400" />
+          {task.id.slice(0, 8)}
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
+            <User className="h-3 w-3" />
+          </span>
+          {task.creatorLabel}
+        </span>
+        <span className="text-xs text-slate-500">
+          {formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}
+        </span>
+        <div className="ml-auto flex items-center gap-2">
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${currentDisplay.className}`}
+          >
+            {currentDisplay.label}
+          </span>
+          {uploaded ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+              <CheckCircle2 className="h-3 w-3" />
+              Output ready
+            </span>
           ) : null}
         </div>
-      </td>
-      <td className="px-3 py-3">
-        <div className="flex flex-col gap-3 text-xs">
-          <div className="rounded border border-slate-200 p-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Output upload
+      </div>
+
+      <div className="grid gap-6 p-5 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div className="space-y-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              Prompt
             </p>
-            {uploaded ? (
-              <p className="mt-1 flex items-center gap-2 text-emerald-700">
-                <span aria-hidden>✓</span>
-                <span>Output uploaded</span>
-                {task.outputSignedUrl ? (
+            <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+              {promptToShow}
+            </p>
+            {isLongPrompt ? (
+              <button
+                type="button"
+                onClick={() => setPromptExpanded((v) => !v)}
+                className="mt-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+              >
+                {promptExpanded ? "Show less" : "Show more"}
+              </button>
+            ) : null}
+          </div>
+
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              Creator inputs
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200">
+                {task.portraitSignedUrl ? (
+                  <Image
+                    src={task.portraitSignedUrl}
+                    alt="Portrait reference"
+                    fill
+                    sizes="64px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">
+                    no portrait
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col gap-1.5 text-xs">
+                {task.portraitSignedUrl ? (
                   <a
-                    href={task.outputSignedUrl}
+                    href={task.portraitSignedUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="underline"
+                    className="inline-flex w-fit items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 font-medium text-slate-700 transition hover:bg-slate-200"
                   >
-                    Preview
+                    <User className="h-3 w-3" />
+                    Portrait
+                    <ExternalLink className="h-3 w-3 text-slate-400" />
                   </a>
                 ) : null}
+                {task.voiceSignedUrl ? (
+                  <a
+                    href={task.voiceSignedUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex w-fit items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 font-medium text-slate-700 transition hover:bg-slate-200"
+                  >
+                    <Mic className="h-3 w-3" />
+                    Voice sample
+                    <ExternalLink className="h-3 w-3 text-slate-400" />
+                  </a>
+                ) : (
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-slate-400 ring-1 ring-slate-100">
+                    <FileAudio2 className="h-3 w-3" />
+                    No voice attached
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                Output file
               </p>
-            ) : (
-              <p className="mt-1 text-slate-500">No file uploaded yet.</p>
-            )}
-            <input
-              type="file"
-              accept="video/mp4,video/webm,video/quicktime"
-              onChange={onFileChange}
-              disabled={isUploading || busy}
-              className="mt-2 block w-full text-xs"
-            />
-            {uploadError ? <p className="mt-1 text-rose-600">{uploadError}</p> : null}
+              {uploaded ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Uploaded
+                </span>
+              ) : (
+                <span className="text-[11px] text-slate-400">Not uploaded</span>
+              )}
+            </div>
+
+            {uploaded && task.outputSignedUrl ? (
+              <a
+                href={task.outputSignedUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
+              >
+                <VideoIcon className="h-3.5 w-3.5 text-indigo-500" />
+                Preview current output
+                <ExternalLink className="ml-auto h-3 w-3 text-slate-400" />
+              </a>
+            ) : null}
+
+            <label className="mt-3 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-slate-200 bg-white px-3 py-4 text-center text-xs text-slate-500 transition hover:border-indigo-300 hover:bg-indigo-50/30">
+              <Upload className="h-4 w-4 text-slate-400" />
+              {outputFile ? (
+                <span className="font-medium text-slate-800">
+                  {outputFile.name}{" "}
+                  <span className="font-normal text-slate-400">
+                    · {formatBytes(outputFile.size)}
+                  </span>
+                </span>
+              ) : (
+                <>
+                  <span className="font-medium text-slate-700">Choose video file</span>
+                  <span className="text-[11px] text-slate-400">mp4 · webm · mov</span>
+                </>
+              )}
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime"
+                onChange={onFileChange}
+                disabled={isUploading || busy}
+                className="hidden"
+              />
+            </label>
+
+            {uploadError ? (
+              <p className="mt-2 inline-flex items-center gap-1 text-xs text-rose-600">
+                <AlertCircle className="h-3 w-3" />
+                {uploadError}
+              </p>
+            ) : null}
+
             <button
               type="button"
               onClick={onUpload}
               disabled={!outputFile || isUploading || busy}
-              className="mt-2 rounded bg-indigo-600 px-3 py-1 text-white disabled:opacity-50"
+              className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
             >
-              {isUploading ? "Uploading…" : uploaded ? "Replace" : "Upload"}
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Uploading…
+                </>
+              ) : (
+                <>
+                  <Upload className="h-3.5 w-3.5" />
+                  {uploaded ? "Replace output" : "Upload output"}
+                </>
+              )}
             </button>
           </div>
 
-          <form onSubmit={onSave} className="flex flex-col gap-2">
-            <select
-              aria-label="Status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as AiVideoTaskStatus)}
-              className="rounded border border-slate-200 px-2 py-1"
-              disabled={busy}
-            >
-              {STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            <input
-              type="url"
-              placeholder="External URL (leave empty if uploading file)"
-              value={outputUrl}
-              onChange={(e) => setOutputUrl(e.target.value)}
-              className="rounded border border-slate-200 px-2 py-1"
-              disabled={busy}
-            />
-            <textarea
-              placeholder="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-              className="rounded border border-slate-200 px-2 py-1"
-              disabled={busy}
-            />
-            {error ? <p className="text-rose-600">{error}</p> : null}
+          <form onSubmit={onSave} className="space-y-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                Status
+              </p>
+              <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                {STATUSES.map((s) => {
+                  const active = s === status;
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setStatus(s)}
+                      disabled={busy}
+                      className={`rounded-lg px-2 py-1.5 text-[11px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                        active
+                          ? "bg-slate-900 text-white shadow-sm"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }`}
+                    >
+                      {STATUS_DISPLAY[s].label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor={`url-${task.id}`}
+                className="text-[11px] font-semibold uppercase tracking-wider text-slate-500"
+              >
+                External output URL
+              </label>
+              <input
+                id={`url-${task.id}`}
+                type="url"
+                placeholder="https://… (optional if file uploaded)"
+                value={outputUrl}
+                onChange={(e) => setOutputUrl(e.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 placeholder:text-slate-300 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50"
+                disabled={busy}
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor={`notes-${task.id}`}
+                className="text-[11px] font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Notes
+              </label>
+              <textarea
+                id={`notes-${task.id}`}
+                placeholder="Internal notes for the creator…"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+                className="mt-1.5 w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 placeholder:text-slate-300 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50"
+                disabled={busy}
+              />
+            </div>
+
+            {error ? (
+              <p className="inline-flex items-center gap-1 text-xs text-rose-600">
+                <AlertCircle className="h-3 w-3" />
+                {error}
+              </p>
+            ) : null}
+
             <button
               type="submit"
-              disabled={busy}
-              className="rounded bg-slate-900 px-3 py-1 text-white disabled:opacity-50"
+              disabled={busy || !dirty}
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
             >
-              {busy ? "Saving…" : "Save"}
+              {busy ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                <>
+                  <Save className="h-3.5 w-3.5" />
+                  {dirty ? "Save changes" : "No changes"}
+                </>
+              )}
             </button>
           </form>
         </div>
-      </td>
-    </tr>
+      </div>
+    </li>
   );
 }

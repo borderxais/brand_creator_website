@@ -3,309 +3,317 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Menu, X, Globe } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Globe, Menu, X } from "lucide-react";
+
+type NavLink = { href: string; label: string };
+
+const NAV_LINKS: Record<"en" | "zh", NavLink[]> = {
+  en: [
+    { href: "/find-creators", label: "Find Creators" },
+    { href: "/campaigns", label: "Campaigns" },
+    { href: "/entertainment-live", label: "Live Streaming" },
+    { href: "/private-community", label: "Private Community" },
+    { href: "/pear", label: "Pear" },
+    { href: "/how-it-works", label: "How it Works" },
+  ],
+  zh: [
+    { href: "/zh/find-creators", label: "寻找创作者" },
+    { href: "/zh/campaigns", label: "广告活动" },
+    { href: "/zh/entertainment-live", label: "娱乐直播" },
+    { href: "/zh/private-community", label: "私域社区" },
+    { href: "/zh/pear", label: "Pear" },
+    { href: "/zh/about", label: "关于我们" },
+  ],
+};
+
+function initialsFromName(name?: string | null) {
+  if (!name) return "C";
+  const parts = name.trim().split(/\s+/).slice(0, 2);
+  return parts.map((p) => p[0]?.toUpperCase() ?? "").join("") || "C";
+}
+
+function LogoMark({ className = "h-7 w-7" }: { className?: string }) {
+  return (
+    <span
+      className={`relative inline-grid place-items-center rounded-[9px] ${className}`}
+      style={{
+        background:
+          "radial-gradient(120% 120% at 0% 0%, oklch(0.7 0.2 305) 0%, transparent 55%), radial-gradient(140% 120% at 100% 100%, oklch(0.55 0.22 270) 0%, transparent 60%), linear-gradient(135deg, oklch(0.42 0.2 290), oklch(0.32 0.18 285))",
+        boxShadow:
+          "inset 0 0 0 1px rgba(255,255,255,0.08), 0 6px 14px -8px oklch(0.42 0.2 290 / 0.55)",
+      }}
+      aria-hidden
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2.4}
+        strokeLinecap="round"
+        className="h-[14px] w-[14px] text-white"
+      >
+        <path d="M5 5l14 14M19 5L5 19" />
+      </svg>
+      <span
+        className="pointer-events-none absolute inset-px rounded-[8px]"
+        style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.12), transparent 40%)" }}
+      />
+    </span>
+  );
+}
 
 export default function Navigation() {
-  const pathname = usePathname() || ""; // Ensure pathname is never undefined
+  const pathname = usePathname() || "";
   const router = useRouter();
-  const { data: session, status } = useSession(); // Get status too
+  const { data: session, status } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDesktopView, setIsDesktopView] = useState(true);
 
-  // Determine current language from URL path - with non-null pathname
   const isChinesePath = pathname.startsWith("/zh");
+  const currentNavLinks = isChinesePath ? NAV_LINKS.zh : NAV_LINKS.en;
 
-  // Function to switch language
   const switchLanguage = () => {
     if (isChinesePath) {
-      // Switch from Chinese to English
       const englishPath = pathname.replace(/^\/zh/, "") || "/";
       router.push(englishPath);
     } else {
-      // Switch from English to Chinese
-      const chinesePath = `/zh${pathname}`;
-      router.push(chinesePath);
+      router.push(`/zh${pathname}`);
     }
   };
 
-  // Calculate view on mount and window resize
   useEffect(() => {
     const calculateView = () => {
       if (typeof window === "undefined") return;
-
-      const logoWidth = 150;
-      const findCreatorsWidth = 120;
-      const campaignsWidth = 100;
-      const howItWorksWidth = 120;
-      const loginWidth = 80;
-      const creatorButtonWidth = 140;
-      const brandButtonWidth = 140;
-      const spacing = 120;
-      const minWidth =
-        logoWidth +
-        findCreatorsWidth +
-        campaignsWidth +
-        howItWorksWidth +
-        loginWidth +
-        creatorButtonWidth +
-        brandButtonWidth +
-        spacing;
-
-      setIsDesktopView(window.innerWidth >= minWidth);
+      setIsDesktopView(window.innerWidth >= 1100);
     };
-
     calculateView();
     window.addEventListener("resize", calculateView);
     return () => window.removeEventListener("resize", calculateView);
   }, []);
 
-  // Close menu when screen size changes to desktop view
   useEffect(() => {
-    if (isDesktopView) {
-      setIsMenuOpen(false);
-    }
+    if (isDesktopView) setIsMenuOpen(false);
   }, [isDesktopView]);
 
-  // Loading state - show placeholder instead of nothing
+  const userInitials = useMemo(() => initialsFromName(session?.user?.name), [session?.user?.name]);
+
   if (status === "loading") {
     return (
-      <nav className="bg-white border-b border-gray-200">
+      <nav className="bg-white border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex-shrink-0 flex items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
-                <div className="w-24 h-6 bg-gray-200 rounded animate-pulse"></div>
-              </div>
-            </div>
+          <div className="flex h-16 items-center gap-3">
+            <div className="h-7 w-7 animate-pulse rounded-[9px] bg-slate-200" />
+            <div className="h-5 w-28 animate-pulse rounded bg-slate-200" />
           </div>
         </div>
       </nav>
     );
   }
 
-  // Don't show navigation in portals - more defensive check
-  if (pathname && (pathname.startsWith("/brandportal") || pathname.startsWith("/creatorportal"))) {
+  if (pathname.startsWith("/brandportal") || pathname.startsWith("/creatorportal")) {
     return null;
   }
 
-  // Define navigation links for both languages
-  const navLinks = {
-    en: [
-      { href: "/find-creators", label: "Find Creators", width: "120px" },
-      { href: "/campaigns", label: "Campaigns", width: "100px" },
-      { href: "/entertainment-live", label: "Live Streaming", width: "130px" },
-      { href: "/private-community", label: "Private Community", width: "150px" },
-      { href: "/pear", label: "Pear", width: "80px" },
-      { href: "/how-it-works", label: "How it Works", width: "120px" },
-    ],
-    zh: [
-      { href: "/zh/find-creators", label: "寻找创作者", width: "120px" },
-      { href: "/zh/campaigns", label: "广告活动", width: "100px" },
-      { href: "/zh/entertainment-live", label: "娱乐直播", width: "100px" },
-      { href: "/zh/private-community", label: "私域社区", width: "100px" },
-      { href: "/zh/pear", label: "Pear", width: "80px" },
-      { href: "/zh/about", label: "关于我们", width: "120px" },
-    ],
-  };
-
-  // Select current language navigation items
-  const currentNavLinks = isChinesePath ? navLinks.zh : navLinks.en;
-
   const isActive = (path: string) => pathname === path;
+  const homeHref = isChinesePath ? "/zh" : "/";
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  const dashboardHref = role === "BRAND" ? "/brandportal/dashboard" : "/creatorportal/dashboard";
 
   return (
-    <nav className="bg-white border-b border-gray-200">
+    <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex-shrink-0 flex items-center">
-            <Link href={isChinesePath ? "/zh" : "/"} className="flex items-center gap-3">
-              <img src="/logo.jpg" alt="Cricher AI Logo" className="w-6 h-6" />
-              <span className="text-2xl font-bold text-gray-600 whitespace-nowrap">Cricher AI</span>
-            </Link>
-          </div>
+        <div className="flex h-16 items-center justify-between gap-6">
+          <Link href={homeHref} className="flex shrink-0 items-center gap-2.5">
+            <LogoMark />
+            <span className="text-[17px] font-semibold tracking-tight text-slate-900 whitespace-nowrap">
+              Cricher<span className="font-medium text-slate-400">.ai</span>
+            </span>
+          </Link>
 
           {isDesktopView && (
-            <>
-              <div className="flex items-center w-full space-x-6 ml-8">
-                {currentNavLinks.map((link) => (
+            <div className="flex flex-1 items-center justify-center gap-7">
+              {currentNavLinks.map((link) => {
+                const active = isActive(link.href);
+                return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`text-base font-medium whitespace-nowrap overflow-hidden ${
-                      isActive(link.href)
-                        ? "text-purple-600"
-                        : "text-gray-600 hover:text-purple-600"
+                    className={`relative whitespace-nowrap py-[22px] text-sm font-medium transition-colors ${
+                      active ? "text-slate-900" : "text-slate-600 hover:text-slate-900"
                     }`}
-                    style={{
-                      width: link.width,
-                      textOverflow: "ellipsis",
-                    }}
                   >
                     {link.label}
+                    {active && (
+                      <span
+                        className="pointer-events-none absolute inset-x-0 -bottom-px h-[2px] rounded-full bg-purple-600"
+                        aria-hidden
+                      />
+                    )}
                   </Link>
-                ))}
-              </div>
+                );
+              })}
+            </div>
+          )}
 
-              <div className="flex items-center space-x-4">
-                {/* Language switcher button */}
-                {/* <button
-                  onClick={switchLanguage}
-                  className="flex items-center justify-center px-2 py-1 text-sm text-gray-600 hover:text-purple-600 border border-gray-200 rounded"
-                  style={{ minWidth: "80px" }} // Added minimum width to ensure text fits on one line
-                >
-                  <Globe className="w-4 h-4 mr-1" />
-                  <span className="text-center">{isChinesePath ? 'English' : '中文'}</span>
-                </button> */}
-
-                {/* Show different buttons based on authentication state */}
-                {!session ? (
-                  // For unauthenticated users - show login and join buttons
-                  <>
-                    <Link
-                      href={isChinesePath ? "/zh/login" : "/login"}
-                      className="text-base font-medium text-gray-600 hover:text-purple-600 whitespace-nowrap overflow-hidden text-center"
+          {isDesktopView && (
+            <div className="flex shrink-0 items-center gap-3">
+              <button
+                onClick={switchLanguage}
+                className="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Switch language"
+              >
+                <Globe className="h-4 w-4" />
+              </button>
+              {!session ? (
+                <>
+                  <Link
+                    href={isChinesePath ? "/zh/login" : "/login"}
+                    className="text-sm font-medium text-slate-600 hover:text-slate-900 whitespace-nowrap"
+                  >
+                    {isChinesePath ? "登录" : "Log in"}
+                  </Link>
+                  <Link
+                    href={isChinesePath ? "/zh/join-creator" : "/join-creator"}
+                    className="inline-flex items-center justify-center rounded-lg border border-purple-200 bg-purple-50 px-3.5 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-100 whitespace-nowrap"
+                  >
+                    {isChinesePath ? "成为创作者" : "Join as Creator"}
+                  </Link>
+                  <Link
+                    href={isChinesePath ? "/zh/join-brand" : "/join-brand"}
+                    className="inline-flex items-center justify-center rounded-lg bg-purple-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 whitespace-nowrap"
+                  >
+                    {isChinesePath ? "成为品牌" : "Join as Brand"}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <div
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3"
+                    title={session.user?.name ?? undefined}
+                  >
+                    <span
+                      className="grid h-6 w-6 place-items-center rounded-full text-[10.5px] font-semibold text-white"
                       style={{
-                        width: "80px",
-                        textOverflow: "ellipsis",
+                        background:
+                          "linear-gradient(135deg, oklch(0.65 0.18 250), oklch(0.55 0.2 285))",
                       }}
+                      aria-hidden
                     >
-                      {isChinesePath ? "登录" : "Log in"}
-                    </Link>
-                    <Link
-                      href={isChinesePath ? "/zh/join-creator" : "/join-creator"}
-                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 whitespace-nowrap overflow-hidden"
-                      style={{
-                        width: "140px",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {isChinesePath ? "成为创作者" : "Join as Creator"}
-                    </Link>
-                    <Link
-                      href={isChinesePath ? "/zh/join-brand" : "/join-brand"}
-                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 whitespace-nowrap overflow-hidden"
-                      style={{
-                        width: "140px",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {isChinesePath ? "成为品牌" : "Join as Brand"}
-                    </Link>
-                  </>
-                ) : (
-                  // For authenticated users - show user info and dashboard link
-                  <>
-                    <span className="text-sm text-gray-600">
-                      {isChinesePath ? "欢迎，" : "Welcome, "}
+                      {userInitials}
+                    </span>
+                    <span className="max-w-[140px] truncate text-sm font-medium text-slate-800">
                       {session.user?.name || (isChinesePath ? "用户" : "User")}
                     </span>
-                    <Link
-                      href={
-                        session.user?.role === "BRAND"
-                          ? "/brandportal/dashboard"
-                          : "/creatorportal/dashboard"
-                      }
-                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
-                    >
-                      {isChinesePath ? "仪表板" : "Dashboard"}
-                    </Link>
-                  </>
-                )}
-              </div>
-            </>
+                  </div>
+
+                  <Link
+                    href={dashboardHref}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-3.5 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-100"
+                  >
+                    {isChinesePath ? "仪表板" : "Dashboard"}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </>
+              )}
+            </div>
           )}
 
           {!isDesktopView && (
-            <div className="flex items-center">
-              {/* Mobile language switcher */}
+            <div className="flex items-center gap-1">
               <button
                 onClick={switchLanguage}
-                className="mr-2 p-2 text-gray-400 hover:text-gray-500"
+                className="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Switch language"
               >
-                <Globe className="h-6 w-6" />
+                <Globe className="h-5 w-5" />
               </button>
-
               <button
                 type="button"
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="rounded-md p-2 text-slate-600 hover:bg-slate-100"
+                aria-label={isMenuOpen ? "Close menu" : "Open menu"}
               >
-                <span className="sr-only">Open main menu</span>
-                {isMenuOpen ? (
-                  <X className="block h-6 w-6" aria-hidden="true" />
-                ) : (
-                  <Menu className="block h-6 w-6" aria-hidden="true" />
-                )}
+                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Mobile menu */}
       {!isDesktopView && isMenuOpen && (
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          {currentNavLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive(link.href)
-                  ? "text-purple-600 bg-purple-50"
-                  : "text-gray-600 hover:text-purple-600 hover:bg-purple-50"
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
+        <div className="border-t border-slate-200 bg-white px-3 pb-4 pt-2">
+          <div className="space-y-1">
+            {currentNavLinks.map((link) => {
+              const active = isActive(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`block rounded-lg px-3 py-2 text-sm font-medium ${
+                    active ? "bg-purple-50 text-purple-700" : "text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
 
-          {/* Update mobile menu with authenticated user options */}
-          {!session ? (
-            <>
-              <Link
-                href={isChinesePath ? "/zh/login" : "/login"}
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-purple-600 hover:bg-purple-50"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {isChinesePath ? "登录" : "Log in"}
-              </Link>
-              <Link
-                href={isChinesePath ? "/zh/join-creator" : "/join-creator"}
-                className="block px-3 py-2 rounded-md text-base font-medium text-purple-600 bg-purple-50 hover:bg-purple-100"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {isChinesePath ? "成为创作者" : "Join as Creator"}
-              </Link>
-              <Link
-                href={isChinesePath ? "/zh/join-brand" : "/join-brand"}
-                className="block px-3 py-2 rounded-md text-base font-medium text-purple-600 bg-purple-50 hover:bg-purple-100"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {isChinesePath ? "成为品牌" : "Join as Brand"}
-              </Link>
-            </>
-          ) : (
-            <>
-              <div className="block px-3 py-2 rounded-md text-base font-medium text-gray-600">
-                {isChinesePath ? "欢迎，" : "Welcome, "}
-                {session.user?.name || (isChinesePath ? "用户" : "User")}
+          <div className="mt-3 border-t border-slate-200 pt-3">
+            {!session ? (
+              <div className="space-y-1">
+                <Link
+                  href={isChinesePath ? "/zh/login" : "/login"}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  {isChinesePath ? "登录" : "Log in"}
+                </Link>
+                <Link
+                  href={isChinesePath ? "/zh/join-creator" : "/join-creator"}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block rounded-lg bg-purple-50 px-3 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-100"
+                >
+                  {isChinesePath ? "成为创作者" : "Join as Creator"}
+                </Link>
+                <Link
+                  href={isChinesePath ? "/zh/join-brand" : "/join-brand"}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block rounded-lg bg-purple-600 px-3 py-2 text-sm font-semibold text-white hover:bg-purple-700"
+                >
+                  {isChinesePath ? "成为品牌" : "Join as Brand"}
+                </Link>
               </div>
-              <Link
-                href={
-                  session.user?.role === "BRAND"
-                    ? "/brandportal/dashboard"
-                    : "/creatorportal/dashboard"
-                }
-                className="block px-3 py-2 rounded-md text-base font-medium text-purple-600 bg-purple-50 hover:bg-purple-100"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {isChinesePath ? "仪表板" : "Dashboard"}
-              </Link>
-            </>
-          )}
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 px-3 py-2">
+                  <span
+                    className="grid h-7 w-7 place-items-center rounded-full text-[11px] font-semibold text-white"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, oklch(0.65 0.18 250), oklch(0.55 0.2 285))",
+                    }}
+                    aria-hidden
+                  >
+                    {userInitials}
+                  </span>
+                  <span className="truncate text-sm font-medium text-slate-800">
+                    {session.user?.name || (isChinesePath ? "用户" : "User")}
+                  </span>
+                </div>
+                <Link
+                  href={dashboardHref}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-between rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-100"
+                >
+                  {isChinesePath ? "仪表板" : "Dashboard"}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </nav>
