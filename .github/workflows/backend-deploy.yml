@@ -1,0 +1,52 @@
+name: Backend Deploy
+
+on:
+  push:
+    branches: [main, feat/ai-video-fulfillment]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-2
+  ECR_REGISTRY: 202716106225.dkr.ecr.us-east-2.amazonaws.com
+  ECR_REPO: cricher-backend
+  APPRUNNER_SERVICE: cricher-backend
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::202716106225:role/gh-actions-brand-creator
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build + push
+        run: |
+          IMAGE=${ECR_REGISTRY}/${ECR_REPO}
+          docker build -t $IMAGE:${GITHUB_SHA} -t $IMAGE:latest ./backend
+          docker push $IMAGE:${GITHUB_SHA}
+          docker push $IMAGE:latest
+
+      - name: Trigger App Runner deploy
+        run: |
+          ARN=$(aws apprunner list-services \
+            --region $AWS_REGION \
+            --query "ServiceSummaryList[?ServiceName=='${APPRUNNER_SERVICE}'].ServiceArn" \
+            --output text)
+          if [ -z "$ARN" ]; then
+            echo "Service ${APPRUNNER_SERVICE} not found — create it first."
+            exit 0
+          fi
+          aws apprunner start-deployment --service-arn "$ARN" --region $AWS_REGION
+          echo "Deployment started for $ARN"
