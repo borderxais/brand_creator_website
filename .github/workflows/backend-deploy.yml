@@ -16,7 +16,7 @@ env:
   AWS_REGION: us-east-2
   ECR_REGISTRY: 202716106225.dkr.ecr.us-east-2.amazonaws.com
   ECR_REPO: cricher-backend
-  APPRUNNER_SERVICE: cricher-backend
+  ECS_SERVICE_ARN: arn:aws:ecs:us-east-2:202716106225:service/default/cricher-backend
 
 jobs:
   build-and-deploy:
@@ -38,15 +38,18 @@ jobs:
           docker push $IMAGE:${GITHUB_SHA}
           docker push $IMAGE:latest
 
-      - name: Trigger App Runner deploy
+      - name: Update ECS Express service
         run: |
-          ARN=$(aws apprunner list-services \
+          IMAGE=${ECR_REGISTRY}/${ECR_REPO}:${GITHUB_SHA}
+          PRIMARY=$(aws ecs describe-express-gateway-service \
+            --service $ECS_SERVICE_ARN \
             --region $AWS_REGION \
-            --query "ServiceSummaryList[?ServiceName=='${APPRUNNER_SERVICE}'].ServiceArn" \
-            --output text)
-          if [ -z "$ARN" ]; then
-            echo "Service ${APPRUNNER_SERVICE} not found — create it first."
-            exit 0
-          fi
-          aws apprunner start-deployment --service-arn "$ARN" --region $AWS_REGION
-          echo "Deployment started for $ARN"
+            --query "service.activeConfigurations[0].primaryContainer" \
+            --output json)
+          # Swap image to new SHA-tagged build
+          UPDATED=$(echo "$PRIMARY" | jq --arg img "$IMAGE" '.image = $img')
+          aws ecs update-express-gateway-service \
+            --service-arn $ECS_SERVICE_ARN \
+            --primary-container "$UPDATED" \
+            --region $AWS_REGION
+          echo "ECS Express deployment triggered with image: $IMAGE"
