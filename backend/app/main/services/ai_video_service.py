@@ -108,7 +108,10 @@ class AiVideoService:
 
     @classmethod
     async def get_video_library(cls, creator_id: str | None = None) -> list[AiVideoLibraryItem]:
-        client = cls._require_supabase()
+        if not supabase:
+            logger.warning("Supabase not available, returning empty AI video list")
+            return []
+        client = supabase
         query = client.table("AiVideo").select("*").order("generated_time", desc=True)
         if creator_id:
             query = query.eq("creator_id", creator_id)
@@ -121,8 +124,8 @@ class AiVideoService:
         try:
             response = query.execute()
         except Exception as exc:
-            logger.error("Failed to fetch AiVideos: %s", exc)
-            raise HTTPException(status_code=500, detail="Failed to load AI videos")
+            logger.warning("Failed to fetch AiVideos (returning empty list): %s", exc)
+            return []
 
         records: list[AiVideoLibraryItem] = []
         for row in response.data or []:

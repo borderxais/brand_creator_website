@@ -1,17 +1,27 @@
 import { Metadata } from "next";
 import { getServerSession } from "next-auth";
-import AiVideoWelcome from "./AiVideoWelcome";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import AiVideoDashboard from "./AiVideoDashboard";
+import { buildTikTokBinding, fetchAiVideos } from "./data";
 
 export const metadata: Metadata = {
   title: "AI Video | Cricher AI CreatorHub",
-  description:
-    "Browse this week's 90-second AI-built sample reels, bookmark what fits your audience, and unlock the Creator Pack to remix with your own script and voice.",
+  description: "Generate AI videos, browse your library, and post to TikTok.",
 };
 
 export default async function AiVideoPage() {
   const session = await getServerSession(authOptions);
-  const creatorName = session?.user?.name?.split(" ")[0] ?? "Creator";
+  const userId = session?.user?.id ?? null;
 
-  return <AiVideoWelcome creatorName={creatorName} />;
+  const [videos, tiktokAccount] = await Promise.all([
+    fetchAiVideos(userId),
+    userId
+      ? prisma.tikTokAccount.findUnique({ where: { user_id: userId } })
+      : Promise.resolve(null),
+  ]);
+
+  const tikTokBinding = await buildTikTokBinding(tiktokAccount);
+
+  return <AiVideoDashboard videos={videos} tikTokBinding={tikTokBinding} />;
 }

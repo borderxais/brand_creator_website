@@ -59,7 +59,11 @@ services:
     environment:
       DATABASE_URL: postgres://e2e:e2e@pg:5432/brand_creator_e2e
       SUPABASE_URL: http://supabase:5000
-      SUPABASE_SERVICE_KEY: e2e-service-key
+      # Same pre-signed service_role JWT used by the supabase service (PGRST_JWT_SECRET).
+      # The supabase python client validates the key shape at create_client(), so a plain
+      # string like "e2e-service-key" raises "Invalid API key" and leaves the global
+      # supabase = None, which surfaces as 500 "Supabase client not configured".
+      SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6NDAwMDAwMDAwMH0.ioNpxDRMKY2wlaj0A6Jf6bHNoNBFz7YWsVhEj0cOUfo
       ENV: e2e
     ports: ["8001:8000"]
     healthcheck:
